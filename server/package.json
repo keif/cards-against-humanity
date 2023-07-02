@@ -1,11 +1,11 @@
 {
   "name": "cah_backend",
-  "version": "1.0.0",
-  "description": "CAH Stack",
-  "main": "index.js",
+  "version": "0.1.0",
+  "description": "CAH Backend",
+  "main": "index.ts",
   "scripts": {
     "client": "cd ../client && yarn start",
-    "server": "babel-node index.js",
+    "server": "babel-node index.ts",
     "dev": "concurrently --kill-others-on-fail \\\"yarn server\\\" \\\"npm client\\\"",
     "build": "cd ../client && yarn && yarn run build",
     "start": "docker-compose up"
@@ -25,5 +25,15 @@
     "nodemon": "^2.0.22",
     "socket.io": "^4.7.1",
     "socket.io-redis": "^6.1.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.3.3",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "eslint": "^8.44.0",
+    "typescript": "^5.1.6"
   }
 }

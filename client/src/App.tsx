@@ -5,20 +5,20 @@ import HomeScreen from "./Screens/HomeScreen/HomeScreen";
 import JoinPartyScreen from "./Screens/JoinPartyScreen/JoinPartyScreen";
 import StartGameScreen from "./Screens/StartGameScreen/StartGameScreen";
 import PlayerSelectionScreen from './Screens/PlayerSelectionScreen/PlayerSelectionScreen';
-
-// Routing
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 
-function App() {
+// Routing
+
+const App = () => {
     return (
         <BrowserRouter>
             <Routes>
                 <Route
-                    exact path="/"
+                    path="/"
                     element={<HomeScreen/>}
                 />
                 <Route
-                    exact path="/join/:partyCode"
+                    path="/join/:partyCode"
                     element={<StartGameScreen />}
                 />
                 <Route

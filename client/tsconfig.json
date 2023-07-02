@@ -1,0 +1,45 @@
+{
+  "plugins": [
+    "@typescript-eslint",
+    "react-hooks"
+  ],
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "moduleResolution":"node",
+    "strict": false,
+    "noEmit": true,
+    "module": "esnext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+    },
+    "strictNullChecks": true
+  },
+  "include": [
+    ".",
+    "src",
+    "**/*.ts",
+    "**/*.tsx",
+  ],
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.stories.*",
+    "**/__mocks__/*.tsx",
+    "**/mocks.tsx",
+    "**/test.*",
+  ]
+}

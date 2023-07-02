@@ -1,20 +1,8 @@
 {
-  "name": "cards-against-humanity",
+  "name": "cah_frontend",
   "version": "0.1.0",
+  "description": "CAH Frontend",
   "private": true,
-  "dependencies": {
-    "lodash": "^4.17.21",
-    "path-to-regexp": "^6.2.1",
-    "prop-types": "^15.8.1",
-    "react": "^18.2.0",
-    "react-beautiful-dnd": "^13.1.1",
-    "react-dnd": "^16.0.1",
-    "react-dom": "^18.2.0",
-    "react-js-banner": "^0.6.0-beta3",
-    "react-router-dom": "^6.14.1",
-    "react-scripts": "^5.0.1",
-    "socket.io-client": "^4.7.1"
-  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -30,5 +18,30 @@
     "not ie <= 11",
     "not op_mini all"
   ],
-  "proxy": "http://localhost:8080/"
+  "proxy": "http://localhost:8080/",
+  "author": "Keith Baker",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "path-to-regexp": "^6.2.1",
+    "prop-types": "^15.8.1",
+    "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
+    "react-dnd": "^16.0.1",
+    "react-dom": "^18.2.0",
+    "react-js-banner": "^0.6.0-beta3",
+    "react-router-dom": "^6.14.1",
+    "react-scripts": "^5.0.1",
+    "socket.io-client": "^4.7.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.2",
+    "@types/node": "^20.3.3",
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.6",
+    "@typescript-eslint/eslint-plugin": "^5.60.1",
+    "@typescript-eslint/parser": "^5.60.1",
+    "eslint": "^8.44.0",
+    "typescript": "^5.1.6"
+  }
 }
