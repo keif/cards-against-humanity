@@ -4,10 +4,10 @@
   "description": "CAH Stack",
   "main": "index.js",
   "scripts": {
-    "client": "cd client && yarn start",
+    "client": "cd ../client && yarn start",
     "server": "babel-node index.js",
-    "dev": "concurrently --kill-others-on-fail \"yarn server\" \"npm client\"",
-    "build": "cd client && yarn && yarn run build",
+    "dev": "concurrently --kill-others-on-fail \\\"yarn server\\\" \\\"npm client\\\"",
+    "build": "cd ../client && yarn && yarn run build",
     "start": "docker-compose up"
   },
   "author": "Keith Baker",
