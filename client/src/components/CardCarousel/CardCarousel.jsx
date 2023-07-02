@@ -4,7 +4,7 @@ import Card from "../Card/Card"
 
 import { Droppable } from "react-beautiful-dnd";
 
-function CardCarousel(props) {
+const CardCarousel = ({ cards }) => {
   return (
     <Droppable droppableId={'bottom'} direction="horizontal">
       {
@@ -14,7 +14,7 @@ function CardCarousel(props) {
             {...provider.droppableProps}
             className="scrolling-wrapper"
           >
-            {props.cards.map((card, index) => <Card {...card} key={card.id} index={index} />)}
+            {cards.map((card, index) => <Card {...card} key={card.id} index={index} />)}
             {provider.placeholder}
           </div >
         )

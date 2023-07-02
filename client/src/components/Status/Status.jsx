@@ -1,10 +1,10 @@
 import React from 'react'
 import "./Status.css"
 
-function Status(props) {
+const Status = ({className, message}) => {
   return (
-    <div className={`statusModal center ${props.className}`}>
-      {props.message}
+    <div className={`statusModal center ${className}`}>
+      {message}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, {useEffect, useState} from 'react';
 import "./PlayerSelectionScreen.css"
 
 // Import SharedComponents
@@ -14,12 +14,13 @@ import Status from "../../components/Status/Status"
 // Import Helper Libraries
 import { DragDropContext } from "react-beautiful-dnd";
 import { getPlayerRoundState, newGameState, playCard, judgeSelectCard, shuffleCards, endRound } from "../../api"
+import {useNavigate, useParams} from 'react-router-dom';
 
-class PlayerSelectionScreen extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.restoreScreen = this.restoreScreen.bind(this);
+const PlayerSelectionScreen = () => {
+  const params = useParams();
+  const navigate = useNavigate();
+    console.group("PlayerSelectionScreen: constructor()");
+    console.groupEnd();
 
     // roundRole: player
     // roundState:
@@ -29,7 +30,7 @@ class PlayerSelectionScreen extends React.Component {
     // roundState
     //    judge-waiting -> judge-selecting -> viewing-winner -> [player-selecting]
 
-    this.state = {
+    const [state, setState] = useState({
       // get these on getRoundState
       roundState: "viewing-winner",  // player-selecting | player-waiting | judge-selecting | viewing-winner
       roundRole: "judge", // player | judge
@@ -37,7 +38,7 @@ class PlayerSelectionScreen extends React.Component {
       roundNum: null, // Number
       QCard: {
         cardType: "Q",
-        text: `Join the game with party code ${this.props.match.params.partyCode} before playing`,
+        text: `Join the game with party code ${params.partyCode} before playing`,
         id: 69
       },
       cards: [
@@ -85,23 +86,25 @@ class PlayerSelectionScreen extends React.Component {
       // this is set when judge selects a card
       winningCard: { // type=Card || null
         cardType: "A",
-        text: `Go to localhost:3000/game/${this.props.match.params.partyCode}`,
+        text: `Go to localhost:3000/game/${params.partyCode}`,
         id: 42
       },
-    }
-  }
+    });
 
-  componentDidMount() {
+  useEffect(() => {
     console.log("PlayerSelectionScreen: componentDidMount()")
-    let partyCode = this.props.match.params.partyCode
+    let partyCode = params.partyCode
     let newState = (roundState) => {
+      console.group("PlayerSelectionScreen: newState()")
+      console.log("roundState:", roundState);
+      console.groupEnd();
       if(roundState == null) {
         // redirect them to join
         if(partyCode === 'join') {
-          this.props.history.push(`/join`)
+          navigate(`/join`)
         }
         else {
-          this.props.history.push(`/join/${partyCode}`)
+          navigate(`/join/${partyCode}`)
         }
         return;
       }
@@ -125,7 +128,8 @@ class PlayerSelectionScreen extends React.Component {
         else if (roundState.roundState === 'judge-selecting') directions = `${roundState.roundJudge} is choosing their favorite`
       }
 
-      this.setState({
+      setState({
+        ...state,
         QCard: roundState.QCard,
         cards: roundState.cards,
         otherPlayerCards: roundState.otherPlayerCards,
@@ -140,19 +144,20 @@ class PlayerSelectionScreen extends React.Component {
         directions
       });
 
-      if (this.state.ticker) {
+      if (state.ticker) {
         console.log('updated timeLeft!, deleting ticker')
-        clearInterval(this.state.ticker)
+        clearInterval(state.ticker)
       }
-      var ticker = setInterval(() => {
-        if (this.state.timeLeft <= 0) {
+      let ticker = setInterval(() => {
+        if (state.timeLeft <= 0) {
           console.log('clearing interval timeout!', ticker)
           clearInterval(ticker)
         }
         else {
           console.log('tick');
-          this.setState({
-            timeLeft: this.state.timeLeft - 1,
+          setState({
+            ...state,
+            timeLeft: state.timeLeft - 1,
             ticker
           });
         }
@@ -162,23 +167,22 @@ class PlayerSelectionScreen extends React.Component {
     // ask server to send current gameStateEvents
     getPlayerRoundState(partyCode, newState);
     // subscribe to newGameState events
-    newGameState(partyCode); 
-  }
-
-  componentWillUnmount() {
-    console.log("PlayerSelectionScreen: componentWillUnmount()")
-    clearInterval(this.state.ticker);
-  }
+    newGameState(partyCode);
+    return () => {
+      console.log("PlayerSelectionScreen: componentWillUnmount()")
+      clearInterval(state.ticker);
+    }
+  }, []);
 
   // called after viewing-winner, resets state and gets new state from server. Begins new round
-  restoreScreen() {
-    let partyCode = this.props.match.params.partyCode
+  const restoreScreen = () => {
+    let partyCode = params.partyCode
     endRound(partyCode);
     console.log("restoring screen");
   }
 
   // choosing card logic (drag-and-drop)
-  chooseCardHandler = result => {
+  const chooseCardHandler = (result) => {
     const { destination, source } = result;
     // console.log(result);
     
@@ -189,67 +193,65 @@ class PlayerSelectionScreen extends React.Component {
     if (source.droppableId === destination.droppableId) {
       // shift/move cards in correct order @ CardCarousel
       console.log("swapping!")
-      let partyCode = this.props.match.params.partyCode
+      let partyCode = params.partyCode
       shuffleCards(partyCode, source.index, destination.index)
     }
-    else if (source.droppableId === "bottom" && destination.droppableId === "top" && this.state.playerChoice == null) {
-      if (this.state.roundState === 'judge-selecting' && this.state.roundRole === 'judge') {
+    else if (source.droppableId === "bottom" && destination.droppableId === "top" && state.playerChoice == null) {
+      if (state.roundState === 'judge-selecting' && state.roundRole === 'judge') {
         // judge-selecting card
-        console.log(`winner card chosen: ${JSON.stringify(this.state.otherPlayerCards[source.index])}`);
-        let partyCode = this.props.match.params.partyCode
-        judgeSelectCard(partyCode, this.state.otherPlayerCards[source.index].id);
+        console.log(`winner card chosen: ${JSON.stringify(state.otherPlayerCards[source.index])}`);
+        let partyCode = params.partyCode
+        judgeSelectCard(partyCode, state.otherPlayerCards[source.index].id);
       }
       else {
         // player-selecting card
         console.log("player chose a card!");
-        let partyCode = this.props.match.params.partyCode
-        playCard(partyCode, this.state.cards[source.index].id)
+        let partyCode = params.partyCode
+        playCard(partyCode, state.cards[source.index].id)
       }
     }
   }
 
   // vibrate when dragging card
-  onDragStart = () => {
+  const onDragStart = () => {
     if (window.navigator.vibrate) {
       window.navigator.vibrate(100);
     };
   }
 
-  render() {
     return (
       <Screen>
-        <DragDropContext onDragEnd={this.chooseCardHandler} onDragStart={this.onDragStart}>
-          <Top className={this.state.roundState === 'viewing-winner' ? 'winner' : ''}>
+        <DragDropContext onDragEnd={chooseCardHandler} onDragStart={onDragStart}>
+          <Top className={state.roundState === 'viewing-winner' ? 'winner' : ''}>
             <HeaderMenu
-              text={this.state.headerText}
-              timeLeft={this.state.timeLeft}
+              text={state.headerText}
+              timeLeft={state.timeLeft}
             />
             <DropCardSpace
-              QCard={this.state.QCard}
-              playerChoice={this.state.roundState === 'viewing-winner' ? this.state.winningCard : this.state.playerChoice}
-              cardsIn={this.state.otherPlayerCards.length}
-              roundState={this.state.roundState}
-              roundRole={this.state.roundRole}
+              QCard={state.QCard}
+              playerChoice={state.roundState === 'viewing-winner' ? state.winningCard : state.playerChoice}
+              cardsIn={state.otherPlayerCards.length}
+              roundState={state.roundState}
+              roundRole={state.roundRole}
             />
-            <div className={this.state.roundState === 'viewing-winner' ? 'continueMsg' : ''} id="continueMsg" onClick={this.restoreScreen}>
-              {this.state.roundState === 'viewing-winner' ? "Tap anywhere to Continue" : ""}
+            <div className={state.roundState === 'viewing-winner' ? 'continueMsg' : ''} id="continueMsg" onClick={restoreScreen}>
+              {state.roundState === 'viewing-winner' ? "Tap anywhere to Continue" : ""}
             </div>
           </Top>
           <Bottom>
-            <Status message={this.state.directions} />
+            <Status message={state.directions} />
             <CardCarousel
               cards={
-                this.state.roundState === 'judge-selecting' ? this.state.otherPlayerCards :
-                  this.state.roundState === 'judge-waiting' ? [] : this.state.cards
+                state.roundState === 'judge-selecting' ? state.otherPlayerCards :
+                  state.roundState === 'judge-waiting' ? [] : state.cards
               } />
             <Footer>
-              Share Link or Party Code: {this.props.match.params.partyCode}
+              Share Link or Party Code: {params.partyCode}
             </Footer>
           </Bottom >
         </DragDropContext >
       </Screen >
     );
-  }
 }
 
 export default PlayerSelectionScreen;

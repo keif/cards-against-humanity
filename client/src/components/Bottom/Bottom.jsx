@@ -1,10 +1,10 @@
 import React from 'react'
 import "./Bottom.css"
 
-function Bottom(props) {
+const Bottom = ({children}) => {
   return (
     <div className="bottom" id="bottom">
-      {props.children}
+      {children}
     </div>
   );
 }

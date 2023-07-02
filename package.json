@@ -1,29 +1,29 @@
 {
   "name": "cah_backend",
   "version": "1.0.0",
-  "description": "Backend communication for cah",
+  "description": "CAH Stack",
   "main": "index.js",
   "scripts": {
-    "client": "cd client && npm start",
+    "client": "cd client && yarn start",
     "server": "babel-node index.js",
-    "dev": "concurrently --kill-others-on-fail \"npm server\" \"npm client\"",
-    "build": "cd client && npm i && npm run build",
+    "dev": "concurrently --kill-others-on-fail \"yarn server\" \"npm client\"",
+    "build": "cd client && yarn && yarn run build",
     "start": "docker-compose up"
   },
-  "author": "Yusuf Ameri",
+  "author": "Keith Baker",
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.2.2",
     "@babel/node": "^7.2.2",
     "@babel/preset-env": "^7.3.1",
-    "concurrently": "^4.1.0",
-    "connect-redis": "^3.4.0",
+    "concurrently": "^8.2.0",
+    "connect-redis": "^7.1.0",
     "express": "^4.16.4",
     "express-session": "^1.15.6",
     "express-socket.io-session": "^1.3.5",
     "lodash": "^4.17.11",
-    "nodemon": "^1.18.9",
-    "socket.io": "^2.2.0",
-    "socket.io-redis": "^5.2.0"
+    "nodemon": "^2.0.22",
+    "socket.io": "^4.7.1",
+    "socket.io-redis": "^6.1.1"
   }
 }

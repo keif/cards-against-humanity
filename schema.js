@@ -22,7 +22,7 @@ export function joinGame(partyCode, sessionID, name) {
 export function getLobbyState(partyCode, sessionID, cb) {
   let game = getOrCreateGame(partyCode, cb);
   let currentPlayer = game.getPlayer(sessionID)
-  let players = _.map(game.players, (player) => player.name);
+  let players = game.players.map((player) => player.name);
 
   let response = {
     players,

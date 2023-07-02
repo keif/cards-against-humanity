@@ -2,32 +2,30 @@ import React from 'react'
 import "./Button.css"
 import { Link } from "react-router-dom";
 
-function Button(props) {
+const Button = ({ disabled, className, link, onClick, text}) => {
   // disabled btn
-  if (props.disabled) {
+  if (disabled) {
     return (
-      <button type="button" className={`menuButton disabled ${props.className}`}>
-        {props.text}
+      <button disabled type="button" className={`menuButton disabled ${className}`}>
+        {text}
       </button>
     );
   }
   // link btn
-  if (props.link) {
+  if (link) {
     console.log(`btn link`);
     return (
-      <Link to={props.link ? props.link : "/404"} className={`${props.className}`}>
-        <button type="button" className={`menuButton ${props.className}`}>
-          {props.text}
-        </button>
+      <Link to={link ? link : "/404"} className={`menuButton ${className}`}>
+        {text}
       </Link>
     );
   }
   // onClick btn
-  else if (props.onClick) {
+  else if (onClick) {
     console.log(`btn click`);
     return (
-      <button type="button" className={`menuButton ${props.className}`} onClick={props.onClick}>
-        {props.text}
+      <button type="button" className={`menuButton ${className}`} onClick={onClick}>
+        {text}
       </button>
     );
   }

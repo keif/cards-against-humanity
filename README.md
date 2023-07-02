@@ -1,15 +1,22 @@
+Play the Game Now! | http://www.cardiparty.co/ - (under construction) 
 
-Follow us on Instagram | https://www.instagram.com/cardipartygame/  
-Play the Game Now! | http://www.cardiparty.co/ 
-
-___ 
-Build: [![CircleCI](https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master.svg?style=svg)](https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master)
+___
+[//]: # (Build: [![CircleCI]&#40;https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master.svg?style=svg&#41;]&#40;https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master&#41;)
 # Welcome to Cards Against Humanity on Mobile!
 This project represents a mobile version of the popular party card game we all know and love, "**Cards Against Humanity!**"
 
 The game is simple! The person who plays the funniest card wins! For more info on intricate versions of the game, checkout the [official rulebook](https://s3.amazonaws.com/cah/CAH_Rules.pdf) from the creators.
 
 Although this game will be available to play online, it is meant to be played in person with friends, for those times we forget to carry that 5 lb brick of cards :P
+
+## Development Setup
+
+### Prerequisites
+1. Node.js (v18.16.0) - if using [`nvm`](https://github.com/nvm-sh/nvm) run `nvm use`
+
+### Setup
+1. Clone the repo
+2. run `yarn` to get all the dependencies
 
 ## Developing Roadmap
 ### Iteration 1:
@@ -33,10 +40,10 @@ These are the preliminary tech stacks that I have planned to use, subject to cha
 
 
 ### Infrastructure
-As a Microsoft Dev, I have become intimately familiar with Microsoft Azure and the different Paas and Iaas offerings that we offer. However, I would like to explore building this out using different Paas infrastructures such as products from AWS or even Heroku. I have not done much research in this regard, but would like to have this project be an opportunity to compare and contrast what is out there and how it compares to Azure.
+TBD
 
 ## Current Project Progress
-I hope to keep this section of the readme as up to date as possible as the project progresses. As of today, 1/14/19, the initial wire-frames have been created and prototyped via [Figma](https://www.figma.com/file/0Tg73m0IZNdbAh9hmAk5Sh10/Cards-Against-Humanity?node-id=0%3A1). I am currently building out the react (presentational) components for each of the wire-frame screens as well as exploring npm packages to allow for fluidity and drag-and-drop behaviors for the app. After I have finished transferring the design to react components, I will begin exploring the data transfer model and backend logic for game creation and game flow.
+I just discovered this, and it's an idea a few friends have been toying with. I'm using this as the basis to kick something off, we'll see how much of the original code will be retained.
 
 ## Extra goodies and features
 Although the basic mvp of this project need not be complicated, here are a few extra goodies that can make the app shine!
@@ -48,7 +55,7 @@ Although the basic mvp of this project need not be complicated, here are a few e
 * Add different game modes as described in the [handbook](https://s3.amazonaws.com/cah/CAH_Rules.pdf)
 
 ## Wireframes
-Take a look at the [Figma](https://www.figma.com/file/0Tg73m0IZNdbAh9hmAk5Sh10/Cards-Against-Humanity?node-id=0%3A1) created and try out the prototype option to see the game in action before its created!
+Take a look at the [Figma](https://www.figma.com/file/IYczZI8lUrWHNwh7E17qBr/Cards-Against-Humanity?type=design&node-id=0%3A1&mode=design&t=gbHl9zHtVGVM7hST-1) created and try out the prototype option to see the game in action before its created!
 
 Below are some Screenshots and the story board for user interactions:
 

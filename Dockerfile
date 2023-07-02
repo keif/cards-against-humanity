@@ -1,25 +1,27 @@
 # To Create a new image
-# docker build -t yusufameri/cah:<version_num> .
+# docker build -t cardigame/cah:<version_num> .
 
 # To Push a new image
-# docker push yusufameri/cah:<version num here optional>
+# docker push cardigame/cah:<version num here optional>
 ####-------####-------####-------####-------####-------####-------####-------
-FROM node:8
+FROM node:18-alpine
 
 # Create app directory for express server
 WORKDIR /usr/src/app
 COPY package*.json ./
-RUN npm install
+RUN yarn install
 COPY . .
 
 # npm i and build react build (production)
 WORKDIR /usr/src/app/client
-RUN npm i
-RUN npm run build
+RUN yarn
+RUN yarn run build
 
 # go back to server and run it
 WORKDIR /usr/src/app
-CMD npm run server
+CMD yarn run server
 
-# run server on port 5000
-EXPOSE 5000
+# run server on port
+ENV PORT 8080
+EXPOSE 8080
+

@@ -1,10 +1,10 @@
 import React from 'react'
 import "./Top.css"
 
-function Top(props) {
+const Top = ({className, children}) => {
   return (
-    <div className={`${props.className} top`} id="top">
-      {props.children}
+    <div className={`${className} top`} id="top">
+      {children}
   </div>
   );
 }

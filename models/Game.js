@@ -32,7 +32,7 @@ class Game {
     else {
       this.players[sessionID] = {
         name,
-        pID: _.size(this.players),
+        pID: this.players.constructor === Object ? Object.keys(this.players).length : this.players.length,
         roundsWon: [],
         cards: this.ACardDeck.splice(0, 10),
         roundState: "lobby"
@@ -47,7 +47,8 @@ class Game {
 
   // get the latest active round or create a new empty round (if its the first round)
   getLatestRound() {
-    if (_.size(this.players) < 3) {
+    const playerSize = this.players.constructor === Object ? Object.keys(this.players).length : this.players.length;
+    if (playerSize < 3) {
       // console.log("Cannot getLatestRound. not enough players to start a game")
       return null;
     }
@@ -62,7 +63,7 @@ class Game {
         roundState: "players-selecting",
         roundStartTime: new Date(),
         roundEndTime: null,
-        roundJudge: _.find(this.players, player => player.pID === (this.rounds.length % _.size(this.players))),
+        roundJudge: _.find(this.players, player => player.pID === (this.rounds.length % playerSize)),
         QCard: (this.QCardDeck.splice(0,1))[0],
         otherPlayerCards: [],
         winningCard: null,
@@ -119,8 +120,20 @@ class Game {
     let winningCard = latestRound.winningCard;
     let winner = latestRound.winner;
     // timeRemaining in seconds
-    let timeLeft = _.max([0, _.floor(this.roundLength - ((new Date() - latestRound.roundStartTime) / 1000))]);
+    let timeLeft = Math.max(...[0, Math.floor(this.roundLength - ((new Date() - latestRound.roundStartTime) / 1000))]);
     let roundState;
+    console.group(`getPlayerRoundState for ${player.name} in round ${roundNum}`);
+    console.log(`roundRole: ${roundRole}`)
+    console.log(`playerChoice: ${playerChoice ? playerChoice.text : null}`)
+    console.log(`otherPlayerCards: ${otherPlayerCards.length}`)
+    console.log(`cards: ${cards.length}`)
+    console.log(`QCard: ${QCard.text}`)
+    console.log(`roundNum: ${roundNum}`)
+    console.log(`roundJudge: ${roundJudge}`)
+    console.log(`winningCard: ${winningCard ? winningCard.text : null}`)
+    console.log(`winner: ${winner ? winner.name : null}`)
+    console.log(`timeLeft: ${timeLeft}`)
+    console.groupEnd();
 
     if (latestRound.roundState === 'judge-selecting' || latestRound.roundState === 'viewing-winner') {
       timeLeft = 0
@@ -158,7 +171,7 @@ class Game {
     if(card === undefined) cb(false, `Player ${player.name}[${sessionID}] attempting to play card (${cardID}) they do not own!`);
     let latestRound = this.getLatestRound()
 
-    if (latestRound.roundState != 'players-selecting') {
+    if (latestRound.roundState !== 'players-selecting') {
       cb(false, "Cannot play card!, judge is currently selecting!")
     }
     if (this.isRoundJudge(sessionID, latestRound)) {
@@ -166,10 +179,11 @@ class Game {
     }
 
     if (card) {
+      const playerSize = this.players.constructor === Object ? Object.keys(this.players).length : this.players.length;
       _.remove(player.cards, c => c.id === cardID)
       latestRound.otherPlayerCards.push({ ...card, owner: { "name": player.name, "pID": player.pID } })
       player.cards = player.cards.concat(this.ACardDeck.splice(0, 1))
-      if (latestRound.otherPlayerCards.length === (_.size(this.players) - 1)) {
+      if (latestRound.otherPlayerCards.length === (playerSize - 1)) {
         latestRound.roundState = 'judge-selecting'
         clearTimeout(this.roundTimer)
         this.roundFinishedNotifier(true, 'all players have played their cards, going to judge-selecting!')

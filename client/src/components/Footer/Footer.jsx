@@ -1,10 +1,10 @@
 import React from 'react'
 import "./Footer.css"
 
-function Footer(props) {
+const Footer = ({children}) => {
   return (
     <div className="footer">
-      {props.children}
+      {children}
     </div>
   );
 }

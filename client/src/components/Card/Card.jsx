@@ -5,46 +5,46 @@ import "./Card.css"
 import { Link } from "react-router-dom";
 import { Draggable } from "react-beautiful-dnd"
 
-function Card(props) {
-  if (props.cardType === "Q") {
+const Card = ({ cardType, className, id, index, link, status, text }) => {
+  if (cardType === "Q") {
     return (
       <div>
-        <div className={`card Q ${props.className}`}>
-          <p>{props.text.replace("_", "__________")}</p>
+        <div className={`card Q ${className}`}>
+          <p>{text.replace("_", "__________")}</p>
         </div>
         {
-          props.status &&
-          <div className={`status ${props.className}`}>
-            <span>{props.status}</span>
+          status &&
+          <div className={`status ${className}`}>
+            <span>{status}</span>
           </div>
         }
       </div>
     );
   }
-  else if (props.cardType === "Title") {
+  else if (cardType === "Title") {
     return (
-      <div className={`card Title ${props.className}`}>
+      <div className={`card Title ${className}`}>
         <h3>Cardi</h3>
         <h3>Party</h3>
       </div>
     );
   }
-  else if (props.cardType === "placeholder") {
+  else if (cardType === "placeholder") {
     return (
-      <div className={`card placeholder ${props.className}`}>
+      <div className={`card placeholder ${className}`}>
         Drop Card Here
       </div>
     );
   }
-  else if (props.cardType === "Link") {
+  else if (cardType === "Link") {
     return (
-      <div className={`card Title Link ${props.className}`}>
+      <div className={`card Title Link ${className}`}>
         <h3>Invite</h3>
         <h3>Friends</h3>
         <h3>with party code:</h3>
         <h6 className="link">
-          <Link to={props.link}>
-            {`${props.link}`}
+          <Link to={link}>
+            {`${link}`}
           </Link>
         </h6>
       </div>
@@ -52,16 +52,16 @@ function Card(props) {
   }
   else {
     return (
-      <Draggable draggableId={`${props.id}`} index={props.index}>
+      <Draggable draggableId={`${id}`} index={index}>
         {
           (provider) => (
             <div
-              className={`card A ${props.className}`}
+              className={`card A ${className}`}
               {...provider.draggableProps}
               {...provider.dragHandleProps}
               ref={provider.innerRef}
             >
-              <p>{props.text}</p>
+              <p>{text}</p>
             </div>
           )
         }
