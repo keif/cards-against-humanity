@@ -14,52 +14,46 @@ import "./StartGameScreen.css";
 import {getLobbyState, joinParty, newLobbyState} from "../../api";
 import {useParams} from 'react-router-dom';
 
-const StartGameScreen = (props) => {
-    console.group("StartGameScreen: constructor()");
-    console.groupEnd();
+const StartGameScreen = () => {
     const params = useParams();
     const [state, setState] = useState({
         players: [],
         joined: false,
         currentPlayerName: "",
     });
-    console.log(`params:`, params);
 
     useEffect(() => {
         let partyCode = params.partyCode;
         getLobbyState(partyCode, (response) => {
-            console.log(`getLobbyState ${JSON.stringify(response)}`);
             setState({
                 ...state,
-                joined: response.currentPlayer ? true : false,
-                players: response.players
+                currentPlayerName: response?.currentPlayer?.name,
+                joined: !!response?.currentPlayer,
+                players: response?.players
             });
         });
         newLobbyState(partyCode);
     }, []);
 
     const handleOnClick = () => {
-        console.log('joinParty');
         if (!state.joined) {
             let name = state.currentPlayerName;
             let partyCode = params.partyCode;
-            console.log(`requesting to join party:${partyCode}`);
             joinParty({name, partyCode});
         }
     };
 
     // TODO: REFACTOR: need to pass this to the PlayerList Component
     // to retrieve the user input (nested)
-    const updatePlayerName = (e) => {
-        console.log('updatePlayerName');
+    const updatePlayerName = (playerName) => {
         setState({
             ...state,
-            currentPlayerName: e.target.value
+            currentPlayerName: playerName
         });
     };
 
     const btnText = (!state.joined) ? "Join Party" : "Start Game";
-    const btnDisabled = (!state.joined) ? (state.currentPlayerName.length === 0) : (state.players.length < 3);
+    const btnDisabled = (!state.joined) ? (state.currentPlayerName?.length === 0) : (state.players?.length < 3);
     const btnOnClick = (!state.joined) ? () => handleOnClick() : null;
     const btnLink = (!state.joined) ? null : `/${params.partyCode}`;
     return (
@@ -74,7 +68,7 @@ const StartGameScreen = (props) => {
                 <PlayerList players={state.players} joined={state.joined} className="center"
                             onChange={updatePlayerName}/>
                 <Button text={btnText} className="center" disabled={btnDisabled}
-                    onClick={() => btnOnClick()} link={btnLink}/>
+                        onClick={btnOnClick} link={btnLink}/>
                 <Footer>
                     {state.players.length < 3 ? "Need at least 3 players to start game" : "Ready to start Game!"}
                 </Footer>

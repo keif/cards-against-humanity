@@ -1,4 +1,6 @@
-const cards = [
+import {Card} from "@/data/types";
+
+const cards: Card[] = [
     {
         "id": 1,
         "cardType": "A",
@@ -9255,4 +9257,4 @@ const cards = [
     }
 ]
 
-module.exports = cards;
+export default cards;

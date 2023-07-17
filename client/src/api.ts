@@ -4,7 +4,7 @@ const socket = openSocket();
 
 // StartGameScreen
 
-export function joinParty({partyCode, name}, cb) {
+export function joinParty({partyCode, name}) {
     socket.emit('joinParty', {partyCode, name});
 }
 
@@ -14,6 +14,7 @@ export function getLobbyState(partyCode, cb) {
 }
 
 export function newLobbyState(partyCode) {
+    console.log('newLobbyState', partyCode);
     socket.on('newLobbyState', () => {
         socket.emit('getLobbyState', partyCode);
     });
@@ -22,6 +23,10 @@ export function newLobbyState(partyCode) {
 // PlayerSelectionScreen
 
 export function getPlayerRoundState(partyCode, cb) {
+    console.group('getPlayerRoundState');
+    console.log('partyCode:', partyCode);
+    console.log('cb:', cb);
+    console.groupEnd();
     socket.emit('getPlayerRoundState', partyCode);
     socket.on('getPlayerRoundState', (roundState) => cb(roundState));
 }
