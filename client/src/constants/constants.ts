@@ -1,3 +1,6 @@
+// SITE
+export const SITE_NAME = 'Cardi Party';
+
 // ROLES
 export const JUDGE = 'judge';
 export const PLAYER = 'player';

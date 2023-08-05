@@ -1,26 +1,33 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import "./PlayerList.css";
 
-const PlayerList = (props) => {
-    const {className, joined, onChange, players} = props;
-    const [playerName, setPlayerName] = useState("");
+interface PlayerListProps {
+	className: string;
+	joined: boolean;
+	onChange: (playerName: string) => void;
+	onEnter?: () => void;
+	players: string[];
+}
 
-    const handleOnChange = (event) => {
-        const userInput = event.target.value;
-        setPlayerName(userInput);
-        onChange(userInput);
-    };
+const PlayerList = ({className, joined, onChange, onEnter, players}: PlayerListProps) => {
+	const [playerName, setPlayerName] = useState("");
 
-    return (
-        <div className={`${className}`}>
-            <ol>
-                {players.map(((player, index) => <li key={index}>{player}</li>))}
-                {!joined &&
+	const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+		const userInput = event.target.value;
+		setPlayerName(userInput);
+		onChange(userInput);
+	};
+
+	return (
+		<div className={`player-list ${className}`}>
+			<ol>
+				{players.map(((player, index) => <li key={index}>{player}</li>))}
+				{!joined &&
                     <li><input type="text" className="enterName" placeholder="Enter Name Here" id="playerName"
                                onChange={handleOnChange} value={playerName}/></li>}
-            </ol>
-        </div>
-    );
+			</ol>
+		</div>
+	);
 };
 
 export default PlayerList;

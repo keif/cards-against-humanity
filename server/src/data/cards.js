@@ -1,6 +1,6 @@
-import {Card} from "./types";
-
-const cards: Card[] = [
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var cards = [
     {
         "id": 1,
         "cardType": "A",
@@ -9255,6 +9255,5 @@ const cards: Card[] = [
         "numAnswers": 1,
         "expansion": "Image1"
     }
-]
-
-export default cards;
+];
+exports.default = cards;

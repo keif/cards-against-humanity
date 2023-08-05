@@ -1,29 +1,31 @@
 import React, { useEffect, useState } from 'react';
-import "./PlayerSelectionScreen.css";
+import './PlayerSelectionScreen.css';
 
 // Import SharedComponents
-import Screen from "@/components/Screen/Screen";
-import Top from "@/components/Top/Top";
-import HeaderMenu from "@/components/HeaderMenu/HeaderMenu";
-import DropCardSpace from "@/components/DropCardSpace/DropCardSpace";
-import Bottom from "@/components/Bottom/Bottom";
-import CardCarousel from "@/components/CardCarousel/CardCarousel";
-import Footer from "@/components/Footer/Footer";
-import Status from "@/components/Status/Status";
+import Screen from '@/components/Screen/Screen';
+import Top from '@/components/Top/Top';
+import HeaderMenu from '@/components/HeaderMenu/HeaderMenu';
+import DropCardSpace from '@/components/DropCardSpace/DropCardSpace';
+import Bottom from '@/components/Bottom/Bottom';
+import CardCarousel from '@/components/CardCarousel/CardCarousel';
+import Footer from '@/components/Footer/Footer';
+import Status from '@/components/Status/Status';
 
 // Import Helper Libraries
-import { OnDragEndResponder } from "react-beautiful-dnd";
-import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from "@/api";
+import { OnDragEndResponder } from 'react-beautiful-dnd';
+import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
 import { useNavigate, useParams } from 'react-router-dom';
-import { JUDGE_SELECTING, VIEWING_WINNER } from '@/constants/constants';
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { CardProps } from "@/components/Card/Card";
+import { JUDGE_SELECTING, JUDGE_WAITING, VIEWING_WINNER } from '@/constants/constants';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { CardProps } from '@/components/Card/Card';
+import { ROUTE_PARAM } from '@/App';
+import { TouchBackend } from 'react-dnd-touch-backend';
 
 type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner';
 type RoleTypes = 'player' | 'judge';
 
-interface RoundInterface {
+export interface RoundInterface {
 	cards: CardProps[];
 	directions: string;
 	headerText: string;
@@ -32,7 +34,14 @@ interface RoundInterface {
 	QCard: CardProps;
 	roundState: RoundTypes;
 	roundRole: RoleTypes;
-	roundJudge: string;
+	roundJudge: {
+		cards: CardProps[];
+		name: string;
+		pID: number;
+		roundState: string;
+		roundsWon: [];
+		type: string;
+	};
 	roundNum: number;
 	ticker?: number;
 	timeLeft?: number;
@@ -40,14 +49,20 @@ interface RoundInterface {
 	winningCard: CardProps | null,
 }
 
+interface ParamTypes {
+	partyCode: string;
+}
+
 const PlayerSelectionScreen = () => {
-	const params = useParams();
+	const {partyCode} = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
-	console.group("PlayerSelectionScreen");
-	console.log('params:', params);
 	console.log('timeLeft:', timeLeft);
 	console.groupEnd();
+
+	if (!partyCode) {
+		navigate(`/join`);
+	}
 
 	// roundRole: player
 	// roundState:
@@ -59,30 +74,37 @@ const PlayerSelectionScreen = () => {
 
 	const [state, setState] = useState<RoundInterface>({
 		// get these on getRoundState
-		roundState: "viewing-winner",  // player-selecting | player-waiting | judge-selecting | viewing-winner
-		roundRole: "judge", // player | judge
-		roundJudge: "Keith",
+		roundState: 'viewing-winner',  // player-selecting | player-waiting | judge-selecting | viewing-winner
+		roundRole: 'judge', // player | judge
+		roundJudge: {
+			cards: [],
+			name: 'Keith',
+			pID: 0,
+			roundState: '',
+			roundsWon: [],
+			type: '',
+		},
 		roundNum: 0,
 		QCard: {
-			cardType: "Q",
-			text: `Join the game with party code ${params.partyCode} before playing`,
+			cardType: 'Q',
+			text: `Join the game with party code ${partyCode} before playing`,
 			id: 69
 		},
 		cards: [
 			{
-				cardType: "A",
+				cardType: 'A',
 				id: 0,
-				text: "Hey dummy!",
+				text: 'Hey dummy!',
 			},
 			{
-				cardType: "A",
+				cardType: 'A',
 				id: 1,
-				text: "Join the game from the home screen before starting!",
+				text: 'Join the game from the home screen before starting!',
 			}
 		],
 		// these should be set implicitly based on above state
-		directions: "Waiting for other Players",
-		headerText: "Join game before playing",
+		directions: 'Waiting for other Players',
+		headerText: 'Join game before playing',
 
 		// this is set when user selects a card
 		playerChoice: null,
@@ -90,20 +112,20 @@ const PlayerSelectionScreen = () => {
 		// these are set for everyone as everyone is selecting their own cards
 		otherPlayerCards: [
 			{
-				cardType: "A",
-				text: "(Salman's Card)",
+				cardType: 'A',
+				text: '(Salman\'s Card)',
 				id: 10,
 				owner: {
-					name: "Salman",
+					name: 'Salman',
 					pID: 2
 				}
 			},
 			{
-				cardType: "A",
-				text: "(Reza's Card)",
+				cardType: 'A',
+				text: '(Reza\'s Card)',
 				id: 11,
 				owner: {
-					name: "Reza",
+					name: 'Reza',
 					pID: 1
 				}
 			}
@@ -111,18 +133,14 @@ const PlayerSelectionScreen = () => {
 		winner: '',
 		// this is set when judge selects a card
 		winningCard: { // type=Card || null
-			cardType: "A",
+			cardType: 'A',
 			id: 42,
-			text: `Go to localhost:3000/game/${params.partyCode}`,
+			text: `Go to localhost:3000/game/${partyCode}`,
 		},
 	});
 
 	useEffect(() => {
-		console.log("PlayerSelectionScreen: useEffect()");
-		let partyCode = params.partyCode;
 		const newState = (roundState: RoundInterface | null) => {
-			console.group("PlayerSelectionScreen: newState()");
-			console.log("roundState:", roundState);
 			console.groupEnd();
 			if (roundState == null) {
 				// redirect them to join
@@ -135,7 +153,7 @@ const PlayerSelectionScreen = () => {
 			}
 			console.log(`${new Date().getMinutes()}:${new Date().getSeconds()}`);
 			console.log('RoundState:', roundState);
-			let headerText = '';
+			let headerText;
 			let directions = '';
 			if (roundState.roundState === VIEWING_WINNER) {
 				headerText = `${roundState.winner} Won!`;
@@ -145,10 +163,14 @@ const PlayerSelectionScreen = () => {
 				if (roundState.roundState === 'judge-waiting') directions = 'Waiting for players to choose Cards';
 				else if (roundState.roundState === JUDGE_SELECTING) directions = 'Choose your favorite card';
 			} else {
-				headerText = `${roundState.roundJudge} is the Judge`;
-				if (roundState.roundState === 'player-selecting') directions = 'Choose one Card';
-				else if (roundState.roundState === 'player-waiting') directions = 'Waiting for other players';
-				else if (roundState.roundState === JUDGE_SELECTING) directions = `${roundState.roundJudge} is choosing their favorite`;
+				headerText = `${roundState.roundJudge.name} is the Judge`;
+				if (roundState.roundState === 'player-selecting') {
+					directions = 'Choose one Card';
+				} else if (roundState.roundState === 'player-waiting') {
+					directions = 'Waiting for other players';
+				} else if (roundState.roundState === JUDGE_SELECTING) {
+					directions = `${roundState.roundJudge.name} is choosing their favorite`;
+				}
 			}
 
 			setState({
@@ -192,79 +214,83 @@ const PlayerSelectionScreen = () => {
 			}, 1000);
 		};
 
-		// ask server to send current gameStateEvents
-		getPlayerRoundState(partyCode, newState);
-		// subscribe to newGameState events
-		newGameState(partyCode);
+		if (partyCode) {
+			// ask server to send current gameStateEvents
+			getPlayerRoundState(partyCode, newState);
+			// subscribe to newGameState events
+			newGameState(partyCode);
+		}
 		return () => {
-			console.log("PlayerSelectionScreen: componentWillUnmount()");
+			console.log('PlayerSelectionScreen: componentWillUnmount()');
 			clearInterval(state.ticker);
 		};
 	}, []);
 
 	// called after viewing-winner, resets state and gets new state from server. Begins new round
 	const restoreScreen = () => {
-		let partyCode = params.partyCode;
-		endRound(partyCode);
-		console.log("restoring screen");
+		if (partyCode) {
+			endRound(partyCode);
+		}
 	};
 
 	// choosing card logic (drag-and-drop)
 	const chooseCardHandler = (result: OnDragEndResponder) => {
+		// @ts-ignore
 		const {destination, source} = result;
 		console.log(result);
 
-		if (!destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+		if (!partyCode || !destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
 			return;
 		}
 
 		if (source.droppableId === destination.droppableId) {
 			// shift/move cards in correct order @ CardCarousel
-			console.log("swapping!");
-			let partyCode = params.partyCode;
 			shuffleCards(partyCode, source.index, destination.index);
-		} else if (source.droppableId === "bottom" && destination.droppableId === "top" && state.playerChoice == null) {
+		} else if (source.droppableId === 'bottom' && destination.droppableId === 'top' && state.playerChoice == null) {
 			if (state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') {
 				// judge-selecting card
 				console.log(`winner card chosen: ${JSON.stringify(state.otherPlayerCards[source.index])}`);
-				let partyCode = params.partyCode;
-				judgeSelectCard(partyCode, state.otherPlayerCards[source.index].id);
+				const cardID = state.otherPlayerCards[source.index].id;
+				if (cardID) {
+					judgeSelectCard(partyCode, cardID);
+				}
 			} else {
 				// player-selecting card
-				console.log("player chose a card!");
-				let partyCode = params.partyCode;
-				playCard(partyCode, state.cards[source.index].id);
+				const cardID = state.cards[source.index].id
+				if (cardID) {
+					playCard(partyCode, cardID);
+				}
 			}
 		}
 	};
 
-	// vibrate when dragging card
-	const onDragStart = () => {
-		if (window.navigator.vibrate) {
-			window.navigator.vibrate(100);
-		}
+	const isTouchDevice = () => !!("ontouchstart" in window);
+	// Assigning backend based on touch support on the device
+	const backendForDND = isTouchDevice() ? TouchBackend : HTML5Backend;
 
-	};
 
 	return (
 		<Screen>
-			{/*<DragDropContext onDragEnd={chooseCardHandler} onDragStart={onDragStart}>*/}
-			<DndProvider backend={HTML5Backend}>
+			<DndProvider backend={backendForDND}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
 					<HeaderMenu
 						text={state.headerText}
 						timeLeft={timeLeft}
 					/>
 					<DropCardSpace
-						QCard={state.QCard}
-						playerChoice={state.roundState === VIEWING_WINNER ? state.winningCard : state.playerChoice}
 						cardsIn={state.otherPlayerCards.length}
-						roundState={state.roundState}
+						dropHandler={chooseCardHandler}
+						playerChoice={state.roundState === VIEWING_WINNER ? state.winningCard : state.playerChoice}
+						QCard={state.QCard}
 						roundRole={state.roundRole}
+						roundState={state.roundState}
 					/>
-					<div className={state.roundState === VIEWING_WINNER ? 'continueMsg' : ''} id="continueMsg"
-					     onClick={restoreScreen}>
-						{state.roundState === VIEWING_WINNER ? "Tap anywhere to Continue" : ""}
+					<div
+						className={state.roundState === VIEWING_WINNER ? 'continueMsg' : ''}
+						id="continueMsg"
+						onClick={restoreScreen}
+					>
+						{state.roundState === VIEWING_WINNER ? 'Tap anywhere to Continue' : ''}
 					</div>
 				</Top>
 				<Bottom>
@@ -272,14 +298,15 @@ const PlayerSelectionScreen = () => {
 					<CardCarousel
 						cards={
 							state.roundState === JUDGE_SELECTING ? state.otherPlayerCards :
-								state.roundState === 'judge-waiting' ? [] : state.cards
-						}/>
+								state.roundState === JUDGE_WAITING ? [] : state.cards
+						}
+						dropHandler={chooseCardHandler}
+					/>
 					<Footer>
-						Share Link or Party Code: {params.partyCode}
+						Share Link or Party Code: {partyCode}
 					</Footer>
 				</Bottom>
 			</DndProvider>
-			{/*</DragDropContext>*/}
 		</Screen>
 	);
 };

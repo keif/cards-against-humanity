@@ -19,7 +19,7 @@ function CreateGame() {
 }
 
 const HomeScreen = () => {
-    console.group('HomeScreen: constructor()');
+    console.group('HomeScreen');
     console.groupEnd();
     return (
         <Screen>
@@ -28,11 +28,21 @@ const HomeScreen = () => {
             </Top>
             <Bottom>
                 <Title text="A party game for horrible people"/>
-                <Button text="Create Party" className="center" link={`/join/${CreateGame()}`}/>
+                <Button
+                    asLink
+                    className="center"
+                    link={`/join/${CreateGame()}`}
+                    text="Create Party"
+                />
                 <div className="orDiv">
                   <span className="orText">or</span>
                 </div>
-                <Button text="Join Party" className="center" link="/join"/>
+                <Button
+                    asLink
+                    className="center"
+                    link="/join"
+                    text="Join Party"
+                />
                 <Footer>
                     Like us on <a href="https://www.instagram.com/cardipartygame/"> Instagram!</a>
                 </Footer>

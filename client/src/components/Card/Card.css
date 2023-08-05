@@ -15,21 +15,22 @@
     /* prevent text highlighting in cards */
     -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
-     -khtml-user-select: none; /* Konqueror HTML */
-       -moz-user-select: none; /* Firefox */
-        -ms-user-select: none; /* Internet Explorer/Edge */
-            user-select: none; /* Non-prefixed version, currently
-                                  supported by Chrome and Opera */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none;
+    /* Non-prefixed version, currently supported by Chrome and Opera */
 }
 
 /* iPhone 6 and iPhone X screens */
 /* Samsung s8 screen */
 @media (max-width: 380px) {
     .card {
-      width: 112px;
-      height: 154px;
-      font-size: 17px;
+        width: 112px;
+        height: 154px;
+        font-size: 17px;
     }
+
     .status {
         width: 112px;
         font-size: 15px;
@@ -40,12 +41,14 @@
 
 /* Placeholder cards */
 .placeholder {
+    align-items: center;
     background-color: transparent;
     border: 3px dashed #6F6F6F;
     color: #6F6F6F;
-    text-align: center;
+    display: flex;
+    line-height: 1;
     position: relative;
-    line-height: 220px;
+    text-align: center;
 }
 
 /* Black Title Cards */
@@ -57,11 +60,11 @@
     width: 240px;
     height: 330px;
     background-color: black;
-    color:  #F7F7F7; 
+    color: #F7F7F7;
     line-height: .2;
     margin-top: 20px;
     font-size: 26px;
-    box-shadow: -20px 8px 2px 0px rgba(0,0,0,.5);
+    box-shadow: -20px 8px 2px 0px rgba(0, 0, 0, .5);
     border: 0px;
     opacity: 50%;
     padding-left: 25px;
@@ -81,7 +84,7 @@
 /* Question (Black) Cards */
 .Q {
     background-color: black;
-    color:  #F7F7F7;
+    color: #F7F7F7;
 }
 
 /* Answer (White) Cards) */
@@ -91,6 +94,7 @@
 }
 
 .link {
+    line-height: 1;
     margin-top: 40%;
 }
 

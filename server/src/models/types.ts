@@ -1,4 +1,4 @@
-import {Card} from "@/data/types";
+import {Card} from "../data/types";
 
 export type CallbackType = (success: boolean, message: string) => void;
 
@@ -10,7 +10,7 @@ export interface GameInterface {
     gameStartDate: Date;
     getLatestRound: () => RoundInterface | null;
     getPlayer: (sessionID: string) => PlayerInterface | null;
-    getPlayerRoundState: (sessionID: string) => void;
+    getPlayerRoundState: (sessionID: string) => RoundInterface | null;
     judgeSelectCard: (sessionID: string, cardID: number, cb: CallbackType) => void;
     partyCode: string;
     playCard: (cardID: number, sessionID: string, cb: CallbackType) => void;
@@ -20,8 +20,39 @@ export interface GameInterface {
     roundFinishedNotifier: CallbackType;
     rounds: RoundInterface[];
     roundsIdle: number; // if at least |this.players.length.length| roundsIdle, then game state is inactive
-    roundTimer: number;
+    roundTimer: null | ReturnType<typeof setTimeout>;
     shuffleCard: (sessionID: string, sourceIdx: number, destIdx: number, cb: CallbackType) => void;
+}
+
+export interface LobbyInterface {
+    players: PlayerInterface[];
+    currentPlayer: PlayerInterface | null;
+}
+
+export interface RoundInterface {
+    active?: boolean;
+    cards?: Card[];
+    gameStartDate?: Date;
+    otherPlayerCards: Card[] | undefined;
+    partyCode?: string;
+    playerChoice?: Card | null;
+    players?: { [key: string]: PlayerInterface };
+    QCard?: Card;
+    QCardDeck?: Card[];
+    roundEndTime?: Date;
+    roundFinishedNotifier?: () => void;
+    roundJudge: PlayerInterface | null | undefined;
+    roundLength?: number;
+    roundNum?: number;
+    roundRole?: string;
+    rounds?: RoundInterface[];
+    roundsIdle?: number;
+    roundStartTime?: Date;
+    roundState?: string;
+    roundTimer?: number;
+    timeLeft?: number;
+    winner?: string;
+    winningCard?: Card | null;
 }
 
 export interface PlayerInterface {
@@ -31,26 +62,4 @@ export interface PlayerInterface {
     roundState: string;
     roundsWon: [];
     type: string;
-}
-
-export interface RoundInterface {
-    active: boolean;
-    gameStartDate?: Date;
-    otherPlayerCards: Card[];
-    partyCode?: string;
-    players?: { [key: string]: PlayerInterface };
-    QCard?: Card;
-    QCardDeck?: Card[];
-    roundEndTime?: Date;
-    roundFinishedNotifier?: () => void;
-    roundJudge: PlayerInterface;
-    roundLength?: number;
-    roundNum?: number;
-    rounds?: RoundInterface[];
-    roundsIdle?: number;
-    roundStartTime?: Date;
-    roundState?: string;
-    roundTimer?: number;
-    winner?: string;
-    winningCard?: Card | null;
 }

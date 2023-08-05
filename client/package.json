@@ -4,14 +4,11 @@
   "description": "CAH Frontend",
   "private": true,
   "scripts": {
-    "build": "react-scripts build",
-    "dev": "react-scripts start",
-    "eject": "react-scripts eject",
-    "start": "react-scripts start",
-    "test": "react-scripts test"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "build": "vite build",
+    "dev": "vite",
+    "serve": "vite preview",
+    "start": "vite",
+    "test": "jest test"
   },
   "browserslist": [
     ">0.2%",
@@ -23,6 +20,7 @@
   "author": "Keith Baker",
   "license": "MIT",
   "dependencies": {
+    "core-js": "^3.31.1",
     "lodash": "^4.17.21",
     "path-to-regexp": "^6.2.1",
     "prop-types": "^15.8.1",
@@ -30,10 +28,11 @@
     "react-beautiful-dnd": "^13.1.1",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-js-banner": "^0.6.0-beta3",
-    "react-router-dom": "^6.14.1",
-    "react-scripts": "^5.0.1",
+    "react-router-dom": "^6.14.2",
+    "regenerator-runtime": "^0.13.11",
     "socket.io-client": "^4.7.1"
   },
   "devDependencies": {
@@ -42,9 +41,13 @@
     "@types/react": "^18.2.14",
     "@types/react-beautiful-dnd": "^13.1.4",
     "@types/react-dom": "^18.2.6",
-    "@typescript-eslint/eslint-plugin": "^5.60.1",
-    "@typescript-eslint/parser": "^5.60.1",
+    "@typescript-eslint/eslint-plugin": "^6.1.0",
+    "@typescript-eslint/parser": "^6.1.0",
+    "@vitejs/plugin-react": "^4.0.3",
     "eslint": "^8.44.0",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "vite": "^4.4.4",
+    "vite-plugin-svgr": "^3.2.0",
+    "vite-tsconfig-paths": "^4.2.0"
   }
 }

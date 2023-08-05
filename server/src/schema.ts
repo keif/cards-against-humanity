@@ -1,5 +1,5 @@
 import Game from './models/Game';
-import {CallbackType, GameInterface} from "@/models/types";
+import { CallbackType, GameInterface, LobbyInterface, RoundInterface } from "./models/types";
 
 let games: { [index: string]: any } = {};
 
@@ -37,7 +37,7 @@ export const joinGame = (partyCode: string, sessionID: string, name: string): vo
 };
 
 // returns the players in the game []
-export const getLobbyState = (partyCode: string, sessionID: string, cb: CallbackType) => {
+export const getLobbyState = (partyCode: string, sessionID: string, cb: CallbackType): LobbyInterface => {
     console.log("getLobbyState", partyCode, sessionID, cb);
     const game = getOrCreateGame(partyCode, cb);
     const currentPlayer = game.getPlayer(sessionID);
@@ -52,7 +52,7 @@ export const getLobbyState = (partyCode: string, sessionID: string, cb: Callback
     };
 };
 
-export const getPlayerRoundState = (partyCode: string, sessionID: string, cb: CallbackType) => {
+export const getPlayerRoundState = (partyCode: string, sessionID: string): RoundInterface | null => {
     let game = getOrCreateGame(partyCode);
     return game.getPlayerRoundState(sessionID);
 };

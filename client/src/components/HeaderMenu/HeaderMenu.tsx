@@ -1,15 +1,20 @@
 import React from 'react';
 import "./HeaderMenu.css";
 
-const HeaderMenu = ({text, timeLeft}) => (
-    <div className="headerMenu">
-        <div className="innerHeaderMenu">
-            {/* <HamburgerMenu/> temporarily removing this since the side menu is not implemented yet*/}
-            <p></p>
-            <p>{text}</p>
-            <p>{timeLeft}</p>
-        </div>
-    </div>
+interface HeaderMenuProps {
+	text: string;
+	timeLeft: number;
+}
+
+const HeaderMenu = ({text, timeLeft}: HeaderMenuProps) => (
+	<div className="headerMenu">
+		<div className="innerHeaderMenu">
+			{/* <HamburgerMenu/> temporarily removing this since the side menu is not implemented yet*/}
+			<p></p>
+			<p>{text}</p>
+			<p>{timeLeft}</p>
+		</div>
+	</div>
 );
 
 // function HamburgerMenu() {

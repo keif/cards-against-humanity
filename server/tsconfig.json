@@ -3,6 +3,9 @@
     "@typescript-eslint",
     "react-hooks"
   ],
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
     "baseUrl": ".",
@@ -11,37 +14,33 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "lib": [
-      "dom",
-      "dom.iterable",
+      "es5",
+      "es6",
+      "es7",
       "esnext"
     ],
-    "module": "esnext",
-    "moduleResolution": "NodeNext",
-    "noEmit": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
     "outDir": "./dist",
-    "paths": {
-      "@/*": [
-        "./src/*"
-      ]
-    },
     "plugins": [
       {
         "name": "typescript-tslint-plugin"
       }
     ],
     "resolveJsonModule": true,
+    "rootDir": "./src",
     "skipLibCheck": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "esnext",
+    "target": "es2017",
     "typeRoots": [
       "./node_modules/@types",
       "./types"
     ],
   },
   "include": [
-    ".",
     "src",
+    "./src/**/*",
     "**/*.ts",
     "**/*.tsx",
   ],
