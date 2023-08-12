@@ -4,7 +4,6 @@ import "./Card.css";
 import { SITE_NAME } from "@/constants/constants";
 import { ItemTypes } from "@/types";
 import { useDrag } from "react-dnd";
-import { useLocation } from "react-router-dom";
 
 
 export type CardType = "Q" | "A" | "Title" | "placeholder" | "Link";
@@ -26,7 +25,6 @@ export interface CardProps {
 }
 
 const Card = ({ cardType, className, id, index, link, status, text }: CardProps) => {
-	const location = useLocation();
 	if (cardType === "Q" && text) {
 		return (
 			<div>
