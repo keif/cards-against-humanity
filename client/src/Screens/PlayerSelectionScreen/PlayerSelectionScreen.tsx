@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import './PlayerSelectionScreen.css';
 
 // Import SharedComponents
-import Screen from '@/components/Screen/Screen';
-import Top from '@/components/Top/Top';
-import HeaderMenu from '@/components/HeaderMenu/HeaderMenu';
-import DropCardSpace from '@/components/DropCardSpace/DropCardSpace';
 import Bottom from '@/components/Bottom/Bottom';
 import CardCarousel from '@/components/CardCarousel/CardCarousel';
+import DropCardSpace from '@/components/DropCardSpace/DropCardSpace';
 import Footer from '@/components/Footer/Footer';
+import HeaderMenu from '@/components/HeaderMenu/HeaderMenu';
+import Screen from '@/components/Screen/Screen';
 import Status from '@/components/Status/Status';
+import Top from '@/components/Top/Top';
 
 // Import Helper Libraries
-import { OnDragEndResponder } from 'react-beautiful-dnd';
+import { ROUTE_PARAM } from '@/App';
 import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
-import { useNavigate, useParams } from 'react-router-dom';
+import { CardProps } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, VIEWING_WINNER } from '@/constants/constants';
+import { OnDragEndResponder } from 'react-beautiful-dnd';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { CardProps } from '@/components/Card/Card';
-import { ROUTE_PARAM } from '@/App';
 import { TouchBackend } from 'react-dnd-touch-backend';
+import { useNavigate, useParams } from 'react-router-dom';
 
 type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner';
 type RoleTypes = 'player' | 'judge';
@@ -54,7 +54,7 @@ interface ParamTypes {
 }
 
 const PlayerSelectionScreen = () => {
-	const {partyCode} = useParams<ROUTE_PARAM>();
+	const { partyCode } = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
 	console.log('timeLeft:', timeLeft);
@@ -236,8 +236,7 @@ const PlayerSelectionScreen = () => {
 	// choosing card logic (drag-and-drop)
 	const chooseCardHandler = (result: OnDragEndResponder) => {
 		// @ts-ignore
-		const {destination, source} = result;
-		console.log(result);
+		const { destination, source } = result;
 
 		if (!partyCode || !destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
 			return;
@@ -294,7 +293,7 @@ const PlayerSelectionScreen = () => {
 					</div>
 				</Top>
 				<Bottom>
-					<Status message={state.directions}/>
+					<Status message={state.directions} />
 					<CardCarousel
 						cards={
 							state.roundState === JUDGE_SELECTING ? state.otherPlayerCards :

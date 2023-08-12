@@ -1,9 +1,9 @@
-import { getShuffledACard, getShuffledQCard } from './Card';
-import shuffle from 'lodash/shuffle';
 import find from 'lodash/find';
 import remove from 'lodash/remove';
+import shuffle from 'lodash/shuffle';
 import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '../constants';
 import { Card } from '../data/types';
+import { getShuffledACard, getShuffledQCard } from './Card';
 import { CallbackType, GameInterface, PlayerInterface, RoundInterface } from './types';
 
 class Game implements GameInterface {
@@ -162,7 +162,7 @@ class Game implements GameInterface {
 		console.log(`cards: ${cards.length}`);
 		console.log(`QCard: ${QCard?.text}`);
 		console.log(`roundNum: ${roundNum}`);
-		console.log(`roundJudge: ${roundJudge}`);
+		console.log(`roundJudge: `, roundJudge);
 		console.log(`winningCard: ${winningCard ? winningCard.text : null}`);
 		console.log(`winner: ${winner ? winner : null}`);
 		console.log(`timeLeft: ${timeLeft}`);
@@ -218,7 +218,7 @@ class Game implements GameInterface {
 		if (card) {
 			const playerSize = Object.keys(this.players).length;
 			remove(player.cards, c => c.id === cardID);
-			latestRound?.otherPlayerCards?.push({...card, owner: {'name': player.name, 'pID': player.pID}});
+			latestRound?.otherPlayerCards?.push({ ...card, owner: { 'name': player.name, 'pID': player.pID } });
 			player.cards = player.cards.concat(this.ACardDeck.splice(0, 1));
 			if (latestRound?.otherPlayerCards?.length === (playerSize - 1)) {
 				latestRound.roundState = JUDGE_SELECTING;
@@ -262,7 +262,7 @@ class Game implements GameInterface {
 			clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
 			latestRound.active = false;
 			let cardsPlayed: Card[] = [];
-			latestRound?.otherPlayerCards?.forEach((card) => cardsPlayed.push({...card}));
+			latestRound?.otherPlayerCards?.forEach((card) => cardsPlayed.push({ ...card }));
 			cardsPlayed.map(card => delete card.owner);
 			this.ACardDeck = this.ACardDeck.concat(cardsPlayed);
 			this.QCardDeck = (latestRound.QCard) ? this.QCardDeck.concat(latestRound.QCard) : this.QCardDeck;

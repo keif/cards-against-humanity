@@ -1,29 +1,39 @@
-import React from 'react'
-import "./CardCarousel.css"
-import Card, { CardProps } from "../Card/Card"
-import { useDrop } from "react-dnd";
 import { ItemTypes } from "@/types";
+import { useDrop } from "react-dnd";
+import Card, { CardProps } from "../Card/Card";
+import "./CardCarousel.css";
 
 interface CardCarouselProps {
-	cards: CardProps[]
+	cards: CardProps[];
+	dropHandler: (card: any) => void; // TODO: fix any types
 }
 
-const CardCarousel = ({cards}: CardCarouselProps) => {
-	const [{isOver, canDrop}, drop] = useDrop(
+const CardCarousel = ({ cards, dropHandler }: CardCarouselProps) => {
+	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
-			canDrop: () => {
-				console.log('can drop')
-				return true;
-			},
-			drop: () => {
-				console.log('moving card')
-				return true;
-			},
 			collect: (monitor) => ({
 				isOver: !!monitor.isOver(),
 				canDrop: !!monitor.canDrop(),
-			})
+			}),
+			drop: (item, monitor) => {
+				return true;
+			},
+			hover(item, monitor) {
+				// maybe replace with dropHandler???
+				// vibrate when dragging card
+				if (window.navigator.vibrate) {
+					window.navigator.vibrate(100);
+				};
+				const dragIndex = item.id;
+				dropHandler(item);
+				// current element where the dragged element is hovered on
+				// const hoverIndex = index;
+				// If the dragged element is hovered in the same place, then do nothing
+				// if (dragIndex === hoverIndex) {
+				// 	return;
+				// }
+			}
 		}),
 		[]);
 
@@ -32,7 +42,7 @@ const CardCarousel = ({cards}: CardCarouselProps) => {
 			className="scrolling-wrapper"
 			ref={drop}
 		>
-			{cards.map((card, index) => <Card {...card} key={card.id} index={index}/>)}
+			{cards.map((card, index) => <Card {...card} index={index} key={card.id} />)}
 		</div>
 		// <Droppable droppableId={'bottom'} direction="horizontal">
 		//     {

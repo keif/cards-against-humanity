@@ -17,14 +17,14 @@ import { ItemTypes } from "@/types";
 
 interface DropCardSpaceProps {
 	cardsIn: number;
+	dropHandler: (card: any) => void; // TODO: fix any types
 	roundRole: string;
 	roundState: string;
 	QCard: any; // TODO: fix any types
 	playerChoice: any; // TODO: fix any types
 }
 
-const DropCardSpace = (props) => {
-	const {cardsIn, roundRole, roundState, QCard, playerChoice} = props;
+const DropCardSpace = ({cardsIn, roundRole, roundState, QCard, playerChoice}: DropCardSpaceProps) => {
 	const [{isOver, canDrop}, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,

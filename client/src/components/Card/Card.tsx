@@ -1,11 +1,10 @@
-import React from 'react'
-import "./Card.css"
+import "./Card.css";
 
 // external imports
-import { useLocation } from "react-router-dom";
-import { useDrag } from "react-dnd";
-import { ItemTypes } from "@/types";
 import { SITE_NAME } from "@/constants/constants";
+import { ItemTypes } from "@/types";
+import { useDrag } from "react-dnd";
+import { useLocation } from "react-router-dom";
 
 
 export type CardType = "Q" | "A" | "Title" | "placeholder" | "Link";
@@ -26,7 +25,7 @@ export interface CardProps {
 	text?: string;
 }
 
-const Card = ({cardType, className, id, index, link, status, text}: CardProps) => {
+const Card = ({ cardType, className, id, index, link, status, text }: CardProps) => {
 	const location = useLocation();
 	if (cardType === "Q" && text) {
 		return (
@@ -36,9 +35,9 @@ const Card = ({cardType, className, id, index, link, status, text}: CardProps) =
 				</div>
 				{
 					status &&
-                    <div className={`status ${className}`}>
-                        <span>{status}</span>
-                    </div>
+					<div className={`status ${className}`}>
+						<span>{status}</span>
+					</div>
 				}
 			</div>
 		);
@@ -60,14 +59,14 @@ const Card = ({cardType, className, id, index, link, status, text}: CardProps) =
 				<h3>Invite friends</h3>
 				<h3>with party code:</h3>
 				<h6 className="link" onClick={() => navigator.clipboard.writeText(window.location.href)}>
-					(Click to copy) {link}
+					(Click to copy) {window.location.href}
 				</h6>
 			</div>
 		)
 	} else {
-		const [{isDragging}, drag] = useDrag({
+		const [{ isDragging }, drag] = useDrag({
 			type: ItemTypes.CARD,
-			item: {id: id},
+			item: { id: id },
 			collect: monitor => ({
 				isDragging: !!monitor.isDragging(),
 			}),
