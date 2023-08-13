@@ -1,12 +1,12 @@
 import express, { Express } from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import game from './schema';
-import * as path from 'path';
-import * as os from 'os';
 import session from 'express-session';
 import sharedsession from 'express-socket.io-session';
+import { createServer } from 'http';
+import * as os from 'os';
+import * as path from 'path';
+import { Server } from 'socket.io';
 import { RoundInterface } from './models/types';
+import game from './schema';
 
 const app: Express = express();
 const server = createServer(app);
@@ -17,15 +17,15 @@ const io: Server = new Server(server);
 app.use(express.static(path.join(__dirname, '../../client', 'dist')));
 
 // create a session
-const ioSession = session({
+const sessionMiddleware = session({
 	name: 'cah_cookie_session',
-	resave: true,
-	saveUninitialized: true,
+	resave: false,
+	saveUninitialized: false,
 	secret: 'keyboard cat',
 });
 
-app.use(ioSession);
-io.use(sharedsession(ioSession, {autoSave: true}));
+app.use(sessionMiddleware);
+io.use(sharedsession(sessionMiddleware, { autoSave: true }));
 
 app.get('/session', (req, res) => {
 	console.group('session');
@@ -60,7 +60,7 @@ io.on('connection', (socket) => {
 		socket.emit('getLobbyState', response);
 	});
 
-	socket.on('joinParty', ({partyCode, name}) => {
+	socket.on('joinParty', ({ partyCode, name }) => {
 		// @ts-ignore
 		console.group(`${socket.handshake.sessionID} | joinParty`);
 		console.log(`partyCode: ${partyCode}`);
