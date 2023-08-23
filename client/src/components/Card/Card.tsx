@@ -7,6 +7,11 @@ import { useDrag } from "react-dnd";
 
 
 export type CardType = "Q" | "A" | "Title" | "placeholder" | "Link";
+export const Q = "Q";
+export const A = "A";
+export const TITLE = "Title";
+export const PLACEHOLDER = "placeholder";
+export const LINK = "Link";
 
 export interface CardProps {
 	cardType: CardType;
@@ -39,19 +44,19 @@ const Card = ({ cardType, className, id, index, link, status, text }: CardProps)
 				}
 			</div>
 		);
-	} else if (cardType === "Title") {
+	} else if (cardType === TITLE) {
 		return (
 			<div className={`card Title ${className}`}>
 				<h3>{SITE_NAME}</h3>
 			</div>
 		);
-	} else if (cardType === "placeholder") {
+	} else if (cardType === PLACEHOLDER) {
 		return (
 			<div className={`card placeholder ${className}`}>
 				Drop Card Here
 			</div>
 		);
-	} else if (cardType === "Link" && link) {
+	} else if (cardType === LINK && link) {
 		return (
 			<div className={`card Title Link ${className}`}>
 				<h3>Invite friends</h3>

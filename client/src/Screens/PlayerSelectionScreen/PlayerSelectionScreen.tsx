@@ -14,7 +14,7 @@ import Top from '@/components/Top/Top';
 // Import Helper Libraries
 import { ROUTE_PARAM } from '@/App';
 import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
-import { CardProps } from '@/components/Card/Card';
+import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, VIEWING_WINNER } from '@/constants/constants';
 import { OnDragEndResponder } from 'react-beautiful-dnd';
 import { DndProvider } from 'react-dnd';
@@ -86,18 +86,18 @@ const PlayerSelectionScreen = () => {
 		},
 		roundNum: 0,
 		QCard: {
-			cardType: 'Q',
+			cardType: Q,
 			text: `Join the game with party code ${partyCode} before playing`,
 			id: 69
 		},
 		cards: [
 			{
-				cardType: 'A',
+				cardType: A,
 				id: 0,
 				text: 'Hey dummy!',
 			},
 			{
-				cardType: 'A',
+				cardType: A,
 				id: 1,
 				text: 'Join the game from the home screen before starting!',
 			}
@@ -112,7 +112,7 @@ const PlayerSelectionScreen = () => {
 		// these are set for everyone as everyone is selecting their own cards
 		otherPlayerCards: [
 			{
-				cardType: 'A',
+				cardType: A,
 				text: '(Salman\'s Card)',
 				id: 10,
 				owner: {
@@ -121,7 +121,7 @@ const PlayerSelectionScreen = () => {
 				}
 			},
 			{
-				cardType: 'A',
+				cardType: A,
 				text: '(Reza\'s Card)',
 				id: 11,
 				owner: {
@@ -133,7 +133,7 @@ const PlayerSelectionScreen = () => {
 		winner: '',
 		// this is set when judge selects a card
 		winningCard: { // type=Card || null
-			cardType: 'A',
+			cardType: A,
 			id: 42,
 			text: `Go to localhost:3000/game/${partyCode}`,
 		},

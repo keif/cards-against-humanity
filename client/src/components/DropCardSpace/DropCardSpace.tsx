@@ -1,9 +1,8 @@
-import React from 'react';
-import Card from "../Card/Card";
-import "./DropCardSpace.css";
 import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants/constants';
-import { useDrop } from "react-dnd";
 import { ItemTypes } from "@/types";
+import { useDrop } from "react-dnd";
+import Card, { PLACEHOLDER } from "../Card/Card";
+import "./DropCardSpace.css";
 
 // Draggable player IFF
 // player-selecting & player  (show status)
@@ -24,16 +23,18 @@ interface DropCardSpaceProps {
 	playerChoice: any; // TODO: fix any types
 }
 
-const DropCardSpace = ({cardsIn, roundRole, roundState, QCard, playerChoice}: DropCardSpaceProps) => {
-	const [{isOver, canDrop}, drop] = useDrop(
+const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice }: DropCardSpaceProps) => {
+	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
 			canDrop: () => {
-				console.log('can drop')
+				console.group('DropCardSpace: can drop card');
+				console.groupEnd();
 				return true;
 			},
 			drop: () => {
-				console.log('moving card')
+				console.group('DropCardSpace: moving card');
+				console.groupEnd();
 				return true;
 			},
 			collect: (monitor) => ({
@@ -50,12 +51,12 @@ const DropCardSpace = ({cardsIn, roundRole, roundState, QCard, playerChoice}: Dr
 		(roundState === VIEWING_WINNER)) {
 		return (
 			<div className="drop-space">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status}/>
+				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status} />
 				<div
 					ref={drop}
 				>
-					{(playerChoice && <Card {...playerChoice} index={0}/>) ||
-                        <Card cardType="placeholder"/>}
+					{(playerChoice && <Card {...playerChoice} index={0} />) ||
+						<Card cardType={PLACEHOLDER} />}
 				</div>
 				{/*<Droppable droppableId="top" direction="horizontal">*/}
 				{/*    {*/}
@@ -80,7 +81,7 @@ const DropCardSpace = ({cardsIn, roundRole, roundState, QCard, playerChoice}: Dr
 		(roundRole === JUDGE && roundState === JUDGE_WAITING)) {
 		return (
 			<div className="drop-space">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status}/>
+				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status} />
 			</div>
 		);
 	}

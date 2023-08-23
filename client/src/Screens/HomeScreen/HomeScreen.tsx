@@ -1,12 +1,11 @@
-import React from 'react';
 
-import Button from "../../components/Button/Button";
-import Top from "../../components/Top/Top";
-import Title from "../../components/Title/Title";
-import Card from "../../components/Card/Card";
-import Screen from "../../components/Screen/Screen";
 import Bottom from "../../components/Bottom/Bottom";
+import Button from "../../components/Button/Button";
+import Card, { TITLE } from "../../components/Card/Card";
 import Footer from "../../components/Footer/Footer";
+import Screen from "../../components/Screen/Screen";
+import Title from "../../components/Title/Title";
+import Top from "../../components/Top/Top";
 import "./HomeScreen.css";
 
 function CreateGame() {
@@ -24,10 +23,10 @@ const HomeScreen = () => {
     return (
         <Screen>
             <Top>
-                <Card cardType="Title"/>
+                <Card cardType={TITLE} />
             </Top>
             <Bottom>
-                <Title text="A party game for horrible people"/>
+                <Title text="A party game for horrible people" />
                 <Button
                     asLink
                     className="center"
@@ -35,7 +34,7 @@ const HomeScreen = () => {
                     text="Create Party"
                 />
                 <div className="orDiv">
-                  <span className="orText">or</span>
+                    <span className="orText">or</span>
                 </div>
                 <Button
                     asLink

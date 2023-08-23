@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
-import Screen from '@/components/Screen/Screen';
-import Top from '@/components/Top/Top';
-import Title from '@/components/Title/Title';
 import Bottom from '@/components/Bottom/Bottom';
-import Card from '@/components/Card/Card';
 import Button from '@/components/Button/Button';
+import Card, { LINK } from '@/components/Card/Card';
 import Footer from '@/components/Footer/Footer';
 import PlayerList from '@/components/PlayerList/PlayerList';
+import Screen from '@/components/Screen/Screen';
+import Title from '@/components/Title/Title';
+import Top from '@/components/Top/Top';
 import Banner from 'react-js-banner';
 import './StartGameScreen.css';
 
@@ -23,7 +23,7 @@ interface GameState {
 const StartGameScreen = () => {
 	console.group('StartGameScreen');
 	console.groupEnd();
-	const {partyCode} = useParams();
+	const { partyCode } = useParams();
 	const [state, setState] = useState<GameState>({
 		currentPlayerName: '',
 		joined: false,
@@ -49,7 +49,7 @@ const StartGameScreen = () => {
 		event.preventDefault();
 		if (!state.joined && partyCode) {
 			const name = state.currentPlayerName;
-			joinParty({name, partyCode});
+			joinParty({ name, partyCode });
 		}
 	}
 
@@ -84,14 +84,14 @@ const StartGameScreen = () => {
 		<Screen>
 			<Top>
 				<Banner
-					title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!"/>
-				<Card cardType="Link" link={partyCode}/>
+					title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
+				<Card cardType={LINK} link={partyCode} />
 			</Top>
 			<Bottom>
-				<Title text="Players Joined"/>
+				<Title text="Players Joined" />
 				<form className={'join-form'} onSubmit={handleFormSubmit}>
 					<PlayerList players={state.players} joined={state.joined} className="center"
-					            onChange={updatePlayerName}/>
+						onChange={updatePlayerName} />
 					{state.joined ? renderLink() : renderButton()}
 				</form>
 				<Footer>
