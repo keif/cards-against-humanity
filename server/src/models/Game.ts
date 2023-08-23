@@ -28,6 +28,7 @@ class Game implements GameInterface {
 		console.log('partyCode:', partyCode);
 		console.log('roundLength:', roundLength);
 		console.log('roundFinishedNotifier:', roundFinishedNotifier);
+		console.groupEnd();
 		this.active = true;
 		this.roundsIdle = 0; // if at least |this.players.length.length| roundsIdle, then game state is inactive
 		this.partyCode = partyCode;
@@ -46,17 +47,14 @@ class Game implements GameInterface {
 		this.getPlayer = this.getPlayer.bind(this);
 		this.getPlayerRoundState = this.getPlayerRoundState.bind(this);
 		this.playCard = this.playCard.bind(this);
-		console.groupEnd();
 	}
 
 	addNewPlayer(name: string, sessionID: string): void {
-		console.group('addNewPlayer');
-		console.log('this.players[sessionID]:', this.players[sessionID]);
-		console.log('this.roundFinishedNotifier:', this.roundFinishedNotifier);
+		console.group(`addNewPlayer: name: ${name} | sessionID: ${sessionID}`);
 		if (name == undefined || sessionID == undefined) {
 			console.log(`trying to add ${name} to ${this.partyCode}`);
 		} else if (this.ACardDeck.length < 3) {
-			console.log('Cannot add new player to deck, ACardDeck has ran out of cards!');
+			console.log(`Cannot add new ${name} to deck, ACardDeck has ran out of cards!`);
 		} else {
 			console.log(`adding ${name} to ${this.partyCode}`);
 			this.players[sessionID] = {
@@ -66,13 +64,15 @@ class Game implements GameInterface {
 				cards: this.ACardDeck.splice(0, 10),
 				roundState: 'lobby'
 			};
-			console.log('this.players[sessionID]:', this.players[sessionID]);
 		}
 		console.groupEnd();
 	}
 
 	// return the player in the game, if exists, else return null
 	getPlayer(sessionID: string): PlayerInterface | null {
+		console.group(`getPlayer: sessionID: ${sessionID}`);
+		console.log(this.players[sessionID] ? 'VALID player returned' : 'INVALID player - null return')
+		console.groupEnd();
 		return this.players[sessionID] ? this.players[sessionID] : null;
 	}
 

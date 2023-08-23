@@ -1,6 +1,7 @@
+import cookieParser from 'cookie-parser';
+import cookieSession from 'cookie-session';
 import express, { Express } from 'express';
 import session from 'express-session';
-import sharedsession from 'express-socket.io-session';
 import { createServer } from 'http';
 import * as os from 'os';
 import * as path from 'path';
@@ -8,24 +9,40 @@ import { Server } from 'socket.io';
 import { RoundInterface } from './models/types';
 import game from './schema';
 
+const SESSION_NAME = 'cah_cookie_session';
+const SESSION_SECRET = 'keyboard cat';
+const COOKIE_MAX_AGE = 24 * 60 * 60 * 1000 // 24 hours
 const app: Express = express();
 const server = createServer(app);
-// const io = new Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>(server);
 const io: Server = new Server(server);
-
-// serve production build
-app.use(express.static(path.join(__dirname, '../../client', 'dist')));
 
 // create a session
 const sessionMiddleware = session({
-	name: 'cah_cookie_session',
-	resave: false,
-	saveUninitialized: false,
-	secret: 'keyboard cat',
+	cookie: {
+		httpOnly: true,
+		maxAge: COOKIE_MAX_AGE,
+		sameSite: process.env.NODE_ENV === "production" ? "none" : true,
+		secure: process.env.NODE_ENV === 'production'
+	},
+	name: SESSION_NAME,
+	resave: true,
+	// rolling: true,
+	saveUninitialized: true,
+	secret: SESSION_SECRET,
 });
 
-app.use(sessionMiddleware);
-io.use(sharedsession(sessionMiddleware, { autoSave: true }));
+const sessionCookie = cookieSession({
+	name: SESSION_NAME,
+	keys: [SESSION_SECRET],
+	maxAge: COOKIE_MAX_AGE,
+})
+
+// serve production build
+app.use(express.static(path.join(__dirname, '../../client', 'dist')));
+app.use(cookieParser(),);
+app.use(sessionCookie);
+io.engine.use(sessionMiddleware);
+
 
 app.get('/session', (req, res) => {
 	console.group('session');
@@ -39,19 +56,21 @@ app.get('/session', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-	console.group('connection');
+	console.group('User has connected');
 	// @ts-ignore
-	console.log(`host ${os.hostname()} | client | ${socket.handshake.sessionID}`);
+	console.log(`host ${os.hostname()} | client | ${socket.id}`);
+	console.log("user-agent: ", socket.request.headers['user-agent']);
 	console.groupEnd();
 
 	// StartGameScreen
 	socket.on('getLobbyState', (partyCode) => {
 		// @ts-ignore
-		console.group(`${socket.handshake.sessionID} | getLobbyState`);
+		console.group(`${socket.id} | getLobbyState`);
+		console.log("socket handshake: ", socket.handshake);
 		socket.join(partyCode);
 
 		// @ts-ignore
-		let response = game.getLobbyState(partyCode, socket.handshake.sessionID, (success, message) => {
+		let response = game.getLobbyState(partyCode, socket.id, (success, message) => {
 			console.log(`Round ended, going to judge-selecting ${success} | ${message}`)
 			io.to(partyCode).emit('newGameState');
 		});
@@ -62,12 +81,14 @@ io.on('connection', (socket) => {
 
 	socket.on('joinParty', ({ partyCode, name }) => {
 		// @ts-ignore
-		console.group(`${socket.handshake.sessionID} | joinParty`);
+		console.group(`${socket.id} | joinParty`);
+		console.log('socket.id', socket.id);
+		console.log('socket.request.sessionID', socket.request.sessionID);
 		console.log(`partyCode: ${partyCode}`);
 		console.log(`name: ${name}`);
 		console.groupEnd();
 		// @ts-ignore
-		game.joinGame(partyCode, socket.handshake.sessionID, name);
+		game.joinGame(partyCode, socket.id, name);
 		io.to(partyCode).emit('newLobbyState');
 	});
 
@@ -75,18 +96,18 @@ io.on('connection', (socket) => {
 
 	socket.on('getPlayerRoundState', (partyCode) => {
 		// @ts-ignore
-		console.log(`${socket.handshake.sessionID} | getPlayerRoundState`)
+		console.log(`${socket.id} | getPlayerRoundState`)
 		socket.join(partyCode);
 		// @ts-ignore
-		let gameState: RoundInterface | null = game.getPlayerRoundState(partyCode, socket.handshake.sessionID);
+		let gameState: RoundInterface | null = game.getPlayerRoundState(partyCode, socket.id);
 		socket.emit('getPlayerRoundState', gameState);
 	});
 
 	socket.on('playCard', (partyCode, cardID) => {
 		// @ts-ignore
-		console.log(`${socket.handshake.sessionID} | playCard`);
+		console.log(`${socket.id} | playCard`);
 		// @ts-ignore
-		game.playCard(partyCode, cardID, socket.handshake.sessionID, (success, message) => {
+		game.playCard(partyCode, cardID, socket.id, (success, message) => {
 			console.log(`playCard | ${success} | ${message}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
@@ -96,11 +117,11 @@ io.on('connection', (socket) => {
 
 	socket.on('judgeSelectCard', (partyCode, cardID) => {
 		// @ts-ignore
-		console.log(`${socket.handshake.sessionID} | judgeSelectCard`);
+		console.log(`${socket.id} | judgeSelectCard`);
 		// @ts-ignore
-		game.judgeSelectCard(partyCode, cardID, socket.handshake.sessionID, (success, message) => {
+		game.judgeSelectCard(partyCode, cardID, socket.id, (success, message) => {
 			// @ts-ignore
-			console.log(`judgeSelectCard | ${success} | ${message} | ${socket.handshake.sessionID}`);
+			console.log(`judgeSelectCard | ${success} | ${message} | ${socket.id}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
 			}
@@ -109,9 +130,9 @@ io.on('connection', (socket) => {
 
 	socket.on('shuffleCards', (partyCode, sourceIdx, destIdx) => {
 		// @ts-ignore
-		game.shuffleCards(partyCode, sourceIdx, destIdx, socket.handshake.sessionID, (success, message) => {
+		game.shuffleCards(partyCode, sourceIdx, destIdx, socket.id, (success, message) => {
 			// @ts-ignore
-			console.log(`shuffleCards | ${socket.handshake.sessionID} | ${success} | ${message}`);
+			console.log(`shuffleCards | ${socket.id} | ${success} | ${message}`);
 			if (success) {
 				socket.emit('newGameState');
 			}
@@ -121,7 +142,7 @@ io.on('connection', (socket) => {
 	socket.on('endRound', partyCode => {
 		game.endRound(partyCode, (success, message) => {
 			// @ts-ignore
-			console.log(`endRound | ${success} | ${message} | ${socket.handshake.sessionID}`);
+			console.log(`endRound | ${success} | ${message} | ${socket.id}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
 			}
@@ -130,7 +151,7 @@ io.on('connection', (socket) => {
 
 	socket.on('disconnect', function () {
 		// @ts-ignore
-		console.log(`client DISCONNECTED: session(${socket.handshake.sessionID})`);
+		console.log(`client DISCONNECTED: session(${socket.id})`);
 	});
 });
 
