@@ -43,6 +43,9 @@ app.use(cookieParser(),);
 app.use(sessionCookie);
 io.engine.use(sessionMiddleware);
 
+// convert a connect middleware to a Socket.IO middleware
+// const wrap = middleware => (socket, next) => middleware(socket.request, {}, next);
+// io.use(wrap(sessionMiddleware));
 
 app.get('/session', (req, res) => {
 	console.group('session');
@@ -54,6 +57,13 @@ app.get('/session', (req, res) => {
 		res.json(`welcome for the first time!`);
 	}
 });
+
+// io.use((socket, next) => {
+// 	const session = socket.request.session;
+// 	console.group('io.use');
+// 	console.log('session:', session);
+// 	console.groupEnd();
+// });
 
 io.on('connection', (socket) => {
 	console.group('User has connected');
