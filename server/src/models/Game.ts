@@ -5,6 +5,7 @@ import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER
 import { Card } from '../data/types';
 import { getShuffledACard, getShuffledQCard } from './Card';
 import { CallbackType, GameInterface, PlayerInterface, RoundInterface } from './types';
+import logger from 'src/utils/logger';
 
 class Game implements GameInterface {
 	ACardDeck: Card[];
@@ -195,67 +196,245 @@ class Game implements GameInterface {
 	}
 
 	playCard(cardID: number, sessionID: string, cb: CallbackType): void {
+		// Validate player exists
 		let player = this.getPlayer(sessionID);
 		if (player === null) {
-			cb(false, `Cannot playCard: ${sessionID} is not a player in game ${this.partyCode}`);
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				reason: 'player_not_found',
+				partyCode: this.partyCode
+			});
+			cb(false, 'You are not a player in this game');
 			return;
 		}
 
-		let card = find(player?.cards, (c): boolean => c?.id === cardID);
-		if (card === undefined) cb(false, `Player ${player.name}[${sessionID}] attempting to play card (${cardID}) they do not own!`);
+		// Validate game state
 		let latestRound = this.getLatestRound();
-
-		if (latestRound?.roundState !== 'players-selecting') {
-			cb(false, 'Cannot play card!, judge is currently selecting!');
+		if (!latestRound) {
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				reason: 'no_active_round',
+				partyCode: this.partyCode
+			});
+			cb(false, 'No active round found');
 			return;
 		}
 
+		// Validate round state
+		if (latestRound.roundState !== 'players-selecting') {
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				reason: 'wrong_round_state',
+				currentState: latestRound.roundState,
+				partyCode: this.partyCode
+			});
+			cb(false, 'Cannot play card in current game phase');
+			return;
+		}
+
+		// Validate player is not the judge
 		if (this.isRoundJudge(sessionID, latestRound)) {
-			cb(false, `${player.name} cannot play a card this round since. ${player.name} is the round judge`);
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				reason: 'judge_cannot_play',
+				partyCode: this.partyCode
+			});
+			cb(false, 'Judge cannot play cards');
 			return;
 		}
 
-		if (card) {
+		// Validate card ownership
+		let card = find(player?.cards, (c): boolean => c?.id === cardID);
+		if (card === undefined) {
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				reason: 'card_not_owned',
+				playerCards: player.cards.map(c => c.id),
+				partyCode: this.partyCode
+			});
+			cb(false, 'You do not own this card');
+			return;
+		}
+
+		// Validate player hasn't already played
+		const existingCard = find(latestRound.otherPlayerCards, card => card?.owner?.pID === player?.pID);
+		if (existingCard) {
+			logger.warn('Invalid playCard attempt', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				reason: 'already_played',
+				partyCode: this.partyCode
+			});
+			cb(false, 'You have already played a card this round');
+			return;
+		}
+
+		// All validations passed - execute the card play
+		try {
 			const playerSize = Object.keys(this.players).length;
 			remove(player.cards, c => c.id === cardID);
-			latestRound?.otherPlayerCards?.push({ ...card, owner: { 'name': player.name, 'pID': player.pID } });
-			player.cards = player.cards.concat(this.ACardDeck.splice(0, 1));
+			latestRound?.otherPlayerCards?.push({
+				...card,
+				owner: { 'name': player.name, 'pID': player.pID }
+			});
+
+			// Give player a new card
+			if (this.ACardDeck.length > 0) {
+				player.cards = player.cards.concat(this.ACardDeck.splice(0, 1));
+			}
+
+			logger.info('Card played successfully', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				cardsPlayed: latestRound?.otherPlayerCards?.length,
+				totalPlayers: playerSize,
+				partyCode: this.partyCode
+			});
+
+			// Check if all players have played
 			if (latestRound?.otherPlayerCards?.length === (playerSize - 1)) {
 				latestRound.roundState = JUDGE_SELECTING;
 				clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
-				this.roundFinishedNotifier(true, 'all players have played their cards, going to judge-selecting!');
-				cb(true, `${player.name} was last player to play cards, going to judge-selecting!`);
+				this.roundFinishedNotifier(true, 'All players have played - judge selection phase');
+				cb(true, 'Card played - all players ready, judge is selecting');
 			} else {
-				cb(true, `${player.name} played their card!`);
+				cb(true, 'Card played successfully');
 			}
+		} catch (error) {
+			logger.error('Error playing card', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				error: error?.message ?? 'Unknown error',
+				partyCode: this.partyCode
+			});
+			cb(false, 'Failed to play card');
 		}
 	}
 
 	judgeSelectCard(sessionID: string, cardID: number, cb: CallbackType) {
-		let latestRound: RoundInterface | null = this.getLatestRound();
-		if (this.isRoundJudge(sessionID, latestRound) && latestRound?.roundState === JUDGE_SELECTING) {
-			let winningCard = find(latestRound.otherPlayerCards, card => card.id === cardID);
-			if (winningCard) {
-				latestRound.roundState = VIEWING_WINNER;
-				latestRound.winningCard = winningCard;
-				latestRound.winner = winningCard.owner?.name;
-				latestRound.roundEndTime = new Date();
-				let winningPlayer = find(this.players, player => player.pID === winningCard?.owner?.pID);
-				winningPlayer.roundsWon.push({
-					roundNum: latestRound.roundNum,
-					ACard: winningCard,
-					QCard: latestRound.QCard
-				});
-				this.roundsIdle = 0;
-				cb(true, `${latestRound.winner} won with card ${latestRound.winningCard.text}`);
-			} else {
-				cb(false, `${sessionID} attempted to play a winning card ${cardID} that was not played!`);
-			}
-		} else {
-			cb(false, 'you are not the round judge! you cannot choose the winner!');
-		}
-	}
+  		// Validate player exists
+  		let player = this.getPlayer(sessionID);
+  		if (player === null) {
+  			logger.warn('Invalid judgeSelectCard attempt', {
+  				sessionID,
+  				cardID,
+  				reason: 'player_not_found',
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'You are not a player in this game');
+  			return;
+  		}
 
+  		// Validate game state
+  		let latestRound: RoundInterface | null = this.getLatestRound();
+  		if (!latestRound) {
+  			logger.warn('Invalid judgeSelectCard attempt', {
+  				sessionID,
+  				cardID,
+  				playerName: player.name,
+  				reason: 'no_active_round',
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'No active round found');
+  			return;
+  		}
+
+  		// Validate player is the judge
+  		if (!this.isRoundJudge(sessionID, latestRound)) {
+  			logger.warn('Invalid judgeSelectCard attempt', {
+  				sessionID,
+  				cardID,
+  				playerName: player.name,
+  				reason: 'not_judge',
+  				actualJudge: latestRound.roundJudge?.name,
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'You are not the judge for this round');
+  			return;
+  		}
+
+  		// Validate round state
+  		if (latestRound.roundState !== JUDGE_SELECTING) {
+  			logger.warn('Invalid judgeSelectCard attempt', {
+  				sessionID,
+  				cardID,
+  				playerName: player.name,
+  				reason: 'wrong_round_state',
+  				currentState: latestRound.roundState,
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'Cannot select winner in current game phase');
+  			return;
+  		}
+
+  		// Validate selected card exists in played cards
+  		let winningCard = find(latestRound.otherPlayerCards, card => card.id === cardID);
+  		if (!winningCard) {
+  			logger.warn('Invalid judgeSelectCard attempt', {
+  				sessionID,
+  				cardID,
+  				playerName: player.name,
+  				reason: 'card_not_found',
+  				availableCards: latestRound.otherPlayerCards.map(c => c.id),
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'Selected card was not played this round');
+  			return;
+  		}
+
+  		// All validations passed - execute the selection
+  		try {
+  			latestRound.roundState = VIEWING_WINNER;
+  			latestRound.winningCard = winningCard;
+  			latestRound.winner = winningCard.owner?.name;
+  			latestRound.roundEndTime = new Date();
+
+  			let winningPlayer = find(this.players, player => player.pID === winningCard?.owner?.pID);
+  			if (winningPlayer) {
+  				winningPlayer.roundsWon.push({
+  					roundNum: latestRound.roundNum,
+  					ACard: winningCard,
+  					QCard: latestRound.QCard
+  				});
+  			}
+
+  			this.roundsIdle = 0;
+
+  			logger.info('Judge selected winning card', {
+  				sessionID,
+  				cardID,
+  				judgeName: player.name,
+  				winnerName: latestRound.winner,
+  				winningCardText: winningCard.text,
+  				roundNum: latestRound.roundNum,
+  				partyCode: this.partyCode
+  			});
+
+  			cb(true, `${latestRound.winner} won this round!`);
+  		} catch (error) {
+  			logger.error('Error in judge selection', {
+  				sessionID,
+  				cardID,
+  				judgeName: player.name,
+  				error: error.message,
+  				partyCode: this.partyCode
+  			});
+  			cb(false, 'Failed to select winning card');
+  		}
+  	}
+	
 	endRound(cb: CallbackType) {
 		let latestRound = this.getLatestRound();
 		if (latestRound) {
