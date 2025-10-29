@@ -1,20 +1,25 @@
+import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cookieSession from 'cookie-session';
 import crypto from 'crypto';
 import express, { Express } from 'express';
 import session from 'express-session';
+import RedisStore from 'connect-redis';
 import { createServer } from 'http';
 import * as os from 'os';
 import * as path from 'path';
 import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
-import { createClient } from 'ioredis';
-import { RoundInterface } from './models/types';
-import game from './schema';
-import { InputValidator } from './utils/validation';
-import logger, { loggerStream } from './utils/logger';
+import Redis from 'ioredis';
+import { RoundInterface } from '@/models/types';
+import game from '@/schema';
+import { InputValidator } from '@/utils/validation';
+import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
-import { checkSocketRateLimit, httpRateLimiter } from './middleware/rateLimiter';
+import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter';
+
+// Load environment variables from .env file
+dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const SESSION_NAME = 'cah_cookie_session';
 // Secure session secret generation
@@ -62,7 +67,7 @@ const io: Server = new Server(server, {
 		methods: ['GET', 'POST'],
 		credentials: true
 	},
-	transports: ['websocket'],
+	transports: ['polling', 'websocket'], // Allow polling first to establish session with cookies
 	// Additional security options
 	allowEIO3: false, // Force latest Engine.IO version
 	pingTimeout: 60000,
@@ -72,17 +77,24 @@ const io: Server = new Server(server, {
 const redisHost = process.env.REDIS_HOST || 'localhost';
 const redisPort = Number(process.env.REDIS_PORT || 6379);
 
-const pubClient = new createClient({ host: redisHost, port: redisPort });
+// Redis clients for Socket.IO adapter
+const pubClient = new Redis({ host: redisHost, port: redisPort });
 const subClient = pubClient.duplicate();
 
-Promise.all([pubClient.connect(), subClient.connect()])
-  .then(() => {
-    io.adapter(createAdapter(pubClient, subClient));
-    logger.info('Socket.IO Redis adapter connected');
-  })
-  .catch((err) => {
-    logger.error('Failed to connect Redis adapter', { error: err.message });
-  });
+// Redis client for session store
+const redisClient = new Redis({ host: redisHost, port: redisPort });
+
+// Set up Socket.IO Redis adapter
+io.adapter(createAdapter(pubClient, subClient));
+logger.info('Socket.IO Redis adapter configured');
+
+redisClient.on('connect', () => {
+  logger.info('Redis session store connected');
+});
+
+redisClient.on('error', (err) => {
+  logger.error('Redis session store error', { error: err.message });
+});
 
 // Middleware to parse JSON bodies
 app.use(morgan('combined', { stream: loggerStream }));
@@ -101,72 +113,152 @@ io.use((socket, next) => {
 	next();
 });
 
-// create a session
+// Create Redis session store
+const redisStore = new RedisStore({
+	client: redisClient,
+	prefix: 'cah:sess:',
+	ttl: COOKIE_MAX_AGE / 1000 // TTL in seconds
+});
+
+// Create session middleware with proper configuration
 const sessionMiddleware = session({
+	store: redisStore,
 	cookie: {
 		httpOnly: true,
 		maxAge: COOKIE_MAX_AGE,
-		sameSite: process.env.NODE_ENV === "production" ? "none" : true,
+		sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
 		secure: process.env.NODE_ENV === 'production'
 	},
 	name: SESSION_NAME,
-	resave: true,
-	// rolling: true,
-	saveUninitialized: true,
+	resave: false,
+	rolling: true, // Refresh session on each request
+	saveUninitialized: true, // Create session even if nothing stored
 	secret: SESSION_SECRET,
+	genid: () => crypto.randomUUID(), // Generate unique session IDs
 });
 
-const sessionCookie = cookieSession({
-	name: SESSION_NAME,
-	keys: [SESSION_SECRET],
-	maxAge: COOKIE_MAX_AGE,
-})
+// Apply middleware
+app.use(express.json());
+app.use(cookieParser());
 
-// serve production build
+// CORS middleware for regular HTTP endpoints
+app.use((req, res, next) => {
+	const origin = req.headers.origin;
+	const allowedOrigins = getAllowedOrigins();
+
+	if (origin && allowedOrigins.includes(origin)) {
+		res.setHeader('Access-Control-Allow-Origin', origin);
+		res.setHeader('Access-Control-Allow-Credentials', 'true');
+		res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+		res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Accept');
+	}
+
+	if (req.method === 'OPTIONS') {
+		return res.sendStatus(200);
+	}
+
+	next();
+});
+
+app.use(sessionMiddleware);
+
+// Serve production build
 app.use(express.static(path.join(__dirname, '../../client', 'dist')));
-app.use(cookieParser(),);
-app.use(sessionCookie);
-io.engine.use(sessionMiddleware);
 
-// convert a connect middleware to a Socket.IO middleware
-// const wrap = middleware => (socket, next) => middleware(socket.request, {}, next);
-// io.use(wrap(sessionMiddleware));
+// Convert Express session middleware to Socket.IO middleware
+const wrap = (middleware: any) => (socket: any, next: any) => middleware(socket.request, {}, next);
+io.use(wrap(sessionMiddleware));
 
-app.get('/session', (req, res) => {
-	console.group('session');
-	console.groupEnd();
-	if (req.session.name) {
-		res.json(`welcome: ${req.session.name}`);
+// Socket.IO session middleware - ensure session exists and initialize it
+io.use((socket, next) => {
+	const req = socket.request as any;
+	const session = req.session;
+
+	logger.info('Socket handshake attempt', {
+		socketId: socket.id,
+		hasCookies: !!req.headers.cookie,
+		cookies: req.headers.cookie,
+		hasSession: !!session,
+		sessionID: session?.id,
+		initialized: session?.initialized
+	});
+
+	if (session) {
+		// Initialize the session by storing a flag
+		// This ensures the session is saved and the cookie is set properly
+		if (!session.initialized) {
+			session.initialized = true;
+			session.save((err: any) => {
+				if (err) {
+					logger.error('Failed to save session', { error: err.message });
+					return next(err);
+				}
+				logger.info('Socket session established and initialized', {
+					socketId: socket.id,
+					sessionID: session.id
+				});
+				next();
+			});
+		} else {
+			logger.info('Socket session established (existing)', {
+				socketId: socket.id,
+				sessionID: session.id
+			});
+			next();
+		}
 	} else {
-		req.session.name = 'Yusuf';
-		res.json(`welcome for the first time!`);
+		next(new Error('Session not found'));
 	}
 });
 
-// io.use((socket, next) => {
-// 	const session = socket.request.session;
-// 	console.group('io.use');
-// 	console.log('session:', session);
-// 	console.groupEnd();
-// });
+// Helper function to get persistent sessionID from socket
+const getSessionID = (socket: any): string => {
+	const session = socket.request.session;
+	return session.id; // Use the session.id directly
+};
+
+// Map to track socket.id -> sessionID mapping for reverse lookups
+const socketToSession = new Map<string, string>();
+
+app.get('/session', (req, res) => {
+	logger.info('Session endpoint accessed', {
+		sessionID: req.session.id,
+		hasCookie: !!req.headers.cookie,
+		cookieHeader: req.headers.cookie
+	});
+	res.json({
+		sessionID: req.session.id,
+		name: req.session.name || null
+	});
+});
 
 io.on('connection', (socket) => {
+	const sessionID = getSessionID(socket);
+
+	// Track this socket's session
+	socketToSession.set(socket.id, sessionID);
+
 	logger.info('User connected', {
   		socketId: socket.id,
+		sessionID,
   		host: os.hostname(),
   		userAgent: socket.request.headers['user-agent'],
   		ip: socket.handshake.address
   	});
 
+	// Clean up on disconnect
+	socket.on('disconnect', () => {
+		socketToSession.delete(socket.id);
+		logger.info('User disconnected', { socketId: socket.id, sessionID });
+	});
+
 	// StartGameScreen
 	socket.on('getLobbyState', (partyCode) => {
-		// @ts-ignore
-		console.group(`${socket.id} | getLobbyState`);
-		console.log("socket handshake: ", socket.handshake);
+		console.group(`${sessionID} | getLobbyState`);
+		console.log("partyCode:", partyCode);
 		socket.join(partyCode);
 
-		// @ts-ignore
-		let response = game.getLobbyState(partyCode, socket.id, (success, message) => {
+		let response = game.getLobbyState(partyCode, sessionID, (success, message) => {
 			console.log(`Round ended, going to judge-selecting ${success} | ${message}`)
 			io.to(partyCode).emit('newGameState');
 		});
@@ -176,14 +268,12 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('joinParty', ({ partyCode, name }) => {
-		// @ts-ignore
-		console.group(`${socket.id} | joinParty`);
-		console.log('socket.id', socket.id);
-		console.log('socket.request.sessionID', (socket.request as any).sessionID);
-		console.log(`partyCode: ${partyCode}`);
-		console.log(`name: ${name}`);
+		console.group(`${sessionID} | joinParty`);
+		console.log('sessionID:', sessionID);
+		console.log('partyCode:', partyCode);
+		console.log('name:', name);
 		console.groupEnd();
-		// @ts-ignore
+
 		// Validate and sanitize inputs
 		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
 		if (!partyCodeValidation.isValid) {
@@ -201,29 +291,43 @@ io.on('connection', (socket) => {
 		const sanitizedName = nameValidation.sanitizedValue!;
 
 		try {
-			// @ts-ignore
-			game.joinGame(sanitizedPartyCode, socket.id, sanitizedName);
+			game.joinGame(sanitizedPartyCode, sessionID, sanitizedName);
+			socket.join(sanitizedPartyCode);
 			io.to(sanitizedPartyCode).emit('newLobbyState');
 		} catch (error) {
 			socket.emit('error', { message: 'Failed to join party' });
 		}
 	});
 
+	socket.on('startGame', (partyCode) => {
+		console.log(`${sessionID} | startGame`);
+		console.log('partyCode:', partyCode);
+
+		// Validate party code
+		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
+		if (!partyCodeValidation.isValid) {
+			socket.emit('error', { message: `Invalid party code: ${partyCodeValidation.error}` });
+			return;
+		}
+
+		const sanitizedPartyCode = partyCodeValidation.sanitizedValue!;
+
+		// Notify all clients in the party to navigate to game view
+		logger.info('Game started', { partyCode: sanitizedPartyCode, startedBy: sessionID });
+		io.to(sanitizedPartyCode).emit('gameStarted', { partyCode: sanitizedPartyCode });
+	});
+
 	// PlayerSelectionScreen
 
 	socket.on('getPlayerRoundState', (partyCode) => {
-		// @ts-ignore
-		console.log(`${socket.id} | getPlayerRoundState`)
+		console.log(`${sessionID} | getPlayerRoundState`)
 		socket.join(partyCode);
-		// @ts-ignore
-		let gameState: RoundInterface | null = game.getPlayerRoundState(partyCode, socket.id);
+		let gameState: RoundInterface | null = game.getPlayerRoundState(partyCode, sessionID);
 		socket.emit('getPlayerRoundState', gameState);
 	});
 
 	socket.on('playCard', (partyCode, cardID) => {
-		// @ts-ignore
-		console.log(`${socket.id} | playCard`);
-		// @ts-ignore
+		console.log(`${sessionID} | playCard`);
 		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
 		const cardIdValidation = InputValidator.validateCardId(cardID);
 
@@ -232,8 +336,7 @@ io.on('connection', (socket) => {
 			return;
 		}
 
-		// @ts-ignore
-		game.playCard(partyCodeValidation.sanitizedValue!, parseInt(cardIdValidation.sanitizedValue!), socket.id, (success, message) => {
+		game.playCard(partyCodeValidation.sanitizedValue!, parseInt(cardIdValidation.sanitizedValue!), sessionID, (success, message) => {
 			if (success) {
 				io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
 			} else {
@@ -243,12 +346,9 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('judgeSelectCard', (partyCode, cardID) => {
-		// @ts-ignore
-		console.log(`${socket.id} | judgeSelectCard`);
-		// @ts-ignore
-		game.judgeSelectCard(partyCode, cardID, socket.id, (success, message) => {
-			// @ts-ignore
-			console.log(`judgeSelectCard | ${success} | ${message} | ${socket.id}`);
+		console.log(`${sessionID} | judgeSelectCard`);
+		game.judgeSelectCard(partyCode, cardID, sessionID, (success, message) => {
+			console.log(`judgeSelectCard | ${success} | ${message} | ${sessionID}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
 			}
@@ -256,10 +356,8 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('shuffleCards', (partyCode, sourceIdx, destIdx) => {
-		// @ts-ignore
-		game.shuffleCards(partyCode, sourceIdx, destIdx, socket.id, (success, message) => {
-			// @ts-ignore
-			console.log(`shuffleCards | ${socket.id} | ${success} | ${message}`);
+		game.shuffleCards(partyCode, sourceIdx, destIdx, sessionID, (success, message) => {
+			console.log(`shuffleCards | ${sessionID} | ${success} | ${message}`);
 			if (success) {
 				socket.emit('newGameState');
 			}
@@ -268,16 +366,11 @@ io.on('connection', (socket) => {
 
 	socket.on('endRound', partyCode => {
 		game.endRound(partyCode, (success, message) => {
-			// @ts-ignore
-			console.log(`endRound | ${success} | ${message} | ${socket.id}`);
+			console.log(`endRound | ${success} | ${message} | ${sessionID}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
 			}
 		});
-	});
-
-	socket.on('disconnect', function () {
-		logger.info('Client disconnected', { sessionId: socket.id });
 	});
 });
 
