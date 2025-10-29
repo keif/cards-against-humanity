@@ -1,11 +1,11 @@
 import find from 'lodash/find';
 import remove from 'lodash/remove';
 import shuffle from 'lodash/shuffle';
-import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '../constants';
-import { Card } from '../data/types';
-import { getShuffledACard, getShuffledQCard } from './Card';
-import { CallbackType, GameInterface, PlayerInterface, RoundInterface } from './types';
-import logger from 'src/utils/logger';
+import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants';
+import { Card } from '@/data/types';
+import { getShuffledACard, getShuffledQCard } from '@/models/Card';
+import { CallbackType, GameInterface, PlayerInterface, RoundInterface } from '@/models/types';
+import logger from '@/utils/logger';
 
 class Game implements GameInterface {
 	ACardDeck: Card[];

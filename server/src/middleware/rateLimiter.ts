@@ -1,5 +1,5 @@
 import rateLimit from 'express-rate-limit';
-import logger from '../utils/logger';
+import logger from '@/utils/logger';
 
 // Rate limiter for Socket.IO connections
 export const socketRateLimiter = new Map<string, { count: number; resetTime: number }>();

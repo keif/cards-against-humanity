@@ -1,4 +1,4 @@
-import {Card} from "../data/types";
+import {Card} from "@/data/types";
 
 export type CallbackType = (success: boolean, message: string) => void;
 

@@ -1,4 +1,4 @@
-import {Card} from "./types";
+import {Card} from "@/data/types";
 
 const cards: Card[] = [
     {

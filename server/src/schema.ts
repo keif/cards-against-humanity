@@ -1,5 +1,5 @@
-import Game from './models/Game';
-import { CallbackType, GameInterface, LobbyInterface, RoundInterface } from "./models/types";
+import Game from '@/models/Game';
+import { CallbackType, GameInterface, LobbyInterface, RoundInterface } from "@/models/types";
 
 let games: { [index: string]: any } = {};
 

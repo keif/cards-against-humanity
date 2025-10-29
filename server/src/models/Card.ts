@@ -1,4 +1,4 @@
-import cards from "../data/cards";
+import cards from "@/data/cards";
 import shuffle from "lodash/shuffle";
 
 export function getShuffledACard() {
