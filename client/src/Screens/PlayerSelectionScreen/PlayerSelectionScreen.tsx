@@ -15,7 +15,7 @@ import Top from '@/components/Top/Top';
 import { ROUTE_PARAM } from '@/App';
 import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
-import { JUDGE_SELECTING, JUDGE_WAITING, VIEWING_WINNER } from '@/constants/constants';
+import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { OnDragEndResponder } from 'react-beautiful-dnd';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -264,6 +264,26 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
+	// Drop handler for react-dnd (receives dropped item with id)
+	const handleCardDrop = (item: { id: number }) => {
+		if (!partyCode || !item || !item.id) {
+			return;
+		}
+
+		// Check if player can drop a card
+		if (state.playerChoice != null) {
+			return; // Already selected a card
+		}
+
+		if (state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') {
+			// Judge selecting winner card
+			judgeSelectCard(partyCode, item.id);
+		} else if (state.roundState === PLAYER_SELECTING && state.roundRole === 'player') {
+			// Player selecting card to play
+			playCard(partyCode, item.id);
+		}
+	};
+
 	const isTouchDevice = () => !!("ontouchstart" in window);
 	// Assigning backend based on touch support on the device
 	const backendForDND = isTouchDevice() ? TouchBackend : HTML5Backend;
@@ -279,7 +299,7 @@ const PlayerSelectionScreen = () => {
 					/>
 					<DropCardSpace
 						cardsIn={state.otherPlayerCards.length}
-						dropHandler={chooseCardHandler}
+						dropHandler={handleCardDrop}
 						playerChoice={state.roundState === VIEWING_WINNER ? state.winningCard : state.playerChoice}
 						QCard={state.QCard}
 						roundRole={state.roundRole}

@@ -23,18 +23,23 @@ interface DropCardSpaceProps {
 	playerChoice: any; // TODO: fix any types
 }
 
-const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice }: DropCardSpaceProps) => {
+const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler }: DropCardSpaceProps) => {
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
 			canDrop: () => true,
-			drop: () => true,
+			drop: (item) => {
+				if (dropHandler) {
+					dropHandler(item);
+				}
+				return { dropEffect: 'copy' };
+			},
 			collect: (monitor) => ({
 				isOver: !!monitor.isOver(),
 				canDrop: !!monitor.canDrop(),
 			})
 		}),
-		[]);
+		[dropHandler]);
 	let status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : "";
 
 	// draggable
