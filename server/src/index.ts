@@ -7,10 +7,13 @@ import { createServer } from 'http';
 import * as os from 'os';
 import * as path from 'path';
 import { Server } from 'socket.io';
+import { createAdapter } from '@socket.io/redis-adapter';
+import { createClient } from 'ioredis';
 import { RoundInterface } from './models/types';
 import game from './schema';
 import { InputValidator } from './utils/validation';
-import logger from './utils/logger';
+import logger, { loggerStream } from './utils/logger';
+import morgan from 'morgan';
 import { checkSocketRateLimit, httpRateLimiter } from './middleware/rateLimiter';
 
 const SESSION_NAME = 'cah_cookie_session';
@@ -65,6 +68,24 @@ const io: Server = new Server(server, {
 	pingTimeout: 60000,
 	pingInterval: 25000
 });
+
+const redisHost = process.env.REDIS_HOST || 'localhost';
+const redisPort = Number(process.env.REDIS_PORT || 6379);
+
+const pubClient = new createClient({ host: redisHost, port: redisPort });
+const subClient = pubClient.duplicate();
+
+Promise.all([pubClient.connect(), subClient.connect()])
+  .then(() => {
+    io.adapter(createAdapter(pubClient, subClient));
+    logger.info('Socket.IO Redis adapter connected');
+  })
+  .catch((err) => {
+    logger.error('Failed to connect Redis adapter', { error: err.message });
+  });
+
+// Middleware to parse JSON bodies
+app.use(morgan('combined', { stream: loggerStream }));
 
 // Apply HTTP rate limiting
 app.use(httpRateLimiter);
@@ -158,7 +179,7 @@ io.on('connection', (socket) => {
 		// @ts-ignore
 		console.group(`${socket.id} | joinParty`);
 		console.log('socket.id', socket.id);
-		console.log('socket.request.sessionID', socket.request.sessionID);
+		console.log('socket.request.sessionID', (socket.request as any).sessionID);
 		console.log(`partyCode: ${partyCode}`);
 		console.log(`name: ${name}`);
 		console.groupEnd();

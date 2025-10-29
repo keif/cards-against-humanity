@@ -4,11 +4,10 @@
   "description": "CAH Frontend",
   "private": true,
   "scripts": {
-    "build": "vite build",
     "dev": "vite",
-    "serve": "vite preview",
-    "start": "vite",
-    "test": "jest test"
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "jest"
   },
   "browserslist": [
     ">0.2%",
@@ -16,7 +15,6 @@
     "not ie <= 11",
     "not op_mini all"
   ],
-  "proxy": "http://localhost:8080/",
   "author": "Keith Baker",
   "license": "MIT",
   "dependencies": {

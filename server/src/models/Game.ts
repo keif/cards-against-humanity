@@ -312,11 +312,15 @@ class Game implements GameInterface {
 				cb(true, 'Card played successfully');
 			}
 		} catch (error) {
+			let errorMessage = 'Unknown error';
+			if (error instanceof Error) {
+				errorMessage = error.message;
+			}
 			logger.error('Error playing card', {
 				sessionID,
 				cardID,
 				playerName: player.name,
-				error: error?.message ?? 'Unknown error',
+				error: errorMessage,
 				partyCode: this.partyCode
 			});
 			cb(false, 'Failed to play card');
@@ -387,7 +391,7 @@ class Game implements GameInterface {
   				cardID,
   				playerName: player.name,
   				reason: 'card_not_found',
-  				availableCards: latestRound.otherPlayerCards.map(c => c.id),
+  				availableCards: latestRound?.otherPlayerCards?.map(c => c.id),
   				partyCode: this.partyCode
   			});
   			cb(false, 'Selected card was not played this round');
@@ -424,11 +428,15 @@ class Game implements GameInterface {
 
   			cb(true, `${latestRound.winner} won this round!`);
   		} catch (error) {
+			let errorMessage = 'Unknown error';
+			if (error instanceof Error) {
+				errorMessage = error.message;
+			}
   			logger.error('Error in judge selection', {
   				sessionID,
   				cardID,
   				judgeName: player.name,
-  				error: error.message,
+  				error: errorMessage,
   				partyCode: this.partyCode
   			});
   			cb(false, 'Failed to select winning card');

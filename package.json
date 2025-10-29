@@ -1,0 +1,18 @@
+{
+  "name": "cards-against-humanity",
+  "private": true,
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others \"pnpm --filter server dev\" \"pnpm --filter client dev\"",
+    "build": "pnpm --recursive run build",
+    "dev:client": "pnpm --filter cah_frontend dev",
+    "build:client": "pnpm --filter cah_frontend build",
+    "test:client": "pnpm --filter cah_frontend test"
+  },
+  "devDependencies": {
+    "concurrently": "^8.0.1"
+  }
+}

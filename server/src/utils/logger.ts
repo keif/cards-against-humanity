@@ -54,10 +54,10 @@ const logger = winston.createLogger({
 });
 
 // Create a stream for HTTP logging (Morgan integration)
-logger.stream = {
-    write: (message: string) => {
-        logger.http(message.trim());
-    },
+export const loggerStream = {
+  write: (message: string) => {
+    logger.http(message.trim());
+  },
 };
 
 export default logger;
