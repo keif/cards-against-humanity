@@ -12,14 +12,10 @@ function CreateGame() {
     // TODO: call backend api to create a game and return the party code,
     // mocking the response for now...
     let partyCodeFromServer = Math.random().toString(36).slice(2).substring(5).toLowerCase();
-    console.log(`partyCodeFromServer ${partyCodeFromServer}`);
-
     return partyCodeFromServer;
 }
 
 const HomeScreen = () => {
-    console.group('HomeScreen');
-    console.groupEnd();
     return (
         <Screen>
             <Top>

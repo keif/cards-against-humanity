@@ -27,16 +27,8 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice }: 
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
-			canDrop: () => {
-				console.group('DropCardSpace: can drop card');
-				console.groupEnd();
-				return true;
-			},
-			drop: () => {
-				console.group('DropCardSpace: moving card');
-				console.groupEnd();
-				return true;
-			},
+			canDrop: () => true,
+			drop: () => true,
 			collect: (monitor) => ({
 				isOver: !!monitor.isOver(),
 				canDrop: !!monitor.canDrop(),

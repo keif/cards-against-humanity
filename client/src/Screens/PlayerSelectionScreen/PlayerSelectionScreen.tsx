@@ -57,8 +57,6 @@ const PlayerSelectionScreen = () => {
 	const { partyCode } = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
-	console.log('timeLeft:', timeLeft);
-	console.groupEnd();
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -141,19 +139,13 @@ const PlayerSelectionScreen = () => {
 
 	useEffect(() => {
 		const newState = (roundState: RoundInterface | null) => {
-			console.groupEnd();
-			console.log('🎮 PlayerSelectionScreen - Received round state:', roundState);
-
 			if (roundState == null) {
 				// Check if player was previously in this game
 				const storedPartyCode = localStorage.getItem('cah_party_code');
 				const storedName = localStorage.getItem('cah_player_name');
 
-				console.log('⚠️  Round state is null. Stored data:', { storedPartyCode, storedName, currentParty: partyCode });
-
 				// If they were in this party, redirect to lobby to check status
 				if (storedPartyCode === partyCode && storedName) {
-					console.log('📍 Player was in game, redirecting to lobby to check status');
 					navigate(`/join/${partyCode}`);
 				} else if (partyCode === 'join') {
 					navigate(`/join`);
@@ -162,8 +154,6 @@ const PlayerSelectionScreen = () => {
 				}
 				return;
 			}
-			console.log(`${new Date().getMinutes()}:${new Date().getSeconds()}`);
-			console.log('RoundState:', roundState);
 			let headerText;
 			let directions = '';
 			if (roundState.roundState === VIEWING_WINNER) {
@@ -199,30 +189,32 @@ const PlayerSelectionScreen = () => {
 				directions
 			});
 
+			// Clear existing ticker if any
 			if (state.ticker) {
-				console.log('updated timeLeft!, deleting ticker');
 				clearInterval(state.ticker);
 			}
-			console.log('timeLeft:', timeLeft);
+
+			// Initialize timeLeft from server
+			if (roundState?.timeLeft !== undefined) {
+				setTimeLeft(roundState.timeLeft);
+			}
+
+			// Create countdown timer
 			let ticker = window.setInterval(() => {
-				if (timeLeft <= 0) {
-					console.log('clearing interval timeout!', ticker);
-					clearInterval(ticker);
-				} else {
-					console.group('tick: ', ticker);
-					console.log('roundState.timeLeft:', roundState.timeLeft);
-					console.log('timeLeft:', timeLeft);
-					console.log('timeLeft - 1:', timeLeft - 1);
-					console.groupEnd();
-					setState({
-						...state,
-						ticker
-					});
-					if (roundState && roundState?.timeLeft && roundState?.timeLeft > -1) {
-						setTimeLeft(roundState.timeLeft - 1);
+				setTimeLeft(prevTime => {
+					if (prevTime <= 0) {
+						clearInterval(ticker);
+						return 0;
 					}
-				}
+					return prevTime - 1;
+				});
 			}, 1000);
+
+			// Store ticker in state for cleanup
+			setState(prevState => ({
+				...prevState,
+				ticker
+			}));
 		};
 
 		if (partyCode) {
@@ -232,7 +224,6 @@ const PlayerSelectionScreen = () => {
 			newGameState(partyCode);
 		}
 		return () => {
-			console.log('PlayerSelectionScreen: componentWillUnmount()');
 			clearInterval(state.ticker);
 		};
 	}, []);
@@ -259,7 +250,6 @@ const PlayerSelectionScreen = () => {
 		} else if (source.droppableId === 'bottom' && destination.droppableId === 'top' && state.playerChoice == null) {
 			if (state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') {
 				// judge-selecting card
-				console.log(`winner card chosen: ${JSON.stringify(state.otherPlayerCards[source.index])}`);
 				const cardID = state.otherPlayerCards[source.index].id;
 				if (cardID) {
 					judgeSelectCard(partyCode, cardID);

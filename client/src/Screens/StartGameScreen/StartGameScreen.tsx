@@ -21,8 +21,6 @@ interface GameState {
 }
 
 const StartGameScreen = () => {
-	console.group('StartGameScreen');
-	console.groupEnd();
 	const { partyCode } = useParams();
 	const navigate = useNavigate();
 	const [state, setState] = useState<GameState>({
@@ -33,13 +31,8 @@ const StartGameScreen = () => {
 
 	useEffect(() => {
 		if (partyCode) {
-			console.log('🔍 StartGameScreen: Requesting lobby state for party:', partyCode);
 			// TODO: fix any type
 			getLobbyState(partyCode, (response: any) => {
-				console.log('📥 StartGameScreen: Received lobby state:', response);
-				console.log('   - Current player:', response?.currentPlayer);
-				console.log('   - Is joined:', !!response?.currentPlayer);
-				console.log('   - Players list:', response?.players);
 				setState({
 					...state,
 					currentPlayerName: response?.currentPlayer?.name,
@@ -51,7 +44,6 @@ const StartGameScreen = () => {
 
 			// Listen for game start event
 			onGameStarted((data) => {
-				console.log('🎮 Game started! Navigating to game view:', data.partyCode);
 				navigate(`/${data.partyCode}`);
 			});
 		}
@@ -84,7 +76,6 @@ const StartGameScreen = () => {
 
 	const handleStartGame = () => {
 		if (partyCode) {
-			console.log('🚀 Starting game for party:', partyCode);
 			startGame(partyCode);
 		}
 	};
