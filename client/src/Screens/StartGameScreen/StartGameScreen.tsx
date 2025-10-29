@@ -11,8 +11,8 @@ import Top from '@/components/Top/Top';
 import Banner from 'react-js-banner';
 import './StartGameScreen.css';
 
-import { getLobbyState, joinParty, newLobbyState } from '@/api';
-import { useParams } from 'react-router-dom';
+import { getLobbyState, joinParty, newLobbyState, startGame, onGameStarted, offGameStarted } from '@/api';
+import { useParams, useNavigate } from 'react-router-dom';
 
 interface GameState {
 	currentPlayerName: string;
@@ -24,6 +24,7 @@ const StartGameScreen = () => {
 	console.group('StartGameScreen');
 	console.groupEnd();
 	const { partyCode } = useParams();
+	const navigate = useNavigate();
 	const [state, setState] = useState<GameState>({
 		currentPlayerName: '',
 		joined: false,
@@ -32,8 +33,13 @@ const StartGameScreen = () => {
 
 	useEffect(() => {
 		if (partyCode) {
+			console.log('🔍 StartGameScreen: Requesting lobby state for party:', partyCode);
 			// TODO: fix any type
 			getLobbyState(partyCode, (response: any) => {
+				console.log('📥 StartGameScreen: Received lobby state:', response);
+				console.log('   - Current player:', response?.currentPlayer);
+				console.log('   - Is joined:', !!response?.currentPlayer);
+				console.log('   - Players list:', response?.players);
 				setState({
 					...state,
 					currentPlayerName: response?.currentPlayer?.name,
@@ -42,13 +48,27 @@ const StartGameScreen = () => {
 				});
 			});
 			newLobbyState(partyCode);
+
+			// Listen for game start event
+			onGameStarted((data) => {
+				console.log('🎮 Game started! Navigating to game view:', data.partyCode);
+				navigate(`/${data.partyCode}`);
+			});
 		}
+
+		// Cleanup listener on unmount
+		return () => {
+			offGameStarted();
+		};
 	}, []);
 
 	const handleFormSubmit = (event: React.FormEvent<HTMLFormElement | HTMLButtonElement>) => {
 		event.preventDefault();
 		if (!state.joined && partyCode) {
 			const name = state.currentPlayerName;
+			// Store party info in localStorage for session persistence
+			localStorage.setItem('cah_player_name', name);
+			localStorage.setItem('cah_party_code', partyCode);
 			joinParty({ name, partyCode });
 		}
 	}
@@ -62,6 +82,13 @@ const StartGameScreen = () => {
 		});
 	};
 
+	const handleStartGame = () => {
+		if (partyCode) {
+			console.log('🚀 Starting game for party:', partyCode);
+			startGame(partyCode);
+		}
+	};
+
 	const renderButton = () => (
 		<Button
 			className="center"
@@ -71,12 +98,11 @@ const StartGameScreen = () => {
 			text={'Join Party'}
 		/>
 	)
-	const renderLink = () => (
+	const renderStartButton = () => (
 		<Button
-			asLink
 			className="center"
 			disabled={state.players?.length < 3}
-			link={`/${partyCode}`}
+			onClick={handleStartGame}
 			text={'Start Game'}
 		/>
 	)
@@ -92,7 +118,7 @@ const StartGameScreen = () => {
 				<form className={'join-form'} onSubmit={handleFormSubmit}>
 					<PlayerList players={state.players} joined={state.joined} className="center"
 						onChange={updatePlayerName} />
-					{state.joined ? renderLink() : renderButton()}
+					{state.joined ? renderStartButton() : renderButton()}
 				</form>
 				<Footer>
 					{state.players.length < 3 ? 'Need at least 3 players to start game' : 'Ready to start Game!'}
