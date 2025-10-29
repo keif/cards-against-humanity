@@ -32,6 +32,7 @@ export interface LobbyInterface {
 export interface RoundInterface {
     active?: boolean;
     cards?: Card[];
+    currentPlayerName?: string;
     gameStartDate?: Date;
     otherPlayerCards: Card[] | undefined;
     partyCode?: string;

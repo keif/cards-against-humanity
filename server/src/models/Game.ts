@@ -182,6 +182,7 @@ class Game implements GameInterface {
 
 		return {
 			cards,
+			currentPlayerName: player.name,
 			otherPlayerCards,
 			playerChoice,
 			QCard,

@@ -4,13 +4,13 @@ import "./HeaderMenu.css";
 interface HeaderMenuProps {
 	text: string;
 	timeLeft: number;
+	playerName?: string;
 }
 
-const HeaderMenu = ({text, timeLeft}: HeaderMenuProps) => (
+const HeaderMenu = ({text, timeLeft, playerName}: HeaderMenuProps) => (
 	<div className="headerMenu">
 		<div className="innerHeaderMenu">
-			{/* <HamburgerMenu/> temporarily removing this since the side menu is not implemented yet*/}
-			<p></p>
+			<p>{playerName || ''}</p>
 			<p>{text}</p>
 			<p>{timeLeft}</p>
 		</div>

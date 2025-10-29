@@ -27,6 +27,7 @@ type RoleTypes = 'player' | 'judge';
 
 export interface RoundInterface {
 	cards: CardProps[];
+	currentPlayerName?: string;
 	directions: string;
 	headerText: string;
 	otherPlayerCards: CardProps[],
@@ -72,6 +73,7 @@ const PlayerSelectionScreen = () => {
 
 	const [state, setState] = useState<RoundInterface>({
 		// get these on getRoundState
+		currentPlayerName: '',
 		roundState: 'viewing-winner',  // player-selecting | player-waiting | judge-selecting | viewing-winner
 		roundRole: 'judge', // player | judge
 		roundJudge: {
@@ -176,6 +178,7 @@ const PlayerSelectionScreen = () => {
 
 			setState({
 				...state,
+				currentPlayerName: roundState.currentPlayerName,
 				QCard: roundState.QCard,
 				cards: roundState.cards,
 				otherPlayerCards: roundState.otherPlayerCards,
@@ -296,6 +299,7 @@ const PlayerSelectionScreen = () => {
 					<HeaderMenu
 						text={state.headerText}
 						timeLeft={timeLeft}
+						playerName={state.currentPlayerName}
 					/>
 					<DropCardSpace
 						cardsIn={state.otherPlayerCards.length}
