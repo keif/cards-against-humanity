@@ -142,9 +142,20 @@ const PlayerSelectionScreen = () => {
 	useEffect(() => {
 		const newState = (roundState: RoundInterface | null) => {
 			console.groupEnd();
+			console.log('🎮 PlayerSelectionScreen - Received round state:', roundState);
+
 			if (roundState == null) {
-				// redirect them to join
-				if (partyCode === 'join') {
+				// Check if player was previously in this game
+				const storedPartyCode = localStorage.getItem('cah_party_code');
+				const storedName = localStorage.getItem('cah_player_name');
+
+				console.log('⚠️  Round state is null. Stored data:', { storedPartyCode, storedName, currentParty: partyCode });
+
+				// If they were in this party, redirect to lobby to check status
+				if (storedPartyCode === partyCode && storedName) {
+					console.log('📍 Player was in game, redirecting to lobby to check status');
+					navigate(`/join/${partyCode}`);
+				} else if (partyCode === 'join') {
 					navigate(`/join`);
 				} else {
 					navigate(`/join/${partyCode}`);
