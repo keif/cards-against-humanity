@@ -237,16 +237,6 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
-	// Legacy handler for card shuffling in carousel (not used for actual card selection)
-	const chooseCardHandler = (item: DraggedCard) => {
-		// This handler is called from CardCarousel on hover
-		// The actual card selection is handled by handleCardDrop
-		// This could be used for card reordering/shuffling if needed in the future
-		if (!partyCode || !item) {
-			return;
-		}
-	};
-
 	// Drop handler for react-dnd (receives dropped item with id)
 	const handleCardDrop = (item: DraggedCard) => {
 		if (!partyCode || !item || !item.id) {
@@ -304,7 +294,6 @@ const PlayerSelectionScreen = () => {
 							state.roundState === JUDGE_SELECTING ? state.otherPlayerCards :
 								state.roundState === JUDGE_WAITING ? [] : state.cards
 						}
-						dropHandler={chooseCardHandler}
 					/>
 					<Footer>
 						Share Link or Party Code: {partyCode}

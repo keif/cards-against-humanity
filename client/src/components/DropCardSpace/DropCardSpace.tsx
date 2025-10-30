@@ -55,20 +55,6 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 					{(playerChoice && <Card {...playerChoice} index={0} />) ||
 						<Card cardType={PLACEHOLDER} />}
 				</div>
-				{/*<Droppable droppableId="top" direction="horizontal">*/}
-				{/*    {*/}
-				{/*        (provider) => (*/}
-				{/*            <div*/}
-				{/*                ref={provider.innerRef}*/}
-				{/*                {...provider.droppableProps}*/}
-				{/*            >*/}
-				{/*                {(playerChoice && <Card {...playerChoice} index={0}/>) ||*/}
-				{/*                    <Card cardType="placeholder"/>}*/}
-				{/*                {provider.placeholder}*/}
-				{/*            </div>*/}
-				{/*        )*/}
-				{/*    }*/}
-				{/*</Droppable>*/}
 			</div>
 		);
 	}
