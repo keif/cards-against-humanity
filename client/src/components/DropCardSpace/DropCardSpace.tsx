@@ -1,7 +1,7 @@
 import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants/constants';
-import { ItemTypes } from "@/types";
+import { ItemTypes, DraggedCard } from "@/types";
 import { useDrop } from "react-dnd";
-import Card, { PLACEHOLDER } from "../Card/Card";
+import Card, { CardProps, PLACEHOLDER } from "../Card/Card";
 import "./DropCardSpace.css";
 
 // Draggable player IFF
@@ -16,11 +16,11 @@ import "./DropCardSpace.css";
 
 interface DropCardSpaceProps {
 	cardsIn: number;
-	dropHandler: (card: any) => void; // TODO: fix any types
+	dropHandler: (card: DraggedCard) => void;
 	roundRole: string;
 	roundState: string;
-	QCard: any; // TODO: fix any types
-	playerChoice: any; // TODO: fix any types
+	QCard: CardProps;
+	playerChoice: CardProps | null;
 }
 
 const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler }: DropCardSpaceProps) => {

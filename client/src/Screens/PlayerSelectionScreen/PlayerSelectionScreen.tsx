@@ -20,6 +20,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { useNavigate, useParams } from 'react-router-dom';
+import { DraggedCard, PlayerInfo } from '@/types';
 
 type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner';
 type RoleTypes = 'player' | 'judge';
@@ -34,14 +35,7 @@ export interface RoundInterface {
 	QCard: CardProps;
 	roundState: RoundTypes;
 	roundRole: RoleTypes;
-	roundJudge: {
-		cards: CardProps[];
-		name: string;
-		pID: number;
-		roundState: string;
-		roundsWon: [];
-		type: string;
-	};
+	roundJudge: PlayerInfo;
 	roundNum: number;
 	ticker?: number;
 	timeLeft?: number;
@@ -237,37 +231,18 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
-	// choosing card logic (drag-and-drop)
-	const chooseCardHandler = (result: any) => {
-		// @ts-ignore
-		const { destination, source } = result;
-
-		if (!partyCode || !destination || (destination.droppableId === source.droppableId && destination.index === source.index)) {
+	// Legacy handler for card shuffling in carousel (not used for actual card selection)
+	const chooseCardHandler = (item: DraggedCard) => {
+		// This handler is called from CardCarousel on hover
+		// The actual card selection is handled by handleCardDrop
+		// This could be used for card reordering/shuffling if needed in the future
+		if (!partyCode || !item) {
 			return;
-		}
-
-		if (source.droppableId === destination.droppableId) {
-			// shift/move cards in correct order @ CardCarousel
-			shuffleCards(partyCode, source.index, destination.index);
-		} else if (source.droppableId === 'bottom' && destination.droppableId === 'top' && state.playerChoice == null) {
-			if (state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') {
-				// judge-selecting card
-				const cardID = state.otherPlayerCards[source.index].id;
-				if (cardID) {
-					judgeSelectCard(partyCode, cardID);
-				}
-			} else {
-				// player-selecting card
-				const cardID = state.cards[source.index].id
-				if (cardID) {
-					playCard(partyCode, cardID);
-				}
-			}
 		}
 	};
 
 	// Drop handler for react-dnd (receives dropped item with id)
-	const handleCardDrop = (item: { id: number }) => {
+	const handleCardDrop = (item: DraggedCard) => {
 		if (!partyCode || !item || !item.id) {
 			return;
 		}

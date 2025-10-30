@@ -13,11 +13,12 @@ import './StartGameScreen.css';
 
 import { getLobbyState, joinParty, newLobbyState, startGame, onGameStarted, offGameStarted } from '@/api';
 import { useParams, useNavigate } from 'react-router-dom';
+import { LobbyStateResponse } from '@/types';
 
 interface GameState {
 	currentPlayerName: string;
 	joined: boolean;
-	players: any[]; // TODO: fix any type
+	players: string[];
 }
 
 const StartGameScreen = () => {
@@ -31,13 +32,12 @@ const StartGameScreen = () => {
 
 	useEffect(() => {
 		if (partyCode) {
-			// TODO: fix any type
-			getLobbyState(partyCode, (response: any) => {
+			getLobbyState(partyCode, (response: LobbyStateResponse) => {
 				setState({
 					...state,
-					currentPlayerName: response?.currentPlayer?.name,
+					currentPlayerName: response?.currentPlayer?.name || '',
 					joined: !!response?.currentPlayer,
-					players: response?.players
+					players: response?.players || []
 				});
 			});
 			newLobbyState(partyCode);

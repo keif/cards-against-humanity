@@ -1,11 +1,11 @@
-import { ItemTypes } from "@/types";
+import { ItemTypes, DraggedCard } from "@/types";
 import { useDrop } from "react-dnd";
 import Card, { CardProps } from "../Card/Card";
 import "./CardCarousel.css";
 
 interface CardCarouselProps {
 	cards: CardProps[];
-	dropHandler: (card: any) => void; // TODO: fix any types
+	dropHandler: (card: DraggedCard) => void;
 }
 
 const CardCarousel = ({ cards, dropHandler }: CardCarouselProps) => {
