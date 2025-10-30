@@ -17,10 +17,10 @@ import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard,
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
-import { HTML5Backend } from 'react-dnd-html5-backend';
-import { TouchBackend } from 'react-dnd-touch-backend';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DraggedCard, PlayerInfo } from '@/types';
+import { loadDndBackend } from '@/utils/dndBackend';
+import type { BackendFactory } from 'dnd-core';
 
 type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner';
 type RoleTypes = 'player' | 'judge';
@@ -51,6 +51,7 @@ const PlayerSelectionScreen = () => {
 	const { partyCode } = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
+	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -131,6 +132,11 @@ const PlayerSelectionScreen = () => {
 			text: `Go to localhost:3000/game/${partyCode}`,
 		},
 	});
+
+	// Load DnD backend dynamically based on device type
+	useEffect(() => {
+		loadDndBackend().then(setDndBackend);
+	}, []);
 
 	useEffect(() => {
 		const newState = (roundState: RoundInterface | null) => {
@@ -261,14 +267,14 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
-	const isTouchDevice = () => !!("ontouchstart" in window);
-	// Assigning backend based on touch support on the device
-	const backendForDND = isTouchDevice() ? TouchBackend : HTML5Backend;
-
+	// Don't render until DnD backend is loaded
+	if (!dndBackend) {
+		return null;
+	}
 
 	return (
 		<Screen>
-			<DndProvider backend={backendForDND}>
+			<DndProvider backend={dndBackend}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
 					<HeaderMenu
 						text={state.headerText}

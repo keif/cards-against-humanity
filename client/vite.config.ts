@@ -17,7 +17,7 @@ export default defineConfig(({ command, mode }) => {
 				output: {
 					manualChunks: {
 						'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-						'dnd-vendor': ['react-dnd', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+						'dnd-vendor': ['react-dnd'],
 						'socket-vendor': ['socket.io-client'],
 					},
 				},
