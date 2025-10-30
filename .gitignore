@@ -28,3 +28,6 @@ dump.rdb
 # Editor directories and files
 .idea
 .vscode
+
+# notes
+_notes/

@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, loadEnv } from 'vite';
 import svgrPlugin from 'vite-plugin-svgr';
 import viteTsconfigPaths from 'vite-tsconfig-paths';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command, mode }) => {
@@ -12,14 +13,33 @@ export default defineConfig(({ command, mode }) => {
 	return {
 		build: {
 			outDir: 'dist',
+			rollupOptions: {
+				output: {
+					manualChunks: {
+						'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+						'dnd-vendor': ['react-dnd', 'react-dnd-html5-backend', 'react-dnd-touch-backend'],
+						'socket-vendor': ['socket.io-client'],
+					},
+				},
+			},
 		},
 		// vite config
 		define: {
 			__VITE_SERVER_URL__: JSON.stringify(env.VITE_SERVER_URL),
 		},
-		plugins: [react({
-			include: ['**/*.tsx', '**/*.ts'],
-		}), viteTsconfigPaths(), svgrPlugin()],
+		plugins: [
+			react({
+				include: ['**/*.tsx', '**/*.ts'],
+			}),
+			viteTsconfigPaths(),
+			svgrPlugin(),
+			visualizer({
+				filename: './dist/stats.html',
+				open: false,
+				gzipSize: true,
+				brotliSize: true,
+			}),
+		],
 		server: {
 			open: true,
 			port: 3000,

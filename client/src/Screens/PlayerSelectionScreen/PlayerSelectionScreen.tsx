@@ -16,7 +16,6 @@ import { ROUTE_PARAM } from '@/App';
 import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
-import { OnDragEndResponder } from 'react-beautiful-dnd';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
@@ -239,7 +238,7 @@ const PlayerSelectionScreen = () => {
 	};
 
 	// choosing card logic (drag-and-drop)
-	const chooseCardHandler = (result: OnDragEndResponder) => {
+	const chooseCardHandler = (result: any) => {
 		// @ts-ignore
 		const { destination, source } = result;
 

@@ -31,10 +31,11 @@ export interface CardProps {
 
 const Card = ({ cardType, className, id, index, link, status, text }: CardProps) => {
 	if (cardType === "Q" && text) {
+		const formattedText = text.replace("_", "__________");
 		return (
 			<div>
 				<div className={`card Q ${className}`}>
-					<p>{text.replace("_", "__________")}</p>
+					<p dangerouslySetInnerHTML={{ __html: formattedText }} />
 				</div>
 				{
 					status &&
@@ -84,7 +85,7 @@ const Card = ({ cardType, className, id, index, link, status, text }: CardProps)
 					opacity: isDragging ? 0.5 : 1,
 				}}
 			>
-				<p>{text}</p>
+				<p dangerouslySetInnerHTML={{ __html: text || '' }} />
 			</div>
 			// <Draggable draggableId={`${id}`} index={index}>
 			//     {

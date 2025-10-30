@@ -1,11 +1,11 @@
-import React from 'react';
-
-// Screens
-import HomeScreen from "./Screens/HomeScreen/HomeScreen";
-import JoinPartyScreen from "./Screens/JoinPartyScreen/JoinPartyScreen";
-import StartGameScreen from "./Screens/StartGameScreen/StartGameScreen";
-import PlayerSelectionScreen from './Screens/PlayerSelectionScreen/PlayerSelectionScreen';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+// Lazy load screens for code splitting
+const HomeScreen = lazy(() => import("./Screens/HomeScreen/HomeScreen"));
+const JoinPartyScreen = lazy(() => import("./Screens/JoinPartyScreen/JoinPartyScreen"));
+const StartGameScreen = lazy(() => import("./Screens/StartGameScreen/StartGameScreen"));
+const PlayerSelectionScreen = lazy(() => import('./Screens/PlayerSelectionScreen/PlayerSelectionScreen'));
 
 // Routing
 export const enum ROUTE_PARAM {
@@ -22,24 +22,26 @@ export const enum ROUTE_PATH {
 const App = () => {
 	return (
 		<BrowserRouter>
-			<Routes>
-				<Route
-					path={`${ROUTE_PATH.HOME}`}
-					element={<HomeScreen/>}
-				/>
-				<Route
-					path={`${ROUTE_PATH.START_GAME}`}
-					element={<StartGameScreen/>}
-				/>
-				<Route
-					path={`${ROUTE_PATH.JOIN_PARTY}`}
-					element={<JoinPartyScreen/>}
-				/>
-				<Route
-					path={`${ROUTE_PATH.PLAYER_SELECTION}`}
-					element={<PlayerSelectionScreen/>}
-				/>
-			</Routes>
+			<Suspense fallback={<div>Loading...</div>}>
+				<Routes>
+					<Route
+						path={`${ROUTE_PATH.HOME}`}
+						element={<HomeScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.START_GAME}`}
+						element={<StartGameScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.JOIN_PARTY}`}
+						element={<JoinPartyScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.PLAYER_SELECTION}`}
+						element={<PlayerSelectionScreen/>}
+					/>
+				</Routes>
+			</Suspense>
 		</BrowserRouter>
 	);
 }
