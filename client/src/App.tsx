@@ -21,7 +21,12 @@ export const enum ROUTE_PATH {
 
 const App = () => {
 	return (
-		<BrowserRouter>
+		<BrowserRouter
+			future={{
+				v7_startTransition: true,
+				v7_relativeSplatPath: true,
+			}}
+		>
 			<Suspense fallback={<div>Loading...</div>}>
 				<Routes>
 					<Route
