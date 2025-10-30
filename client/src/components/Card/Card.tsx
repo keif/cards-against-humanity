@@ -87,20 +87,6 @@ const Card = ({ cardType, className, id, index, link, status, text }: CardProps)
 			>
 				<p dangerouslySetInnerHTML={{ __html: text || '' }} />
 			</div>
-			// <Draggable draggableId={`${id}`} index={index}>
-			//     {
-			//         (provider) => (
-			//             <div
-			//                 className={`card A ${className}`}
-			//                 {...provider.draggableProps}
-			//                 {...provider.dragHandleProps}
-			//                 ref={provider.innerRef}
-			//             >
-			//                 <p>{text}</p>
-			//             </div>
-			//         )
-			//     }
-			// </Draggable>
 		);
 	}
 }

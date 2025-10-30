@@ -29,5 +29,7 @@ dump.rdb
 .idea
 .vscode
 
-# notes
+# notes and logs
 _notes/
+log.txt
+logs.txt
