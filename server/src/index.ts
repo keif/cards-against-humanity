@@ -17,6 +17,9 @@ import { InputValidator } from '@/utils/validation';
 import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
 import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter';
+import { CardService } from '@/services/cardService';
+import { initializeCardService } from '@/models/Card';
+import cards from '@/data/cards';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -94,6 +97,16 @@ redisClient.on('connect', () => {
 
 redisClient.on('error', (err) => {
   logger.error('Redis session store error', { error: err.message });
+});
+
+// Initialize CardService and seed cards
+const cardService = new CardService(redisClient);
+initializeCardService(cardService);
+
+// Seed cards on startup (only runs once)
+cardService.seedOfficialCards(cards).catch((err) => {
+	logger.error('Failed to seed cards', { error: err.message });
+	process.exit(1);
 });
 
 // Middleware to parse JSON bodies
@@ -253,12 +266,12 @@ io.on('connection', (socket) => {
 	});
 
 	// StartGameScreen
-	socket.on('getLobbyState', (partyCode) => {
+	socket.on('getLobbyState', async (partyCode) => {
 		console.group(`${sessionID} | getLobbyState`);
 		console.log("partyCode:", partyCode);
 		socket.join(partyCode);
 
-		let response = game.getLobbyState(partyCode, sessionID, (success, message) => {
+		let response = await game.getLobbyState(partyCode, sessionID, (success, message) => {
 			console.log(`Round ended, going to judge-selecting ${success} | ${message}`)
 			io.to(partyCode).emit('newGameState');
 		});
@@ -267,7 +280,7 @@ io.on('connection', (socket) => {
 		socket.emit('getLobbyState', response);
 	});
 
-	socket.on('joinParty', ({ partyCode, name }) => {
+	socket.on('joinParty', async ({ partyCode, name }) => {
 		console.group(`${sessionID} | joinParty`);
 		console.log('sessionID:', sessionID);
 		console.log('partyCode:', partyCode);
@@ -291,7 +304,7 @@ io.on('connection', (socket) => {
 		const sanitizedName = nameValidation.sanitizedValue!;
 
 		try {
-			game.joinGame(sanitizedPartyCode, sessionID, sanitizedName);
+			await game.joinGame(sanitizedPartyCode, sessionID, sanitizedName);
 			socket.join(sanitizedPartyCode);
 			io.to(sanitizedPartyCode).emit('newLobbyState');
 		} catch (error) {
@@ -319,14 +332,14 @@ io.on('connection', (socket) => {
 
 	// PlayerSelectionScreen
 
-	socket.on('getPlayerRoundState', (partyCode) => {
+	socket.on('getPlayerRoundState', async (partyCode) => {
 		console.log(`${sessionID} | getPlayerRoundState`)
 		socket.join(partyCode);
-		let gameState: RoundInterface | null = game.getPlayerRoundState(partyCode, sessionID);
+		let gameState: RoundInterface | null = await game.getPlayerRoundState(partyCode, sessionID);
 		socket.emit('getPlayerRoundState', gameState);
 	});
 
-	socket.on('playCard', (partyCode, cardID) => {
+	socket.on('playCard', async (partyCode, cardID) => {
 		console.log(`${sessionID} | playCard`);
 		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
 		const cardIdValidation = InputValidator.validateCardId(cardID);
@@ -336,7 +349,7 @@ io.on('connection', (socket) => {
 			return;
 		}
 
-		game.playCard(partyCodeValidation.sanitizedValue!, parseInt(cardIdValidation.sanitizedValue!), sessionID, (success, message) => {
+		await game.playCard(partyCodeValidation.sanitizedValue!, parseInt(cardIdValidation.sanitizedValue!), sessionID, (success, message) => {
 			if (success) {
 				io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
 			} else {
@@ -345,9 +358,9 @@ io.on('connection', (socket) => {
 		});
 	});
 
-	socket.on('judgeSelectCard', (partyCode, cardID) => {
+	socket.on('judgeSelectCard', async (partyCode, cardID) => {
 		console.log(`${sessionID} | judgeSelectCard`);
-		game.judgeSelectCard(partyCode, cardID, sessionID, (success, message) => {
+		await game.judgeSelectCard(partyCode, cardID, sessionID, (success, message) => {
 			console.log(`judgeSelectCard | ${success} | ${message} | ${sessionID}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');
@@ -355,8 +368,8 @@ io.on('connection', (socket) => {
 		});
 	});
 
-	socket.on('shuffleCards', (partyCode, sourceIdx, destIdx) => {
-		game.shuffleCards(partyCode, sourceIdx, destIdx, sessionID, (success, message) => {
+	socket.on('shuffleCards', async (partyCode, sourceIdx, destIdx) => {
+		await game.shuffleCards(partyCode, sourceIdx, destIdx, sessionID, (success, message) => {
 			console.log(`shuffleCards | ${sessionID} | ${success} | ${message}`);
 			if (success) {
 				socket.emit('newGameState');
@@ -364,8 +377,8 @@ io.on('connection', (socket) => {
 		});
 	});
 
-	socket.on('endRound', partyCode => {
-		game.endRound(partyCode, (success, message) => {
+	socket.on('endRound', async partyCode => {
+		await game.endRound(partyCode, (success, message) => {
 			console.log(`endRound | ${success} | ${message} | ${sessionID}`);
 			if (success) {
 				io.to(partyCode).emit('newGameState');

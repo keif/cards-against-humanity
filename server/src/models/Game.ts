@@ -34,8 +34,9 @@ class Game implements GameInterface {
 		this.roundsIdle = 0; // if at least |this.players.length.length| roundsIdle, then game state is inactive
 		this.partyCode = partyCode;
 		this.gameStartDate = new Date();
-		this.QCardDeck = getShuffledQCard();
-		this.ACardDeck = getShuffledACard();
+		// Initialize decks as empty - will be populated in initialize()
+		this.QCardDeck = [];
+		this.ACardDeck = [];
 		this.players = {};
 		this.rounds = [];
 		this.roundLength = roundLength;
@@ -48,6 +49,21 @@ class Game implements GameInterface {
 		this.getPlayer = this.getPlayer.bind(this);
 		this.getPlayerRoundState = this.getPlayerRoundState.bind(this);
 		this.playCard = this.playCard.bind(this);
+	}
+
+	/**
+	 * Initialize the game with cards from Redis
+	 * Must be called after constructor to load cards
+	 */
+	async initialize(expansion: string = 'Base'): Promise<void> {
+		logger.info('Initializing game cards', { partyCode: this.partyCode, expansion });
+		this.QCardDeck = await getShuffledQCard(expansion);
+		this.ACardDeck = await getShuffledACard(expansion);
+		logger.info('Game cards initialized', {
+			partyCode: this.partyCode,
+			qCards: this.QCardDeck.length,
+			aCards: this.ACardDeck.length
+		});
 	}
 
 	addNewPlayer(name: string, sessionID: string): void {
