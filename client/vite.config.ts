@@ -18,7 +18,7 @@ export default defineConfig(({ command, mode }) => {
 					manualChunks: {
 						'react-vendor': ['react', 'react-dom', 'react-router-dom'],
 						'dnd-vendor': ['react-dnd'],
-						'socket-vendor': ['socket.io-client'],
+						// socket.io-client is lazy-loaded via dynamic import, so no manual chunk needed
 					},
 				},
 			},

@@ -1,7 +1,5 @@
 import { RoundInterface } from "@/Screens/PlayerSelectionScreen/PlayerSelectionScreen";
 import { CallbackType } from "@/types";
-import openSocket from 'socket.io-client';
-
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080';
 
@@ -25,36 +23,76 @@ const initializeSession = async () => {
 	}
 };
 
-// Initialize session immediately
-initializeSession();
+// Lazy-load socket.io-client only when needed
+let realSocket: any = null;
+let initPromise: Promise<void> | null = null;
 
-// Configure socket with credentials to enable cookie-based sessions
-const socket = openSocket(SERVER_URL, {
-	transports: ['polling', 'websocket'], // Start with polling to establish session, then upgrade to websocket
-	withCredentials: true, // Enable sending cookies
-	autoConnect: false // Don't auto-connect, wait for session initialization
+// Create a proxy that queues operations until the real socket is initialized
+const socket = new Proxy({} as any, {
+	get(_target, prop) {
+		// If real socket exists, use it directly
+		if (realSocket) {
+			return realSocket[prop];
+		}
+
+		// For methods, return a function that queues the operation
+		if (typeof prop === 'string' && ['emit', 'on', 'off', 'connect'].includes(prop)) {
+			return (...args: any[]) => {
+				// Start initialization if not already started
+				if (!initPromise) {
+					initPromise = initializeSocketConnection();
+				}
+
+				// If socket is ready, call immediately
+				if (realSocket) {
+					return realSocket[prop](...args);
+				}
+
+				// Otherwise, queue until ready
+				initPromise.then(() => {
+					if (realSocket) {
+						realSocket[prop](...args);
+					}
+				});
+			};
+		}
+
+		// For properties, return undefined or queue access
+		return realSocket?.[prop];
+	}
 });
 
-// Connect socket after session is initialized
-initializeSession().then(() => {
-	socket.connect();
-});
+async function initializeSocketConnection() {
+	// Dynamic import of socket.io-client (lazy-loaded)
+	const { default: openSocket } = await import('socket.io-client');
 
-socket.on("connect", () => {
-	console.log('✅ Connected to server with socket ID:', socket.id);
-});
+	// Initialize session first
+	await initializeSession();
 
-socket.on("connect_error", (err) => {
-	console.error('❌ Connection error:', err.message);
-});
+	// Configure socket with credentials to enable cookie-based sessions
+	realSocket = openSocket(SERVER_URL, {
+		transports: ['polling', 'websocket'], // Start with polling to establish session, then upgrade to websocket
+		withCredentials: true, // Enable sending cookies
+		autoConnect: true
+	});
 
-socket.on("disconnect", (reason) => {
-	console.log('🔌 Disconnected:', reason);
-});
+	// Set up event listeners
+	realSocket.on("connect", () => {
+		console.log('✅ Connected to server with socket ID:', realSocket.id);
+	});
 
-socket.on("error", (error: { message: string }) => {
-	console.error('⚠️  Server error:', error.message);
-});
+	realSocket.on("connect_error", (err: any) => {
+		console.error('❌ Connection error:', err.message);
+	});
+
+	realSocket.on("disconnect", (reason: any) => {
+		console.log('🔌 Disconnected:', reason);
+	});
+
+	realSocket.on("error", (error: { message: string }) => {
+		console.error('⚠️  Server error:', error.message);
+	});
+}
 
 // StartGameScreen
 export function joinParty({ partyCode, name }: { partyCode: string; name: string }) {
