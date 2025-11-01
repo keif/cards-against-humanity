@@ -1,96 +1,240 @@
-Play the Game Now! | http://www.cardiparty.co/ - (under construction) 
+# Cards Against Humanity - Online Multiplayer
 
-___
-[//]: # (Build: [![CircleCI]&#40;https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master.svg?style=svg&#41;]&#40;https://circleci.com/gh/yusufameri/cards-against-humanity/tree/master&#41;)
-# Welcome to Cards Against Humanity on Mobile!
-This project represents a mobile version of the popular party card game we all know and love, "**Cards Against Humanity!**"
+A real-time multiplayer implementation of the popular party card game, built for mobile web browsers. Play with friends from any device with an internet connection.
 
-The game is simple! The person who plays the funniest card wins! For more info on intricate versions of the game, checkout the [official rulebook](https://s3.amazonaws.com/cah/CAH_Rules.pdf) from the creators.
+**Based on:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
-Although this game will be available to play online, it is meant to be played in person with friends, for those times we forget to carry that 5 lb brick of cards :P
+## Tech Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Vite** - Fast build tooling and HMR
+- **Socket.IO Client** - Real-time game communication
+- **React Router** - Client-side routing
+- **React DnD** - Card drag-and-drop interactions
+- **Vitest** - Unit and component testing (119 tests)
+
+### Backend
+- **Node.js (≥18.0.0)** with Express
+- **Socket.IO** - Real-time bidirectional communication
+- **Redis** - Session storage and game state management
+- **TypeScript** - Type safety throughout
+- **Winston** - Structured logging
+
+### Infrastructure
+- **pnpm** - Package management with workspaces
+- **Redis Adapter** - Horizontal Socket.IO scaling support
+- Session-based authentication with Redis store
+- Rate limiting and security middleware
+
+## Prerequisites
+
+1. **Node.js** ≥18.0.0 (recommend using [nvm](https://github.com/nvm-sh/nvm))
+2. **pnpm** - Install globally: `npm install -g pnpm`
+3. **Redis** - Running locally or accessible instance
 
 ## Development Setup
 
-### Prerequisites
-1. Node.js (v18.16.0) - if using [`nvm`](https://github.com/nvm-sh/nvm) run `nvm use`
+### 1. Clone and Install
+```bash
+git clone <repository-url>
+cd cards-against-humanity
+pnpm install
+```
 
-### Setup
-1. Clone the repo
-2. run `yarn` to get all the dependencies
+### 2. Configure Environment
+```bash
+# Server configuration
+cp server/.env.example server/.env
+# Edit server/.env with your settings
 
-## Developing Roadmap
-### Iteration 1:
-The first iteration of this project will be released in the form of a mobile game, experienced via a users mobile web browser (Chrome/Firefox for most Android users, and Safari for most iOS users). The game will be cross platform and available to play for anyone, free of charge, as long as they have an internet connection and a group of friends to play with! This has the immediate benefit that users who have different phone's can play with each other without having to wait for their version of the app to be released. 
-### Iteration 2:
-I hope to offer this game natively on the App Store and Android Play Store (with react-native) under a different name, due to licensing, once I have created the basic web version.
+# Client configuration (optional)
+cp client/.env.example client/.env
+```
 
-## Proposed Tech Stack
-These are the preliminary tech stacks that I have planned to use, subject to change.
-### Frontend
-1. React.js
-2. Vanilla CSS
-3. Socket.io
+**Required environment variables:**
+- `SESSION_SECRET` - Secure random string for session signing
+- `ALLOWED_ORIGINS` - Comma-separated CORS origins (e.g., `http://localhost:5173`)
+- `PORT` - Server port (default: 8080)
+- `NODE_ENV` - `development` or `production`
 
+### 3. Start Redis
+```bash
+# macOS with Homebrew
+brew services start redis
 
-### Backend
-1. Node.js (Express.js)
-2. Socket.io
-3. Redis (for fast, in memory real time game state data)
-4. MongoDB (for longer term game history data)
+# Or run directly
+redis-server
+```
 
+### 4. Run Development Servers
+```bash
+# Start both client and server with hot reload
+pnpm dev
 
-### Infrastructure
-TBD
+# Or run separately
+pnpm dev:client  # Frontend on http://localhost:5173
+pnpm dev:server  # Backend on http://localhost:8080
+```
 
-## Current Project Progress
-I just discovered this, and it's an idea a few friends have been toying with. I'm using this as the basis to kick something off, we'll see how much of the original code will be retained.
+## Building for Production
 
-## Extra goodies and features
-Although the basic mvp of this project need not be complicated, here are a few extra goodies that can make the app shine!
+### Build All
+```bash
+pnpm build
+```
 
-* facebook/instagram login
-* facebook/instagram sharing capability
-* save card play to local images
-* user gameplay reaction (w/Emoji's :))
-* Add different game modes as described in the [handbook](https://s3.amazonaws.com/cah/CAH_Rules.pdf)
+### Build Individual Services
+```bash
+pnpm build:client  # Outputs to client/dist
+pnpm build:server  # Outputs to server/dist
+```
 
-## Wireframes
-Take a look at the [Figma](https://www.figma.com/file/IYczZI8lUrWHNwh7E17qBr/Cards-Against-Humanity?type=design&node-id=0%3A1&mode=design&t=gbHl9zHtVGVM7hST-1) created and try out the prototype option to see the game in action before its created!
+### Run Production Server
+```bash
+cd server
+pnpm start  # Runs compiled JS from dist/
+```
 
-Below are some Screenshots and the story board for user interactions:
+## Testing
 
-#### 1. User enters the site from mobile browser
-![1](prototype/images/Screen1.png)
+```bash
+# Run all client tests
+pnpm test:client
 
-#### 2a. User Creates a party
-![1](prototype/images/Screen2a.png)
+# Watch mode for development
+cd client
+pnpm test:watch
 
-#### 2b. User Joins an existing party
-![1](prototype/images/Screen2b.png)
+# Coverage report
+pnpm test:coverage
 
-#### 3a. Round Starts and User is NOT the Card Czar
-User will select/drag-and-drop their best/funniest white card based on the current black card in play.  
-![1](prototype/images/Screen3a.png)
+# Interactive UI
+pnpm test:ui
+```
 
-#### 3.a The Card Czar sees a "Waiting Screen"
-Nothing much for them to do but wait...  
-![1](prototype/images/Screen3b.png)
+**Current test coverage:** 119 passing component tests
 
-#### 4a. Round finishes and everyone views the white cards played
-![1](prototype/images/Screen4a.png)
+## Project Structure
 
-#### 4b. Judge chooses their favorite card
-![1](prototype/images/Screen4b.png)
+```
+cards-against-humanity/
+├── client/                 # React frontend (Vite)
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── pages/         # Route pages
+│   │   ├── hooks/         # Custom React hooks
+│   │   └── utils/         # Client utilities
+│   └── dist/              # Production build output
+│
+├── server/                # Express + Socket.IO backend
+│   ├── src/
+│   │   ├── routes/        # REST API routes
+│   │   ├── services/      # Business logic (GameService, CardService)
+│   │   ├── models/        # Data models
+│   │   ├── middleware/    # Express middleware
+│   │   ├── utils/         # Server utilities
+│   │   └── index.ts       # Server entry point
+│   └── dist/              # Production build output
+│
+└── scripts/               # Utility scripts
+    ├── submit-cards.sh    # Card submission tool
+    └── example-cards.json # Sample card data
+```
 
-#### 5. Round Winner is Chosen!
-![1](prototype/images/Screen6.png)
+## Features
 
-#### 6. Round Restarts and Everyone sees the Scoreboard
-![1](prototype/images/Screen5.png)
+### Core Gameplay
+- Real-time multiplayer game rooms
+- Card Czar rotation system
+- Drag-and-drop card selection
+- Live scoring and winner announcement
+- Mobile-optimized interface
 
+### Card Management API
+User-generated card submission and moderation system:
 
+**Submission Endpoints:**
+- `POST /api/cards/submit` - Submit single card
+- `POST /api/cards/batch` - Batch submit (up to 100 cards)
 
-___
+**Moderation Endpoints:**
+- `GET /api/cards/pending` - View cards awaiting approval
+- `POST /api/cards/approve/:id` - Approve card
+- `POST /api/cards/reject/:id` - Reject card with optional reason
 
-###### Disclaimer:
-After I had made a few initial wireframes for this project, I researched and found out that a similar idea, called Cards Against Originality, existed some years ago. It's hard to find any remnants of this project online, but as for the licensing purposes, Cards Against Humanity is under the Creative Commons licenses and as such, I do not intend to make money of this project or sell it in any way. This is purely for educational purposes.
+**Query Endpoints:**
+- `GET /api/cards/approved` - List approved user cards
+- `GET /api/cards/:id/stats` - Card usage statistics
+- `GET /api/cards/expansions` - Available card packs
+
+**Command-line submission tool:**
+```bash
+# Submit single card
+./scripts/submit-cards.sh -s "Your card text" A
+
+# Batch submit from JSON
+./scripts/submit-cards.sh -b scripts/example-cards.json
+```
+
+### Game Management
+- `1,322` official cards from base game and expansions
+- Support for user-generated cards (pending moderation)
+- Redis-backed session management
+- Rate limiting for abuse prevention
+
+## Deployment
+
+### Production Checklist
+
+1. **Environment Configuration**
+   - Set strong `SESSION_SECRET`
+   - Configure `ALLOWED_ORIGINS` for your domains
+   - Set `NODE_ENV=production`
+   - Configure `LOG_LEVEL=info` or `warn`
+
+2. **Redis Setup**
+   - Ensure Redis is accessible from your server
+   - Consider Redis persistence configuration
+   - Optional: Redis Cluster for horizontal scaling
+
+3. **Build and Deploy**
+   ```bash
+   pnpm install --production=false
+   pnpm build
+
+   # Serve client/dist/ with static file server (nginx, CDN, etc.)
+   # Run server with: cd server && pnpm start
+   ```
+
+4. **Security Considerations**
+   - Enable HTTPS/TLS in production
+   - Configure appropriate CORS origins
+   - Review rate limiting thresholds
+   - Consider adding authentication for moderation endpoints
+   - Regular Redis backups for game state
+
+### Scaling
+- Redis Adapter enables horizontal Socket.IO scaling
+- Multiple server instances can share Redis for session/game state
+- Consider load balancer for multi-instance deployments
+
+## Game Rules
+
+For detailed game rules, see the [official Cards Against Humanity rulebook](https://s3.amazonaws.com/cah/CAH_Rules.pdf).
+
+**Basic Rules:**
+1. One player is the Card Czar each round
+2. Card Czar reads a question card (black)
+3. Other players submit their funniest answer card (white)
+4. Card Czar picks the best answer
+5. Winner gets a point, Card Czar rotates
+6. First to reach point goal wins
+
+## License & Attribution
+
+**License:** MIT
+
+**Original Project:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
+
+**Disclaimer:** Cards Against Humanity is licensed under [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). This project is for educational and personal use only. Not affiliated with or endorsed by Cards Against Humanity LLC. Do not use for commercial purposes.
