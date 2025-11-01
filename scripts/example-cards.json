@@ -1,0 +1,48 @@
+{
+  "cards": [
+    {
+      "text": "Two midgets shitting in a bucket",
+      "cardType": "A"
+    },
+    {
+      "text": "Pretending to care",
+      "cardType": "A"
+    },
+    {
+      "text": "A really cool hat",
+      "cardType": "A"
+    },
+    {
+      "text": "What's that smell?",
+      "cardType": "Q",
+      "numAnswers": 1
+    },
+    {
+      "text": "I never truly understood ____ until I encountered ____.",
+      "cardType": "Q",
+      "numAnswers": 2
+    },
+    {
+      "text": "Why can't I sleep at night?",
+      "cardType": "Q",
+      "numAnswers": 1
+    },
+    {
+      "text": "The class field trip was completely ruined by ____.",
+      "cardType": "Q",
+      "numAnswers": 1
+    },
+    {
+      "text": "Programming in JavaScript",
+      "cardType": "A"
+    },
+    {
+      "text": "Stack Overflow at 3 AM",
+      "cardType": "A"
+    },
+    {
+      "text": "Debugging CSS for 6 hours",
+      "cardType": "A"
+    }
+  ]
+}

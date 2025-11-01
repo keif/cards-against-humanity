@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cookieSession from 'cookie-session';
@@ -20,6 +21,7 @@ import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter'
 import { CardService } from '@/services/cardService';
 import { initializeCardService } from '@/models/Card';
 import cards from '@/data/cards';
+import cardRoutes from '@/routes/cardRoutes';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -174,6 +176,9 @@ app.use((req, res, next) => {
 });
 
 app.use(sessionMiddleware);
+
+// API routes
+app.use('/api/cards', cardRoutes);
 
 // Serve production build
 app.use(express.static(path.join(__dirname, '../../client', 'dist')));

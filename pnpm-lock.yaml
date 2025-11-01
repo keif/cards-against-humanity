@@ -141,12 +141,18 @@ importers:
       lodash:
         specifier: ^4.17.11
         version: 4.17.21
+      module-alias:
+        specifier: ^2.2.3
+        version: 2.2.3
       morgan:
         specifier: ^1.10.1
         version: 1.10.1
       socket.io:
         specifier: ^4.7.2
         version: 4.8.1
+      tsconfig-paths:
+        specifier: ^4.2.0
+        version: 4.2.0
       validator:
         specifier: ^13.15.15
         version: 13.15.15
@@ -196,9 +202,6 @@ importers:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@20.19.16)(typescript@5.9.2)
-      tsconfig-paths:
-        specifier: ^4.2.0
-        version: 4.2.0
       typescript:
         specifier: ^5.1.6
         version: 5.9.2
@@ -2198,6 +2201,9 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
+
+  module-alias@2.2.3:
+    resolution: {integrity: sha512-23g5BFj4zdQL/b6tor7Ji+QY4pEfNH784BMslY9Qb0UnJWRAt+lQGLYmRaM0KDBwIG23ffEBELhZDP2rhi9f/Q==}
 
   morgan@1.10.1:
     resolution: {integrity: sha512-223dMRJtI/l25dJKWpgij2cMtywuG/WiUKXdvwfbhGKBhy1puASqXwFzmWZ7+K73vUPoR7SS2Qz2cI/g9MKw0A==}
@@ -5163,6 +5169,8 @@ snapshots:
   minimist@1.2.8: {}
 
   mkdirp@1.0.4: {}
+
+  module-alias@2.2.3: {}
 
   morgan@1.10.1:
     dependencies:
