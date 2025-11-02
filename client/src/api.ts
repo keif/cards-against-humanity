@@ -1,5 +1,5 @@
 import { RoundInterface } from "@/Screens/PlayerSelectionScreen/PlayerSelectionScreen";
-import { CallbackType } from "@/types";
+import { CallbackType, LobbyStateResponse } from "@/types";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080';
 
@@ -99,9 +99,9 @@ export function joinParty({ partyCode, name }: { partyCode: string; name: string
 	socket.emit('joinParty', { partyCode, name });
 }
 
-export function getLobbyState(partyCode: string, cb: CallbackType) {
+export function getLobbyState(partyCode: string, cb: (response: LobbyStateResponse) => void) {
 	socket.emit('getLobbyState', partyCode);
-	socket.on('getLobbyState', (response) => cb(response));
+	socket.on('getLobbyState', (response: LobbyStateResponse) => cb(response));
 }
 
 export function newLobbyState(partyCode: string) {
@@ -126,7 +126,7 @@ export function offGameStarted() {
 
 export function getPlayerRoundState(partyCode: string, cb: (roundState: RoundInterface | null) => void) {
 	socket.emit('getPlayerRoundState', partyCode);
-	socket.on('getPlayerRoundState', (roundState) => cb(roundState));
+	socket.on('getPlayerRoundState', (roundState: RoundInterface | null) => cb(roundState));
 }
 
 export function newGameState(partyCode: string) {

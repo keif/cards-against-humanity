@@ -142,7 +142,7 @@ describe('Top Component', () => {
 			);
 			const topDiv = container.querySelector('.top');
 			const innerDiv = container.querySelector('.inner');
-			expect(topDiv).toContainElement(innerDiv);
+			expect(topDiv).toContainElement(innerDiv as HTMLElement);
 		});
 	});
 });

@@ -78,6 +78,9 @@ importers:
       '@vitest/ui':
         specifier: ^4.0.5
         version: 4.0.5(vitest@4.0.5)
+      dnd-core:
+        specifier: ^16.0.1
+        version: 16.0.1
       eslint:
         specifier: ^8.44.0
         version: 8.57.1

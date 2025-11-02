@@ -28,7 +28,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		() => ({
 			accept: ItemTypes.CARD,
 			canDrop: () => true,
-			drop: (item) => {
+			drop: (item: DraggedCard) => {
 				if (dropHandler) {
 					dropHandler(item);
 				}
@@ -40,7 +40,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 			})
 		}),
 		[dropHandler]);
-	let status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : "";
+	let status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : undefined;
 
 	// draggable
 	if ((roundRole === PLAYER && roundState === PLAYER_SELECTING) ||
@@ -48,7 +48,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		(roundState === VIEWING_WINNER)) {
 		return (
 			<div className="drop-space">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status} />
+				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 				<div
 					ref={drop}
 				>
@@ -64,7 +64,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		(roundRole === JUDGE && roundState === JUDGE_WAITING)) {
 		return (
 			<div className="drop-space">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING && status} />
+				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 			</div>
 		);
 	}

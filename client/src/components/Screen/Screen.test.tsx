@@ -128,8 +128,8 @@ describe('Screen Component', () => {
 			const screenDiv = container.querySelector('.screen');
 			const parentDiv = container.querySelector('.parent');
 			const childDiv = container.querySelector('.child');
-			expect(screenDiv).toContainElement(parentDiv);
-			expect(parentDiv).toContainElement(childDiv);
+			expect(screenDiv).toContainElement(parentDiv as HTMLElement);
+			expect(parentDiv).toContainElement(childDiv as HTMLElement);
 		});
 
 		it('renders a single wrapper div', () => {

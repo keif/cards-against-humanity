@@ -44,6 +44,7 @@
     "@typescript-eslint/parser": "^6.1.0",
     "@vitejs/plugin-react": "^4.0.3",
     "@vitest/ui": "^4.0.5",
+    "dnd-core": "^16.0.1",
     "eslint": "^8.44.0",
     "happy-dom": "^20.0.10",
     "jsdom": "^27.0.1",

@@ -7,11 +7,11 @@ import { useDrag } from "react-dnd";
 
 
 export type CardType = "Q" | "A" | "Title" | "placeholder" | "Link";
-export const Q = "Q";
-export const A = "A";
-export const TITLE = "Title";
-export const PLACEHOLDER = "placeholder";
-export const LINK = "Link";
+export const Q: CardType = "Q";
+export const A: CardType = "A";
+export const TITLE: CardType = "Title";
+export const PLACEHOLDER: CardType = "placeholder";
+export const LINK: CardType = "Link";
 
 export interface CardProps {
 	cardType: CardType;

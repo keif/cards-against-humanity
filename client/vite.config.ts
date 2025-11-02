@@ -38,7 +38,7 @@ export default defineConfig(({ command, mode }) => {
 				open: false,
 				gzipSize: true,
 				brotliSize: true,
-			}),
+			}) as any,
 		],
 		server: {
 			open: true,
