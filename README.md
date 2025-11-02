@@ -158,10 +158,14 @@ User-generated card submission and moderation system:
 - `POST /api/cards/submit` - Submit single card
 - `POST /api/cards/batch` - Batch submit (up to 100 cards)
 
-**Moderation Endpoints:**
+**Moderation Endpoints** (requires moderator role):
 - `GET /api/cards/pending` - View cards awaiting approval
 - `POST /api/cards/approve/:id` - Approve card
 - `POST /api/cards/reject/:id` - Reject card with optional reason
+
+**Authentication Endpoints:**
+- `GET /api/cards/auth/role` - Check current user's role
+- `POST /api/cards/auth/promote` - Promote to moderator (requires `ADMIN_KEY`)
 
 **Query Endpoints:**
 - `GET /api/cards/approved` - List approved user cards
@@ -189,6 +193,7 @@ User-generated card submission and moderation system:
 
 1. **Environment Configuration**
    - Set strong `SESSION_SECRET`
+   - Set strong `ADMIN_KEY` for moderator promotion
    - Configure `ALLOWED_ORIGINS` for your domains
    - Set `NODE_ENV=production`
    - Configure `LOG_LEVEL=info` or `warn`
@@ -211,7 +216,8 @@ User-generated card submission and moderation system:
    - Enable HTTPS/TLS in production
    - Configure appropriate CORS origins
    - Review rate limiting thresholds
-   - Consider adding authentication for moderation endpoints
+   - Moderation endpoints protected with role-based authentication
+   - Keep `ADMIN_KEY` secret and rotate periodically
    - Regular Redis backups for game state
 
 ### Scaling

@@ -4,6 +4,7 @@ declare module 'express-session' {
 	export interface SessionData {
 		name?: string;
 		sessionID?: string;
+		role?: 'user' | 'moderator' | 'admin';
 	}
 }
 

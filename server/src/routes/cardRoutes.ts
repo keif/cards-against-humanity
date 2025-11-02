@@ -2,8 +2,97 @@ import { Router, Request, Response } from 'express';
 import { getCardService } from '@/models/Card';
 import { InputValidator } from '@/utils/validation';
 import logger from '@/utils/logger';
+import { requireModerator } from '@/middleware/auth';
 
 const router = Router();
+
+/**
+ * Get current user's role
+ * GET /api/cards/auth/role
+ */
+router.get('/auth/role', async (req: Request, res: Response) => {
+	try {
+		const session = req.session;
+
+		if (!session || !session.id) {
+			return res.status(401).json({ error: 'Not authenticated' });
+		}
+
+		// Initialize role to 'user' if not set
+		if (!session.role) {
+			session.role = 'user';
+		}
+
+		res.json({
+			success: true,
+			sessionId: session.id,
+			role: session.role,
+			name: session.name || null
+		});
+	} catch (error) {
+		logger.error('Error getting user role', { error: error instanceof Error ? error.message : String(error) });
+		res.status(500).json({ error: 'Failed to get user role' });
+	}
+});
+
+/**
+ * Promote user to moderator role
+ * POST /api/cards/auth/promote
+ * Body: { adminKey: string }
+ * Sets the current session's role to 'moderator'
+ */
+router.post('/auth/promote', async (req: Request, res: Response) => {
+	try {
+		const { adminKey } = req.body;
+		const session = req.session;
+
+		if (!session || !session.id) {
+			return res.status(401).json({ error: 'Not authenticated' });
+		}
+
+		// Check admin key from environment
+		const expectedAdminKey = process.env.ADMIN_KEY;
+
+		if (!expectedAdminKey) {
+			logger.error('ADMIN_KEY not configured in environment');
+			return res.status(500).json({ error: 'Server configuration error' });
+		}
+
+		if (adminKey !== expectedAdminKey) {
+			logger.warn('Invalid admin key attempt', {
+				sessionId: session.id,
+				ip: req.ip
+			});
+			return res.status(403).json({ error: 'Invalid admin key' });
+		}
+
+		// Promote user to moderator
+		session.role = 'moderator';
+
+		// Save session to persist the role
+		session.save((err) => {
+			if (err) {
+				logger.error('Failed to save session', { error: err.message });
+				return res.status(500).json({ error: 'Failed to save session' });
+			}
+
+			logger.info('User promoted to moderator', {
+				sessionId: session.id,
+				name: session.name
+			});
+
+			res.json({
+				success: true,
+				message: 'Successfully promoted to moderator',
+				role: session.role,
+				sessionId: session.id
+			});
+		});
+	} catch (error) {
+		logger.error('Error promoting user', { error: error instanceof Error ? error.message : String(error) });
+		res.status(500).json({ error: 'Failed to promote user' });
+	}
+});
 
 /**
  * Submit a user-generated card
@@ -58,8 +147,9 @@ router.post('/submit', async (req: Request, res: Response) => {
 /**
  * Get pending cards for moderation
  * GET /api/cards/pending?type=A&limit=50
+ * Requires: moderator or admin role
  */
-router.get('/pending', async (req: Request, res: Response) => {
+router.get('/pending', requireModerator, async (req: Request, res: Response) => {
 	try {
 		const type = req.query.type as 'A' | 'Q' | undefined;
 		const limit = parseInt(req.query.limit as string) || 50;
@@ -94,8 +184,9 @@ router.get('/pending', async (req: Request, res: Response) => {
  * Approve a pending card
  * POST /api/cards/approve/:id
  * Body: { moderatorId?: string }
+ * Requires: moderator or admin role
  */
-router.post('/approve/:id', async (req: Request, res: Response) => {
+router.post('/approve/:id', requireModerator, async (req: Request, res: Response) => {
 	try {
 		const cardId = parseInt(req.params.id);
 		const moderatorId = req.body.moderatorId || req.session.id || 'system';
@@ -135,8 +226,9 @@ router.post('/approve/:id', async (req: Request, res: Response) => {
  * Reject a pending card
  * POST /api/cards/reject/:id
  * Body: { reason?: string, moderatorId?: string }
+ * Requires: moderator or admin role
  */
-router.post('/reject/:id', async (req: Request, res: Response) => {
+router.post('/reject/:id', requireModerator, async (req: Request, res: Response) => {
 	try {
 		const cardId = parseInt(req.params.id);
 		const { reason, moderatorId } = req.body;
