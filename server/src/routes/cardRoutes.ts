@@ -127,6 +127,28 @@ router.post('/submit', async (req: Request, res: Response) => {
 			return res.status(503).json({ error: 'Card service unavailable' });
 		}
 
+		// Check for duplicates
+		const duplicateCheck = await cardService.checkForDuplicate(text.trim(), cardType as 'A' | 'Q');
+
+		if (duplicateCheck.isDuplicate) {
+			logger.info('Duplicate card submission rejected', {
+				userId,
+				cardType,
+				duplicateId: duplicateCheck.duplicateId,
+				duplicateSource: duplicateCheck.duplicateSource
+			});
+
+			return res.status(409).json({
+				error: 'This card already exists',
+				duplicate: {
+					id: duplicateCheck.duplicateId,
+					text: duplicateCheck.duplicateText,
+					source: duplicateCheck.duplicateSource,
+					expansion: duplicateCheck.duplicateExpansion
+				}
+			});
+		}
+
 		const cardId = await cardService.submitUserCard({
 			text: text.trim(),
 			cardType: cardType as 'A' | 'Q',
@@ -398,6 +420,17 @@ router.post('/batch', async (req: Request, res: Response) => {
 
 			if (card.text.length > 500) {
 				results.failed.push({ index: i, error: 'Card text must be 500 characters or less', card });
+				continue;
+			}
+
+			// Check for duplicates
+			const duplicateCheck = await cardService.checkForDuplicate(card.text.trim(), card.cardType as 'A' | 'Q');
+			if (duplicateCheck.isDuplicate) {
+				results.failed.push({
+					index: i,
+					error: `Duplicate card (exists as ${duplicateCheck.duplicateSource})`,
+					card
+				});
 				continue;
 			}
 

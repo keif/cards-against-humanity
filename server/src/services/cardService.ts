@@ -4,6 +4,32 @@ import { Card } from '@/data/types';
 import logger from '@/utils/logger';
 
 /**
+ * Normalize card text for duplicate detection
+ * - Convert to lowercase
+ * - Trim whitespace
+ * - Collapse multiple spaces into single space
+ * - Remove trailing punctuation for comparison
+ */
+function normalizeCardText(text: string): string {
+	return text
+		.toLowerCase()
+		.trim()
+		.replace(/\s+/g, ' ')
+		.replace(/[.!?]+$/, ''); // Remove trailing punctuation
+}
+
+/**
+ * Duplicate detection result
+ */
+export interface DuplicateInfo {
+	isDuplicate: boolean;
+	duplicateId?: number;
+	duplicateText?: string;
+	duplicateSource?: 'official' | 'user-pending' | 'user-approved' | 'user-rejected';
+	duplicateExpansion?: string;
+}
+
+/**
  * Redis Card Service
  *
  * Redis Data Structure:
@@ -179,6 +205,75 @@ export class CardService {
 	}
 
 	// ========== User-Generated Cards ==========
+
+	/**
+	 * Check if a card text is a duplicate
+	 * Checks against official cards and all user-submitted cards
+	 */
+	async checkForDuplicate(text: string, cardType: 'A' | 'Q'): Promise<DuplicateInfo> {
+		const normalizedText = normalizeCardText(text);
+
+		try {
+			// 1. Check official cards across all expansions
+			const expansions = await this.getAvailableExpansions();
+
+			for (const expansion of expansions) {
+				const officialCardIds = await this.redis.smembers(`cards:official:${expansion}:${cardType}`);
+
+				for (const idStr of officialCardIds) {
+					const cardData = await this.redis.hgetall(`card:${idStr}`);
+					if (cardData && cardData.text) {
+						const normalizedExistingText = normalizeCardText(cardData.text);
+						if (normalizedExistingText === normalizedText) {
+							return {
+								isDuplicate: true,
+								duplicateId: Number(idStr),
+								duplicateText: cardData.text,
+								duplicateSource: 'official',
+								duplicateExpansion: expansion
+							};
+						}
+					}
+				}
+			}
+
+			// 2. Check user cards (pending, approved, rejected)
+			const userStatuses: Array<{ status: 'pending' | 'approved' | 'rejected'; source: 'user-pending' | 'user-approved' | 'user-rejected' }> = [
+				{ status: 'pending', source: 'user-pending' },
+				{ status: 'approved', source: 'user-approved' },
+				{ status: 'rejected', source: 'user-rejected' }
+			];
+
+			for (const { status, source } of userStatuses) {
+				const userCardIds = await this.redis.zrange(`cards:user:${status}:${cardType}`, 0, -1);
+
+				for (const idStr of userCardIds) {
+					const cardData = await this.redis.hgetall(`card:${idStr}`);
+					if (cardData && cardData.text) {
+						const normalizedExistingText = normalizeCardText(cardData.text);
+						if (normalizedExistingText === normalizedText) {
+							return {
+								isDuplicate: true,
+								duplicateId: Number(idStr),
+								duplicateText: cardData.text,
+								duplicateSource: source
+							};
+						}
+					}
+				}
+			}
+
+			// No duplicate found
+			return { isDuplicate: false };
+
+		} catch (error) {
+			logger.error('Error checking for duplicate card', {
+				error: error instanceof Error ? error.message : String(error)
+			});
+			// In case of error, allow submission (fail open)
+			return { isDuplicate: false };
+		}
+	}
 
 	/**
 	 * Submit a user-generated card

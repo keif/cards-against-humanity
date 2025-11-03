@@ -13,6 +13,7 @@ const mockCardService: Partial<CardService> = {
   getApprovedUserCards: vi.fn(),
   getCardStats: vi.fn(),
   getAvailableExpansions: vi.fn(),
+  checkForDuplicate: vi.fn(),
 };
 
 vi.mock('@/models/Card', () => ({
@@ -36,6 +37,7 @@ describe('Card Routes', () => {
     it('should submit a valid answer card', async () => {
       const mockCardId = 1001;
       (mockCardService.submitUserCard as any).mockResolvedValue(mockCardId);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
 
       const res = await agent.post('/submit', {
         text: 'Test answer card',
@@ -63,6 +65,7 @@ describe('Card Routes', () => {
     it('should submit a valid question card', async () => {
       const mockCardId = 1002;
       (mockCardService.submitUserCard as any).mockResolvedValue(mockCardId);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
 
       const res = await agent.post('/submit', {
         text: 'Test question card?',
@@ -116,6 +119,7 @@ describe('Card Routes', () => {
     it('should trim whitespace from card text', async () => {
       const mockCardId = 1003;
       (mockCardService.submitUserCard as any).mockResolvedValue(mockCardId);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
 
       await agent.post('/submit', {
         text: '  Test card with spaces  ',
@@ -127,6 +131,89 @@ describe('Card Routes', () => {
           text: 'Test card with spaces',
         })
       );
+    });
+
+    it('should reject duplicate card from official set', async () => {
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({
+        isDuplicate: true,
+        duplicateId: 42,
+        duplicateText: 'Existing official card',
+        duplicateSource: 'official',
+        duplicateExpansion: 'Base'
+      });
+
+      const res = await agent.post('/submit', {
+        text: 'Existing official card',
+        cardType: 'A',
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('This card already exists');
+      expect(res.body.duplicate).toEqual({
+        id: 42,
+        text: 'Existing official card',
+        source: 'official',
+        expansion: 'Base'
+      });
+      expect(mockCardService.submitUserCard).not.toHaveBeenCalled();
+    });
+
+    it('should reject duplicate card from pending user submissions', async () => {
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({
+        isDuplicate: true,
+        duplicateId: 1050,
+        duplicateText: 'Pending user card',
+        duplicateSource: 'user-pending'
+      });
+
+      const res = await agent.post('/submit', {
+        text: 'Pending user card',
+        cardType: 'A',
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('This card already exists');
+      expect(res.body.duplicate.source).toBe('user-pending');
+      expect(mockCardService.submitUserCard).not.toHaveBeenCalled();
+    });
+
+    it('should reject duplicate card from approved user submissions', async () => {
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({
+        isDuplicate: true,
+        duplicateId: 2001,
+        duplicateText: 'Approved user card',
+        duplicateSource: 'user-approved'
+      });
+
+      const res = await agent.post('/submit', {
+        text: 'Approved user card',
+        cardType: 'Q',
+        numAnswers: 1
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('This card already exists');
+      expect(res.body.duplicate.source).toBe('user-approved');
+      expect(mockCardService.submitUserCard).not.toHaveBeenCalled();
+    });
+
+    it('should reject duplicate with different casing/spacing', async () => {
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({
+        isDuplicate: true,
+        duplicateId: 100,
+        duplicateText: 'Test Card',
+        duplicateSource: 'official',
+        duplicateExpansion: 'Base'
+      });
+
+      const res = await agent.post('/submit', {
+        text: '  TEST   CARD  ',
+        cardType: 'A',
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.error).toBe('This card already exists');
+      expect(mockCardService.checkForDuplicate).toHaveBeenCalledWith('TEST   CARD', 'A');
     });
   });
 
@@ -410,6 +497,7 @@ describe('Card Routes', () => {
       (mockCardService.submitUserCard as any)
         .mockResolvedValueOnce(1001)
         .mockResolvedValueOnce(1002);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
 
       const res = await agent.post('/batch', {
         cards: [
@@ -444,6 +532,7 @@ describe('Card Routes', () => {
 
     it('should handle partial failures', async () => {
       (mockCardService.submitUserCard as any).mockResolvedValue(1001);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
 
       const res = await agent.post('/batch', {
         cards: [
@@ -483,6 +572,35 @@ describe('Card Routes', () => {
       expect(res.body.submitted).toBe(0);
       expect(res.body.failed).toBe(1);
       expect(res.body.results.failed[0].error).toBe('Card text must be 500 characters or less');
+    });
+
+    it('should reject duplicate cards in batch', async () => {
+      (mockCardService.submitUserCard as any).mockResolvedValue(1001);
+      (mockCardService.checkForDuplicate as any)
+        .mockResolvedValueOnce({ isDuplicate: false }) // First card is unique
+        .mockResolvedValueOnce({ // Second card is duplicate
+          isDuplicate: true,
+          duplicateId: 42,
+          duplicateText: 'Existing card',
+          duplicateSource: 'official'
+        })
+        .mockResolvedValueOnce({ isDuplicate: false }); // Third card is unique
+
+      const res = await agent.post('/batch', {
+        cards: [
+          { text: 'Unique card 1', cardType: 'A' },
+          { text: 'Existing card', cardType: 'A' },
+          { text: 'Unique card 2', cardType: 'Q' },
+        ],
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.body.submitted).toBe(2);
+      expect(res.body.failed).toBe(1);
+      expect(res.body.results.failed[0]).toMatchObject({
+        index: 1,
+        error: 'Duplicate card (exists as official)',
+      });
     });
   });
 
