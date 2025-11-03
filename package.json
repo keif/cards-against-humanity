@@ -12,7 +12,9 @@
     "dev:server": "pnpm --filter cah_backend dev",
     "build:client": "pnpm --filter cah_frontend build",
     "build:server": "pnpm --filter cah_backend build",
-    "test:client": "pnpm --filter cah_frontend test"
+    "test": "pnpm test:client && pnpm test:server",
+    "test:client": "pnpm --filter cah_frontend test",
+    "test:server": "pnpm --filter cah_backend test"
   },
   "devDependencies": {
     "concurrently": "^8.0.1"

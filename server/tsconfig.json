@@ -56,5 +56,6 @@
     "**/__mocks__/*.tsx",
     "**/mocks.tsx",
     "**/test.*",
+    "vitest.config.ts"
   ]
 }

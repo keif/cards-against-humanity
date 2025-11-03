@@ -98,6 +98,7 @@ pnpm start  # Runs compiled JS from dist/
 
 ## Testing
 
+### Client Tests (Frontend)
 ```bash
 # Run all client tests
 pnpm test:client
@@ -113,7 +114,33 @@ pnpm test:coverage
 pnpm test:ui
 ```
 
-**Current test coverage:** 119 passing component tests
+**Client test coverage:** 119 passing component tests
+
+### Server Tests (Backend)
+```bash
+# Run all server tests
+pnpm test:server
+
+# Watch mode for development
+cd server
+pnpm test:watch
+
+# Coverage report
+pnpm test:coverage
+
+# Interactive UI
+pnpm test:ui
+```
+
+**Server test coverage:** 45 passing tests
+- 10 authentication middleware tests
+- 35 card routes API tests
+
+### Run All Tests
+```bash
+# Run both client and server tests
+pnpm test
+```
 
 ## Project Structure
 
