@@ -34,12 +34,16 @@ export const checkSocketRateLimit = (clientIP: string): boolean => {
 };
 
 // HTTP rate limiter - general API protection
+// DISABLED in test environment (NODE_ENV=test)
 export const httpRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Limit each IP to 100 requests per windowMs
     message: { error: 'Too many requests, please try again later' },
     standardHeaders: true,
     legacyHeaders: false,
+    skip: (req) => {
+        return process.env.NODE_ENV === 'test';
+    },
     handler: (req, res) => {
         logger.warn('HTTP rate limit exceeded', {
             ip: req.ip,
@@ -58,6 +62,7 @@ export const httpRateLimiter = rateLimit({
  * - Only counts failed attempts (skipSuccessfulRequests: true)
  * - 15-minute lockout after hitting the limit
  * - Enhanced security logging
+ * - DISABLED in test environment (NODE_ENV=test)
  */
 export const promotionRateLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -71,6 +76,11 @@ export const promotionRateLimiter = rateLimit({
 
     // Only count failed attempts (when status >= 400)
     skipSuccessfulRequests: true,
+
+    // Skip rate limiting in test environment
+    skip: (req) => {
+        return process.env.NODE_ENV === 'test';
+    },
 
     // Use default key generator (IP address with IPv6 support)
     // Removing custom keyGenerator to use express-rate-limit's built-in IPv6-safe implementation
@@ -103,6 +113,7 @@ export const promotionRateLimiter = rateLimit({
  * - 10 submissions per hour per session
  * - Prevents rapid-fire card submission spam
  * - Session-based tracking (not just IP)
+ * - DISABLED in test environment (NODE_ENV=test)
  */
 export const submissionRateLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour
@@ -145,8 +156,14 @@ export const submissionRateLimiter = rateLimit({
         });
     },
 
-    // Skip rate limiting for trusted moderators/admins
+    // Skip rate limiting for trusted moderators/admins and in test environment
     skip: (req) => {
+        // Skip in test environment
+        if (process.env.NODE_ENV === 'test') {
+            return true;
+        }
+
+        // Skip for moderators/admins
         const role = req.session?.role;
         return role === 'moderator' || role === 'admin';
     }
@@ -160,6 +177,7 @@ export const submissionRateLimiter = rateLimit({
  * - 30 votes per minute per session
  * - Allows normal voting behavior while preventing abuse
  * - Session-based tracking
+ * - DISABLED in test environment (NODE_ENV=test)
  */
 export const votingRateLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
@@ -200,5 +218,10 @@ export const votingRateLimiter = rateLimit({
             retryAfter: '1 minute',
             limit: 30
         });
+    },
+
+    // Skip rate limiting in test environment
+    skip: (req) => {
+        return process.env.NODE_ENV === 'test';
     }
 });

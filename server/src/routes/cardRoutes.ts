@@ -690,171 +690,6 @@ router.get('/approved', async (req: Request, res: Response) => {
 	}
 });
 
-/**
- * Get card statistics
- * GET /api/cards/:id/stats
- */
-router.get('/:id/stats', async (req: Request, res: Response) => {
-	try {
-		const cardId = parseInt(req.params.id);
-
-		if (isNaN(cardId)) {
-			return res.status(400).json({ error: 'Invalid card ID' });
-		}
-
-		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
-		}
-
-		const stats = await cardService.getCardStats(cardId);
-
-		res.json({
-			success: true,
-			cardId,
-			stats
-		});
-	} catch (error) {
-		logger.error('Error getting card stats', { error: error instanceof Error ? error.message : String(error) });
-		res.status(500).json({ error: 'Failed to get card stats' });
-	}
-});
-
-/**
- * Get available expansions
- * GET /api/cards/expansions
- */
-router.get('/expansions', async (req: Request, res: Response) => {
-	try {
-		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
-		}
-
-		const expansions = await cardService.getAvailableExpansions();
-
-		res.json({
-			success: true,
-			count: expansions.length,
-			expansions
-		});
-	} catch (error) {
-		logger.error('Error getting expansions', { error: error instanceof Error ? error.message : String(error) });
-		res.status(500).json({ error: 'Failed to get expansions' });
-	}
-});
-
-/**
- * Batch submit cards
- * POST /api/cards/batch
- * Body: { cards: Array<{ text: string, cardType: 'A' | 'Q', numAnswers?: number }> }
- * Rate limited: 10 submissions per hour per session (counts each card in batch)
- * Spam protected: Rejects similar cards within batch and recent submissions
- */
-router.post('/batch', submissionRateLimiter, async (req: Request, res: Response) => {
-	try {
-		const { cards } = req.body;
-		const userId = req.session.id || 'batch-import';
-
-		if (!Array.isArray(cards) || cards.length === 0) {
-			return res.status(400).json({ error: 'Cards array is required' });
-		}
-
-		if (cards.length > 100) {
-			return res.status(400).json({ error: 'Maximum 100 cards per batch' });
-		}
-
-		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
-		}
-
-		const results = {
-			submitted: [] as number[],
-			failed: [] as { index: number; error: string; card: any }[]
-		};
-
-		for (let i = 0; i < cards.length; i++) {
-			const card = cards[i];
-
-			// Validate each card
-			if (!card.text || typeof card.text !== 'string' || card.text.trim().length === 0) {
-				results.failed.push({ index: i, error: 'Card text is required', card });
-				continue;
-			}
-
-			if (!card.cardType || !['A', 'Q'].includes(card.cardType)) {
-				results.failed.push({ index: i, error: 'Card type must be "A" or "Q"', card });
-				continue;
-			}
-
-			if (card.text.length > 500) {
-				results.failed.push({ index: i, error: 'Card text must be 500 characters or less', card });
-				continue;
-			}
-
-			// Check for similar recent submissions (spam detection)
-			const similarityCheck = checkForSimilarSubmissions(card.text.trim(), userId);
-			if (similarityCheck.isSimilar) {
-				results.failed.push({
-					index: i,
-					error: 'Similar card recently submitted',
-					card
-				});
-				continue;
-			}
-
-			// Check for duplicates
-			const duplicateCheck = await cardService.checkForDuplicate(card.text.trim(), card.cardType as 'A' | 'Q');
-			if (duplicateCheck.isDuplicate) {
-				results.failed.push({
-					index: i,
-					error: `Duplicate card (exists as ${duplicateCheck.duplicateSource})`,
-					card
-				});
-				continue;
-			}
-
-			try {
-				const cardId = await cardService.submitUserCard({
-					text: card.text.trim(),
-					cardType: card.cardType as 'A' | 'Q',
-					numAnswers: card.cardType === 'Q' ? (card.numAnswers || 1) : 0,
-					expansion: 'user-generated',
-					userId
-				});
-
-				// Record submission for spam detection
-				recordSubmission(card.text.trim(), userId);
-
-				results.submitted.push(cardId);
-			} catch (error) {
-				results.failed.push({
-					index: i,
-					error: error instanceof Error ? error.message : 'Unknown error',
-					card
-				});
-			}
-		}
-
-		logger.info('Batch card submission completed', {
-			userId,
-			submitted: results.submitted.length,
-			failed: results.failed.length
-		});
-
-		res.status(201).json({
-			success: true,
-			submitted: results.submitted.length,
-			failed: results.failed.length,
-			results
-		});
-	} catch (error) {
-		logger.error('Error in batch submission', { error: error instanceof Error ? error.message : String(error) });
-		res.status(500).json({ error: 'Failed to process batch submission' });
-	}
-});
-
 // ========== Batch Moderation Endpoints ==========
 
 /**
@@ -1066,6 +901,171 @@ router.get('/moderator/stats', requireModerator, async (req: Request, res: Respo
 			error: error instanceof Error ? error.message : String(error)
 		});
 		res.status(500).json({ error: 'Failed to get moderation statistics' });
+	}
+});
+
+/**
+ * Get card statistics
+ * GET /api/cards/:id/stats
+ */
+router.get('/:id/stats', async (req: Request, res: Response) => {
+	try {
+		const cardId = parseInt(req.params.id);
+
+		if (isNaN(cardId)) {
+			return res.status(400).json({ error: 'Invalid card ID' });
+		}
+
+		const cardService = getCardService();
+		if (!cardService) {
+			return res.status(503).json({ error: 'Card service unavailable' });
+		}
+
+		const stats = await cardService.getCardStats(cardId);
+
+		res.json({
+			success: true,
+			cardId,
+			stats
+		});
+	} catch (error) {
+		logger.error('Error getting card stats', { error: error instanceof Error ? error.message : String(error) });
+		res.status(500).json({ error: 'Failed to get card stats' });
+	}
+});
+
+/**
+ * Get available expansions
+ * GET /api/cards/expansions
+ */
+router.get('/expansions', async (req: Request, res: Response) => {
+	try {
+		const cardService = getCardService();
+		if (!cardService) {
+			return res.status(503).json({ error: 'Card service unavailable' });
+		}
+
+		const expansions = await cardService.getAvailableExpansions();
+
+		res.json({
+			success: true,
+			count: expansions.length,
+			expansions
+		});
+	} catch (error) {
+		logger.error('Error getting expansions', { error: error instanceof Error ? error.message : String(error) });
+		res.status(500).json({ error: 'Failed to get expansions' });
+	}
+});
+
+/**
+ * Batch submit cards
+ * POST /api/cards/batch
+ * Body: { cards: Array<{ text: string, cardType: 'A' | 'Q', numAnswers?: number }> }
+ * Rate limited: 10 submissions per hour per session (counts each card in batch)
+ * Spam protected: Rejects similar cards within batch and recent submissions
+ */
+router.post('/batch', submissionRateLimiter, async (req: Request, res: Response) => {
+	try {
+		const { cards } = req.body;
+		const userId = req.session.id || 'batch-import';
+
+		if (!Array.isArray(cards) || cards.length === 0) {
+			return res.status(400).json({ error: 'Cards array is required' });
+		}
+
+		if (cards.length > 100) {
+			return res.status(400).json({ error: 'Maximum 100 cards per batch' });
+		}
+
+		const cardService = getCardService();
+		if (!cardService) {
+			return res.status(503).json({ error: 'Card service unavailable' });
+		}
+
+		const results = {
+			submitted: [] as number[],
+			failed: [] as { index: number; error: string; card: any }[]
+		};
+
+		for (let i = 0; i < cards.length; i++) {
+			const card = cards[i];
+
+			// Validate each card
+			if (!card.text || typeof card.text !== 'string' || card.text.trim().length === 0) {
+				results.failed.push({ index: i, error: 'Card text is required', card });
+				continue;
+			}
+
+			if (!card.cardType || !['A', 'Q'].includes(card.cardType)) {
+				results.failed.push({ index: i, error: 'Card type must be "A" or "Q"', card });
+				continue;
+			}
+
+			if (card.text.length > 500) {
+				results.failed.push({ index: i, error: 'Card text must be 500 characters or less', card });
+				continue;
+			}
+
+			// Check for similar recent submissions (spam detection)
+			const similarityCheck = checkForSimilarSubmissions(card.text.trim(), userId);
+			if (similarityCheck.isSimilar) {
+				results.failed.push({
+					index: i,
+					error: 'Similar card recently submitted',
+					card
+				});
+				continue;
+			}
+
+			// Check for duplicates
+			const duplicateCheck = await cardService.checkForDuplicate(card.text.trim(), card.cardType as 'A' | 'Q');
+			if (duplicateCheck.isDuplicate) {
+				results.failed.push({
+					index: i,
+					error: `Duplicate card (exists as ${duplicateCheck.duplicateSource})`,
+					card
+				});
+				continue;
+			}
+
+			try {
+				const cardId = await cardService.submitUserCard({
+					text: card.text.trim(),
+					cardType: card.cardType as 'A' | 'Q',
+					numAnswers: card.cardType === 'Q' ? (card.numAnswers || 1) : 0,
+					expansion: 'user-generated',
+					userId
+				});
+
+				// Record submission for spam detection
+				recordSubmission(card.text.trim(), userId);
+
+				results.submitted.push(cardId);
+			} catch (error) {
+				results.failed.push({
+					index: i,
+					error: error instanceof Error ? error.message : 'Unknown error',
+					card
+				});
+			}
+		}
+
+		logger.info('Batch card submission completed', {
+			userId,
+			submitted: results.submitted.length,
+			failed: results.failed.length
+		});
+
+		res.status(201).json({
+			success: true,
+			submitted: results.submitted.length,
+			failed: results.failed.length,
+			results
+		});
+	} catch (error) {
+		logger.error('Error in batch submission', { error: error instanceof Error ? error.message : String(error) });
+		res.status(500).json({ error: 'Failed to process batch submission' });
 	}
 });
 
