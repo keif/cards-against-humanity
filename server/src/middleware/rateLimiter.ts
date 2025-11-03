@@ -94,3 +94,60 @@ export const promotionRateLimiter = rateLimit({
         });
     }
 });
+
+/**
+ * Rate limiter for card submissions
+ * Prevents spam and abuse of the card submission system
+ *
+ * Configuration:
+ * - 10 submissions per hour per session
+ * - Prevents rapid-fire card submission spam
+ * - Session-based tracking (not just IP)
+ */
+export const submissionRateLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 10, // Limit each session to 10 submissions per hour
+    message: {
+        error: 'Too many card submissions. Please try again later.',
+        retryAfter: '1 hour',
+        limit: 10
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    // Use session ID as key (more accurate than IP for logged-in users)
+    // Note: We use session ID instead of IP to avoid IPv6 complexity
+    // Sessions are more reliable for tracking user-specific rate limits anyway
+    keyGenerator: (req) => {
+        const sessionId = req.session?.id;
+        // Always use session ID if available
+        // If no session, use a generic key (general rate limiter will catch IP-based abuse)
+        return sessionId || 'no-session';
+    },
+
+    // Handler when rate limit is exceeded
+    handler: (req, res) => {
+        const sessionId = req.session?.id || 'no-session';
+        const ip = req.ip || 'unknown';
+
+        logger.warn('Card submission rate limit exceeded', {
+            sessionId,
+            ip,
+            endpoint: req.path,
+            limitType: 'card_submissions',
+            message: 'Too many card submissions - possible spam'
+        });
+
+        res.status(429).json({
+            error: 'Too many card submissions. Please try again later.',
+            retryAfter: '1 hour',
+            limit: 10
+        });
+    },
+
+    // Skip rate limiting for trusted moderators/admins
+    skip: (req) => {
+        const role = req.session?.role;
+        return role === 'moderator' || role === 'admin';
+    }
+});

@@ -4,6 +4,15 @@ import cardRoutes from './cardRoutes';
 import { createTestApp, createTestAgent } from '@/test/testUtils';
 import type { CardService } from '@/services/cardService';
 
+// Mock the spam detection module (using factory to avoid hoisting issues)
+vi.mock('@/services/spamDetection', () => ({
+  checkForSimilarSubmissions: vi.fn(),
+  recordSubmission: vi.fn(),
+}));
+
+// Import the mocked functions after the mock definition
+import * as spamDetection from '@/services/spamDetection';
+
 // Mock the Card model
 const mockCardService: Partial<CardService> = {
   submitUserCard: vi.fn(),
@@ -27,6 +36,9 @@ describe('Card Routes', () => {
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
+
+    // Default mock returns for spam detection (not similar)
+    vi.mocked(spamDetection.checkForSimilarSubmissions).mockReturnValue({ isSimilar: false });
 
     // Create test app
     app = createTestApp(cardRoutes);
@@ -214,6 +226,69 @@ describe('Card Routes', () => {
       expect(res.status).toBe(409);
       expect(res.body.error).toBe('This card already exists');
       expect(mockCardService.checkForDuplicate).toHaveBeenCalledWith('TEST   CARD', 'A');
+    });
+
+    it('should reject similar submission (spam detection)', async () => {
+      vi.mocked(spamDetection.checkForSimilarSubmissions).mockReturnValue({
+        isSimilar: true,
+        similarText: 'Previous similar card',
+        similarity: 0.92
+      });
+
+      const res = await agent.post('/submit', {
+        text: 'Previous similar card with minor changes',
+        cardType: 'A',
+      });
+
+      expect(res.status).toBe(429);
+      expect(res.body.error).toContain('similar card');
+      expect(res.body.similarCard).toBe('Previous similar card');
+      expect(res.body.similarity).toBe(0.92);
+      expect(mockCardService.submitUserCard).not.toHaveBeenCalled();
+    });
+
+    it('should record submission after successful submit', async () => {
+      const mockCardId = 1234;
+      (mockCardService.submitUserCard as any).mockResolvedValue(mockCardId);
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({ isDuplicate: false });
+
+      await agent.post('/submit', {
+        text: 'New card text',
+        cardType: 'A',
+      });
+
+      expect(spamDetection.recordSubmission).toHaveBeenCalledWith('New card text', expect.any(String));
+    });
+
+    it('should not record submission if duplicate detected', async () => {
+      (mockCardService.checkForDuplicate as any).mockResolvedValue({
+        isDuplicate: true,
+        duplicateId: 42,
+        duplicateText: 'Existing card',
+        duplicateSource: 'official'
+      });
+
+      await agent.post('/submit', {
+        text: 'Existing card',
+        cardType: 'A',
+      });
+
+      expect(spamDetection.recordSubmission).not.toHaveBeenCalled();
+    });
+
+    it('should not record submission if spam detected', async () => {
+      vi.mocked(spamDetection.checkForSimilarSubmissions).mockReturnValue({
+        isSimilar: true,
+        similarText: 'Similar card',
+        similarity: 0.95
+      });
+
+      await agent.post('/submit', {
+        text: 'Similar card text',
+        cardType: 'A',
+      });
+
+      expect(spamDetection.recordSubmission).not.toHaveBeenCalled();
     });
   });
 

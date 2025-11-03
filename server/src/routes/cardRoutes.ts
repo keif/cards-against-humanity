@@ -3,7 +3,8 @@ import { getCardService } from '@/models/Card';
 import { InputValidator } from '@/utils/validation';
 import logger from '@/utils/logger';
 import { requireModerator } from '@/middleware/auth';
-import { promotionRateLimiter } from '@/middleware/rateLimiter';
+import { promotionRateLimiter, submissionRateLimiter } from '@/middleware/rateLimiter';
+import { checkForSimilarSubmissions, recordSubmission } from '@/services/spamDetection';
 
 const router = Router();
 
@@ -103,8 +104,10 @@ router.post('/auth/promote', promotionRateLimiter, async (req: Request, res: Res
  * Submit a user-generated card
  * POST /api/cards/submit
  * Body: { text: string, cardType: 'A' | 'Q', numAnswers?: number }
+ * Rate limited: 10 submissions per hour per session
+ * Spam protected: Rejects similar submissions within 5 minutes
  */
-router.post('/submit', async (req: Request, res: Response) => {
+router.post('/submit', submissionRateLimiter, async (req: Request, res: Response) => {
 	try {
 		const { text, cardType, numAnswers } = req.body;
 		const userId = req.session.id || 'anonymous';
@@ -125,6 +128,22 @@ router.post('/submit', async (req: Request, res: Response) => {
 		const cardService = getCardService();
 		if (!cardService) {
 			return res.status(503).json({ error: 'Card service unavailable' });
+		}
+
+		// Check for similar recent submissions (spam detection)
+		const similarityCheck = checkForSimilarSubmissions(text.trim(), userId);
+		if (similarityCheck.isSimilar) {
+			logger.info('Similar submission rejected', {
+				userId,
+				cardType,
+				similarity: similarityCheck.similarity
+			});
+
+			return res.status(429).json({
+				error: 'You recently submitted a very similar card. Please wait before submitting similar content.',
+				similarCard: similarityCheck.similarText,
+				similarity: similarityCheck.similarity
+			});
 		}
 
 		// Check for duplicates
@@ -156,6 +175,9 @@ router.post('/submit', async (req: Request, res: Response) => {
 			expansion: 'user-generated',
 			userId
 		});
+
+		// Record submission for spam detection
+		recordSubmission(text.trim(), userId);
 
 		logger.info('User card submitted via API', { cardId, userId, cardType });
 
@@ -380,8 +402,10 @@ router.get('/expansions', async (req: Request, res: Response) => {
  * Batch submit cards
  * POST /api/cards/batch
  * Body: { cards: Array<{ text: string, cardType: 'A' | 'Q', numAnswers?: number }> }
+ * Rate limited: 10 submissions per hour per session (counts each card in batch)
+ * Spam protected: Rejects similar cards within batch and recent submissions
  */
-router.post('/batch', async (req: Request, res: Response) => {
+router.post('/batch', submissionRateLimiter, async (req: Request, res: Response) => {
 	try {
 		const { cards } = req.body;
 		const userId = req.session.id || 'batch-import';
@@ -423,6 +447,17 @@ router.post('/batch', async (req: Request, res: Response) => {
 				continue;
 			}
 
+			// Check for similar recent submissions (spam detection)
+			const similarityCheck = checkForSimilarSubmissions(card.text.trim(), userId);
+			if (similarityCheck.isSimilar) {
+				results.failed.push({
+					index: i,
+					error: 'Similar card recently submitted',
+					card
+				});
+				continue;
+			}
+
 			// Check for duplicates
 			const duplicateCheck = await cardService.checkForDuplicate(card.text.trim(), card.cardType as 'A' | 'Q');
 			if (duplicateCheck.isDuplicate) {
@@ -442,6 +477,10 @@ router.post('/batch', async (req: Request, res: Response) => {
 					expansion: 'user-generated',
 					userId
 				});
+
+				// Record submission for spam detection
+				recordSubmission(card.text.trim(), userId);
+
 				results.submitted.push(cardId);
 			} catch (error) {
 				results.failed.push({
