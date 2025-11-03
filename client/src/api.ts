@@ -1,5 +1,14 @@
 import { RoundInterface } from "@/Screens/PlayerSelectionScreen/PlayerSelectionScreen";
-import { CallbackType, LobbyStateResponse } from "@/types";
+import {
+	CallbackType,
+	LobbyStateResponse,
+	CommunityCardsResponse,
+	VoteType,
+	VoteStats,
+	UserVote,
+	SortOption,
+	CardTypeFilter
+} from "@/types";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080';
 
@@ -149,4 +158,136 @@ export function shuffleCards(partyCode: string, sourceIdx: number, destIdx: numb
 
 export function endRound(partyCode: string) {
 	socket.emit('endRound', partyCode);
+}
+
+// Community Voting API
+
+/**
+ * Fetch community cards with voting data
+ * @param options - Filter and pagination options
+ * @returns Promise with cards and metadata
+ */
+export async function getCommunityCards(options: {
+	type?: CardTypeFilter;
+	sort?: SortOption;
+	limit?: number;
+	offset?: number;
+}): Promise<CommunityCardsResponse> {
+	const params = new URLSearchParams();
+	if (options.type) params.append('type', options.type);
+	if (options.sort) params.append('sort', options.sort);
+	if (options.limit) params.append('limit', options.limit.toString());
+	if (options.offset) params.append('offset', options.offset.toString());
+
+	const response = await fetch(`${SERVER_URL}/api/cards/community?${params.toString()}`, {
+		credentials: 'include',
+		headers: {
+			'Accept': 'application/json'
+		}
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to fetch community cards');
+	}
+
+	return response.json();
+}
+
+/**
+ * Cast a vote on a card
+ * @param cardId - Card ID to vote on
+ * @param voteType - Type of vote ('up', 'down', 'duplicate')
+ * @returns Promise with updated vote stats
+ */
+export async function castVote(cardId: number, voteType: VoteType): Promise<VoteStats> {
+	const response = await fetch(`${SERVER_URL}/api/cards/${cardId}/vote`, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify({ voteType })
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to cast vote');
+	}
+
+	const data = await response.json();
+	return data.votes;
+}
+
+/**
+ * Remove your vote from a card
+ * @param cardId - Card ID to remove vote from
+ * @returns Promise with updated vote stats
+ */
+export async function removeVote(cardId: number): Promise<VoteStats> {
+	const response = await fetch(`${SERVER_URL}/api/cards/${cardId}/vote`, {
+		method: 'DELETE',
+		credentials: 'include',
+		headers: {
+			'Accept': 'application/json'
+		}
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.message || 'Failed to remove vote');
+	}
+
+	const data = await response.json();
+	return data.votes;
+}
+
+/**
+ * Check if you've voted on a card
+ * @param cardId - Card ID to check
+ * @returns Promise with user vote status
+ */
+export async function getUserVote(cardId: number): Promise<UserVote> {
+	const response = await fetch(`${SERVER_URL}/api/cards/${cardId}/my-vote`, {
+		credentials: 'include',
+		headers: {
+			'Accept': 'application/json'
+		}
+	});
+
+	if (!response.ok) {
+		throw new Error('Failed to get user vote');
+	}
+
+	return response.json();
+}
+
+/**
+ * Subscribe to real-time vote updates
+ * @param callback - Function called when vote is updated
+ */
+export function onVoteUpdated(callback: (data: { cardId: number; votes: VoteStats }) => void) {
+	socket.on('voteUpdated', callback);
+}
+
+/**
+ * Unsubscribe from vote updates
+ */
+export function offVoteUpdated() {
+	socket.off('voteUpdated');
+}
+
+/**
+ * Subscribe to new card submissions
+ * @param callback - Function called when new card submitted
+ */
+export function onCardSubmitted(callback: (data: { cardId: number }) => void) {
+	socket.on('cardSubmitted', callback);
+}
+
+/**
+ * Unsubscribe from card submission updates
+ */
+export function offCardSubmitted() {
+	socket.off('cardSubmitted');
 }

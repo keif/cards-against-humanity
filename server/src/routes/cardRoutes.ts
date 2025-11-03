@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import { Server as SocketIOServer } from 'socket.io';
 import { getCardService } from '@/models/Card';
 import { getVoteService } from '@/models/Vote';
 import { InputValidator } from '@/utils/validation';
@@ -8,7 +9,9 @@ import { promotionRateLimiter, submissionRateLimiter, votingRateLimiter } from '
 import { checkForSimilarSubmissions, recordSubmission } from '@/services/spamDetection';
 import { RejectionReason, isValidRejectionReason } from '@/types/moderation';
 
-const router = Router();
+// Factory function to create router with Socket.IO instance
+export function createCardRouter(io: SocketIOServer): Router {
+	const router = Router();
 
 // ========== Community Voting Endpoints ==========
 
@@ -142,6 +145,9 @@ router.post('/:id/vote', votingRateLimiter, async (req: Request, res: Response) 
 		// Cast vote
 		const stats = await voteService.castVote(cardId, sessionId, voteType);
 
+		// Emit real-time vote update to all connected clients
+		io.emit('voteUpdated', { cardId, votes: stats });
+
 		logger.info('Vote cast', { cardId, sessionId, voteType, stats });
 
 		res.json({
@@ -185,6 +191,9 @@ router.delete('/:id/vote', async (req: Request, res: Response) => {
 
 		// Get updated stats
 		const stats = await voteService.getVoteStats(cardId);
+
+		// Emit real-time vote update to all connected clients
+		io.emit('voteUpdated', { cardId, votes: stats });
 
 		logger.info('Vote removed', { cardId, sessionId });
 
@@ -413,6 +422,9 @@ router.post('/submit', submissionRateLimiter, async (req: Request, res: Response
 
 		// Record submission for spam detection
 		recordSubmission(text.trim(), userId);
+
+		// Emit real-time notification about new card submission
+		io.emit('cardSubmitted', { cardId });
 
 		logger.info('User card submitted via API', { cardId, userId, cardType });
 
@@ -1057,4 +1069,12 @@ router.get('/moderator/stats', requireModerator, async (req: Request, res: Respo
 	}
 });
 
-export default router;
+	return router;
+}
+
+// Default export for backward compatibility (for tests that don't need Socket.IO)
+// In production, use createCardRouter(io) instead
+export default createCardRouter({
+	emit: () => {},
+	to: () => ({ emit: () => {} })
+} as any);

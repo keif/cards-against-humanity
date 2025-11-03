@@ -23,7 +23,7 @@ import { initializeCardService } from '@/models/Card';
 import { VoteService } from '@/services/voteService';
 import { initializeVoteService } from '@/models/Vote';
 import cards from '@/data/cards';
-import cardRoutes from '@/routes/cardRoutes';
+import { createCardRouter } from '@/routes/cardRoutes';
 
 // Load environment variables from .env file
 dotenv.config({ path: path.join(__dirname, '../../.env') });
@@ -183,8 +183,8 @@ app.use((req, res, next) => {
 
 app.use(sessionMiddleware);
 
-// API routes
-app.use('/api/cards', cardRoutes);
+// API routes - Create router with Socket.IO instance for real-time updates
+app.use('/api/cards', createCardRouter(io));
 
 // Serve production build
 app.use(express.static(path.join(__dirname, '../../client', 'dist')));

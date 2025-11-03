@@ -29,3 +29,34 @@ export interface PlayerInfo {
 	roundsWon: number[];
 	type: string;
 }
+
+// Community Voting Types
+export type VoteType = 'up' | 'down' | 'duplicate';
+export type SortOption = 'newest' | 'oldest' | 'upvoted' | 'controversial';
+export type CardTypeFilter = 'all' | 'A' | 'Q';
+
+export interface VoteStats {
+	upvotes: number;
+	downvotes: number;
+	duplicateFlags: number;
+	netScore: number;
+}
+
+export interface UserVote {
+	voted: boolean;
+	voteType?: VoteType;
+}
+
+export interface PendingCard {
+	id: number;
+	text: string;
+	cardType: 'A' | 'Q';
+	createdAt: string;
+	votes?: VoteStats;
+}
+
+export interface CommunityCardsResponse {
+	cards: PendingCard[];
+	total: number;
+	hasMore: boolean;
+}
