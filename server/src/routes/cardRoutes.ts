@@ -1074,7 +1074,17 @@ router.get('/moderator/stats', requireModerator, async (req: Request, res: Respo
 
 // Default export for backward compatibility (for tests that don't need Socket.IO)
 // In production, use createCardRouter(io) instead
-export default createCardRouter({
-	emit: () => {},
-	to: () => ({ emit: () => {} })
-} as any);
+const mockIO = {
+	emit: (...args: any[]) => {
+		// Mock emit - do nothing in tests
+		return true;
+	},
+	to: (room: string) => ({
+		emit: (...args: any[]) => {
+			// Mock room emit - do nothing in tests
+			return true;
+		}
+	})
+} as any;
+
+export default createCardRouter(mockIO);
