@@ -3,6 +3,7 @@ import { getCardService } from '@/models/Card';
 import { InputValidator } from '@/utils/validation';
 import logger from '@/utils/logger';
 import { requireModerator } from '@/middleware/auth';
+import { promotionRateLimiter } from '@/middleware/rateLimiter';
 
 const router = Router();
 
@@ -40,8 +41,9 @@ router.get('/auth/role', async (req: Request, res: Response) => {
  * POST /api/cards/auth/promote
  * Body: { adminKey: string }
  * Sets the current session's role to 'moderator'
+ * Rate limited: 5 failed attempts per 15 minutes per IP
  */
-router.post('/auth/promote', async (req: Request, res: Response) => {
+router.post('/auth/promote', promotionRateLimiter, async (req: Request, res: Response) => {
 	try {
 		const { adminKey } = req.body;
 		const session = req.session;
@@ -61,7 +63,10 @@ router.post('/auth/promote', async (req: Request, res: Response) => {
 		if (adminKey !== expectedAdminKey) {
 			logger.warn('Invalid admin key attempt', {
 				sessionId: session.id,
-				ip: req.ip
+				ip: req.ip,
+				userAgent: req.get('User-Agent'),
+				timestamp: new Date().toISOString(),
+				endpoint: '/auth/promote'
 			});
 			return res.status(403).json({ error: 'Invalid admin key' });
 		}
