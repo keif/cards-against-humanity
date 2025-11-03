@@ -1,12 +1,247 @@
 import { Router, Request, Response } from 'express';
 import { getCardService } from '@/models/Card';
+import { getVoteService } from '@/models/Vote';
 import { InputValidator } from '@/utils/validation';
 import logger from '@/utils/logger';
 import { requireModerator } from '@/middleware/auth';
-import { promotionRateLimiter, submissionRateLimiter } from '@/middleware/rateLimiter';
+import { promotionRateLimiter, submissionRateLimiter, votingRateLimiter } from '@/middleware/rateLimiter';
 import { checkForSimilarSubmissions, recordSubmission } from '@/services/spamDetection';
+import { RejectionReason, isValidRejectionReason } from '@/types/moderation';
 
 const router = Router();
+
+// ========== Community Voting Endpoints ==========
+
+/**
+ * Get pending cards for community review
+ * GET /api/cards/community?type=A&sort=newest&limit=20&offset=0
+ * Query params:
+ *   - type: 'A' | 'Q' | 'all' (default: 'all')
+ *   - sort: 'newest' | 'oldest' | 'upvoted' | 'controversial' (default: 'newest')
+ *   - limit: number (default 20, max 100)
+ *   - offset: number (default 0, for pagination)
+ */
+router.get('/community', async (req: Request, res: Response) => {
+	try {
+		const type = req.query.type as 'A' | 'Q' | 'all' | undefined;
+		const sort = (req.query.sort as string) || 'newest';
+		const limit = Math.min(parseInt(req.query.limit as string) || 20, 100);
+		const offset = parseInt(req.query.offset as string) || 0;
+
+		if (type && !['A', 'Q', 'all'].includes(type)) {
+			return res.status(400).json({ error: 'Type must be "A", "Q", or "all"' });
+		}
+
+		if (!['newest', 'oldest', 'upvoted', 'controversial'].includes(sort)) {
+			return res.status(400).json({ error: 'Invalid sort parameter' });
+		}
+
+		const cardService = getCardService();
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
+		}
+
+		// Get pending cards
+		const cards = await cardService.getPendingUserCards(
+			type === 'all' ? undefined : (type as 'A' | 'Q'),
+			limit + offset // Get extra for offset
+		);
+
+		// Get vote stats for all cards
+		const cardIds = cards.map(c => c.id);
+		const voteStatsMap = await voteService.getBulkVoteStats(cardIds);
+
+		// Attach vote stats to cards
+		const cardsWithVotes = cards.map(card => ({
+			...card,
+			votes: voteStatsMap.get(card.id) || {
+				upvotes: 0,
+				downvotes: 0,
+				duplicateFlags: 0,
+				netScore: 0
+			}
+		}));
+
+		// Sort cards based on sort parameter
+		let sortedCards = [...cardsWithVotes];
+		switch (sort) {
+			case 'upvoted':
+				sortedCards.sort((a, b) => b.votes.upvotes - a.votes.upvotes);
+				break;
+			case 'controversial':
+				sortedCards.sort((a, b) => {
+					const aControversy = a.votes.upvotes + a.votes.downvotes;
+					const bControversy = b.votes.upvotes + b.votes.downvotes;
+					return bControversy - aControversy;
+				});
+				break;
+			case 'oldest':
+				// Cards are already sorted by timestamp (oldest first) from Redis
+				sortedCards.reverse();
+				break;
+			case 'newest':
+			default:
+				// Cards come from Redis in order (newest first for pending queue)
+				break;
+		}
+
+		// Apply pagination
+		const paginatedCards = sortedCards.slice(offset, offset + limit);
+
+		res.json({
+			success: true,
+			count: paginatedCards.length,
+			total: cards.length,
+			cards: paginatedCards,
+			pagination: {
+				limit,
+				offset,
+				hasMore: offset + limit < cards.length
+			}
+		});
+	} catch (error) {
+		logger.error('Error getting community cards', {
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to get community cards' });
+	}
+});
+
+/**
+ * Cast a vote on a pending card
+ * POST /api/cards/:id/vote
+ * Body: { voteType: 'up' | 'down' | 'duplicate' }
+ * Returns: Updated vote counts
+ * Rate limited: 30 votes per minute per session
+ */
+router.post('/:id/vote', votingRateLimiter, async (req: Request, res: Response) => {
+	try {
+		const cardId = parseInt(req.params.id);
+		const { voteType } = req.body;
+		const sessionId = req.session.id;
+
+		if (!sessionId) {
+			return res.status(401).json({ error: 'Session required to vote' });
+		}
+
+		if (isNaN(cardId)) {
+			return res.status(400).json({ error: 'Invalid card ID' });
+		}
+
+		if (!voteType || !['up', 'down', 'duplicate'].includes(voteType)) {
+			return res.status(400).json({ error: 'Vote type must be "up", "down", or "duplicate"' });
+		}
+
+		const voteService = getVoteService();
+		if (!voteService) {
+			return res.status(503).json({ error: 'Vote service unavailable' });
+		}
+
+		// Cast vote
+		const stats = await voteService.castVote(cardId, sessionId, voteType);
+
+		logger.info('Vote cast', { cardId, sessionId, voteType, stats });
+
+		res.json({
+			success: true,
+			cardId,
+			voteType,
+			votes: stats
+		});
+	} catch (error) {
+		logger.error('Error casting vote', {
+			cardId: req.params.id,
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to cast vote' });
+	}
+});
+
+/**
+ * Remove your vote on a card
+ * DELETE /api/cards/:id/vote
+ */
+router.delete('/:id/vote', async (req: Request, res: Response) => {
+	try {
+		const cardId = parseInt(req.params.id);
+		const sessionId = req.session.id;
+
+		if (!sessionId) {
+			return res.status(401).json({ error: 'Session required' });
+		}
+
+		if (isNaN(cardId)) {
+			return res.status(400).json({ error: 'Invalid card ID' });
+		}
+
+		const voteService = getVoteService();
+		if (!voteService) {
+			return res.status(503).json({ error: 'Vote service unavailable' });
+		}
+
+		await voteService.removeVote(cardId, sessionId);
+
+		// Get updated stats
+		const stats = await voteService.getVoteStats(cardId);
+
+		logger.info('Vote removed', { cardId, sessionId });
+
+		res.json({
+			success: true,
+			cardId,
+			votes: stats
+		});
+	} catch (error) {
+		logger.error('Error removing vote', {
+			cardId: req.params.id,
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to remove vote' });
+	}
+});
+
+/**
+ * Get your vote on a card
+ * GET /api/cards/:id/my-vote
+ * Returns: { voted: boolean, voteType?: 'up' | 'down' | 'duplicate' }
+ */
+router.get('/:id/my-vote', async (req: Request, res: Response) => {
+	try {
+		const cardId = parseInt(req.params.id);
+		const sessionId = req.session.id;
+
+		if (!sessionId) {
+			return res.json({ voted: false });
+		}
+
+		if (isNaN(cardId)) {
+			return res.status(400).json({ error: 'Invalid card ID' });
+		}
+
+		const voteService = getVoteService();
+		if (!voteService) {
+			return res.status(503).json({ error: 'Vote service unavailable' });
+		}
+
+		const userVote = await voteService.getUserVote(cardId, sessionId);
+
+		res.json({
+			success: true,
+			cardId,
+			...userVote
+		});
+	} catch (error) {
+		logger.error('Error getting user vote', {
+			cardId: req.params.id,
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to get user vote' });
+	}
+});
+
+// ========== Authentication & Authorization ==========
 
 /**
  * Get current user's role
@@ -194,34 +429,98 @@ router.post('/submit', submissionRateLimiter, async (req: Request, res: Response
 });
 
 /**
- * Get pending cards for moderation
- * GET /api/cards/pending?type=A&limit=50
+ * Get pending cards for moderation (ENHANCED with vote data)
+ * GET /api/cards/pending?type=A&sort=upvoted&filter=duplicate_flags&limit=50
+ * Query params:
+ *   - type: 'A' | 'Q' | 'all' (default: 'all')
+ *   - sort: 'newest' | 'oldest' | 'upvoted' | 'downvoted' | 'net_score' | 'controversial' (default: 'newest')
+ *   - filter: 'has_duplicate_flags' | 'low_score' | 'high_score' (optional)
+ *   - limit: number (default 50, max 500)
  * Requires: moderator or admin role
  */
 router.get('/pending', requireModerator, async (req: Request, res: Response) => {
 	try {
-		const type = req.query.type as 'A' | 'Q' | undefined;
-		const limit = parseInt(req.query.limit as string) || 50;
+		const type = req.query.type as 'A' | 'Q' | 'all' | undefined;
+		const sort = (req.query.sort as string) || 'newest';
+		const filter = req.query.filter as string | undefined;
+		const limit = Math.min(parseInt(req.query.limit as string) || 50, 500);
 
-		if (type && !['A', 'Q'].includes(type)) {
-			return res.status(400).json({ error: 'Type must be "A" or "Q"' });
+		if (type && !['A', 'Q', 'all'].includes(type)) {
+			return res.status(400).json({ error: 'Type must be "A", "Q", or "all"' });
 		}
 
-		if (limit < 1 || limit > 500) {
-			return res.status(400).json({ error: 'Limit must be between 1 and 500' });
+		if (!['newest', 'oldest', 'upvoted', 'downvoted', 'net_score', 'controversial'].includes(sort)) {
+			return res.status(400).json({ error: 'Invalid sort parameter' });
 		}
 
 		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
 		}
 
-		const cards = await cardService.getPendingUserCards(type, limit);
+		// Get pending cards
+		const cards = await cardService.getPendingUserCards(
+			type === 'all' ? undefined : (type as 'A' | 'Q'),
+			limit
+		);
+
+		// Get vote stats for all cards
+		const cardIds = cards.map(c => c.id);
+		const voteStatsMap = await voteService.getBulkVoteStats(cardIds);
+
+		// Attach vote stats to cards
+		let cardsWithVotes = cards.map(card => ({
+			...card,
+			votes: voteStatsMap.get(card.id) || {
+				upvotes: 0,
+				downvotes: 0,
+				duplicateFlags: 0,
+				netScore: 0
+			}
+		}));
+
+		// Apply filters
+		if (filter === 'has_duplicate_flags') {
+			cardsWithVotes = cardsWithVotes.filter(c => c.votes.duplicateFlags > 0);
+		} else if (filter === 'low_score') {
+			cardsWithVotes = cardsWithVotes.filter(c => c.votes.netScore < 0);
+		} else if (filter === 'high_score') {
+			cardsWithVotes = cardsWithVotes.filter(c => c.votes.netScore > 5);
+		}
+
+		// Sort cards
+		switch (sort) {
+			case 'upvoted':
+				cardsWithVotes.sort((a, b) => b.votes.upvotes - a.votes.upvotes);
+				break;
+			case 'downvoted':
+				cardsWithVotes.sort((a, b) => b.votes.downvotes - a.votes.downvotes);
+				break;
+			case 'net_score':
+				cardsWithVotes.sort((a, b) => b.votes.netScore - a.votes.netScore);
+				break;
+			case 'controversial':
+				cardsWithVotes.sort((a, b) => {
+					const aControversy = a.votes.upvotes + a.votes.downvotes;
+					const bControversy = b.votes.upvotes + b.votes.downvotes;
+					return bControversy - aControversy;
+				});
+				break;
+			case 'oldest':
+				cardsWithVotes.reverse();
+				break;
+			case 'newest':
+			default:
+				// Already in newest-first order
+				break;
+		}
 
 		res.json({
 			success: true,
-			count: cards.length,
-			cards
+			count: cardsWithVotes.length,
+			cards: cardsWithVotes
 		});
 	} catch (error) {
 		logger.error('Error getting pending cards', { error: error instanceof Error ? error.message : String(error) });
@@ -245,11 +544,16 @@ router.post('/approve/:id', requireModerator, async (req: Request, res: Response
 		}
 
 		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
 		}
 
 		await cardService.approveUserCard(cardId, moderatorId);
+
+		// Clean up vote data
+		await voteService.cleanupVoteData(cardId);
 
 		logger.info('Card approved via API', { cardId, moderatorId });
 
@@ -272,33 +576,63 @@ router.post('/approve/:id', requireModerator, async (req: Request, res: Response
 });
 
 /**
- * Reject a pending card
+ * Reject a pending card (ENHANCED with structured reasons)
  * POST /api/cards/reject/:id
- * Body: { reason?: string, moderatorId?: string }
+ * Body: {
+ *   reason: 'offensive' | 'duplicate' | 'poor_grammar' | 'doesnt_fit_tone' | 'too_obscure' | 'too_similar' | 'inappropriate_length' | 'spam' | 'custom',
+ *   customReason?: string (required if reason is 'custom'),
+ *   moderatorId?: string
+ * }
  * Requires: moderator or admin role
  */
 router.post('/reject/:id', requireModerator, async (req: Request, res: Response) => {
 	try {
 		const cardId = parseInt(req.params.id);
-		const { reason, moderatorId } = req.body;
+		const { reason, customReason, moderatorId } = req.body;
 		const modId = moderatorId || req.session.id || 'system';
 
 		if (isNaN(cardId)) {
 			return res.status(400).json({ error: 'Invalid card ID' });
 		}
 
-		const cardService = getCardService();
-		if (!cardService) {
-			return res.status(503).json({ error: 'Card service unavailable' });
+		// Validate rejection reason
+		if (!reason) {
+			return res.status(400).json({ error: 'Rejection reason is required' });
 		}
 
-		await cardService.rejectUserCard(cardId, modId, reason);
+		if (!isValidRejectionReason(reason)) {
+			return res.status(400).json({
+				error: 'Invalid rejection reason',
+				validReasons: Object.values(RejectionReason)
+			});
+		}
 
-		logger.info('Card rejected via API', { cardId, moderatorId: modId, reason });
+		// If custom reason, require customReason text
+		if (reason === RejectionReason.CUSTOM && (!customReason || customReason.trim().length === 0)) {
+			return res.status(400).json({ error: 'Custom reason text is required when using custom rejection' });
+		}
+
+		const cardService = getCardService();
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
+		}
+
+		// Build final reason string
+		const finalReason = reason === RejectionReason.CUSTOM ? customReason : reason;
+
+		await cardService.rejectUserCard(cardId, modId, finalReason);
+
+		// Clean up vote data
+		await voteService.cleanupVoteData(cardId);
+
+		logger.info('Card rejected via API', { cardId, moderatorId: modId, reason, customReason });
 
 		res.json({
 			success: true,
-			message: 'Card rejected successfully'
+			message: 'Card rejected successfully',
+			reason: finalReason
 		});
 	} catch (error) {
 		logger.error('Error rejecting card', {
@@ -506,6 +840,220 @@ router.post('/batch', submissionRateLimiter, async (req: Request, res: Response)
 	} catch (error) {
 		logger.error('Error in batch submission', { error: error instanceof Error ? error.message : String(error) });
 		res.status(500).json({ error: 'Failed to process batch submission' });
+	}
+});
+
+// ========== Batch Moderation Endpoints ==========
+
+/**
+ * Batch approve cards
+ * POST /api/cards/moderator/batch-approve
+ * Body: { cardIds: number[] }
+ * Requires: moderator or admin role
+ */
+router.post('/moderator/batch-approve', requireModerator, async (req: Request, res: Response) => {
+	try {
+		const { cardIds } = req.body;
+		const moderatorId = req.session.id || 'system';
+
+		if (!Array.isArray(cardIds) || cardIds.length === 0) {
+			return res.status(400).json({ error: 'cardIds array is required' });
+		}
+
+		if (cardIds.length > 100) {
+			return res.status(400).json({ error: 'Maximum 100 cards per batch operation' });
+		}
+
+		// Validate all IDs are numbers
+		if (!cardIds.every(id => typeof id === 'number' && !isNaN(id))) {
+			return res.status(400).json({ error: 'All card IDs must be valid numbers' });
+		}
+
+		const cardService = getCardService();
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
+		}
+
+		const results = {
+			approved: [] as number[],
+			failed: [] as { cardId: number; error: string }[]
+		};
+
+		for (const cardId of cardIds) {
+			try {
+				await cardService.approveUserCard(cardId, moderatorId);
+				await voteService.cleanupVoteData(cardId);
+				results.approved.push(cardId);
+			} catch (error) {
+				results.failed.push({
+					cardId,
+					error: error instanceof Error ? error.message : 'Unknown error'
+				});
+			}
+		}
+
+		logger.info('Batch approval completed', {
+			moderatorId,
+			approved: results.approved.length,
+			failed: results.failed.length
+		});
+
+		res.json({
+			success: true,
+			approved: results.approved.length,
+			failed: results.failed.length,
+			results
+		});
+	} catch (error) {
+		logger.error('Error in batch approval', {
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to process batch approval' });
+	}
+});
+
+/**
+ * Batch reject cards
+ * POST /api/cards/moderator/batch-reject
+ * Body: {
+ *   cardIds: number[],
+ *   reason: RejectionReason,
+ *   customReason?: string
+ * }
+ * Requires: moderator or admin role
+ */
+router.post('/moderator/batch-reject', requireModerator, async (req: Request, res: Response) => {
+	try {
+		const { cardIds, reason, customReason } = req.body;
+		const moderatorId = req.session.id || 'system';
+
+		if (!Array.isArray(cardIds) || cardIds.length === 0) {
+			return res.status(400).json({ error: 'cardIds array is required' });
+		}
+
+		if (cardIds.length > 100) {
+			return res.status(400).json({ error: 'Maximum 100 cards per batch operation' });
+		}
+
+		// Validate all IDs are numbers
+		if (!cardIds.every(id => typeof id === 'number' && !isNaN(id))) {
+			return res.status(400).json({ error: 'All card IDs must be valid numbers' });
+		}
+
+		// Validate rejection reason
+		if (!reason || !isValidRejectionReason(reason)) {
+			return res.status(400).json({
+				error: 'Valid rejection reason is required',
+				validReasons: Object.values(RejectionReason)
+			});
+		}
+
+		if (reason === RejectionReason.CUSTOM && (!customReason || customReason.trim().length === 0)) {
+			return res.status(400).json({ error: 'Custom reason text is required when using custom rejection' });
+		}
+
+		const cardService = getCardService();
+		const voteService = getVoteService();
+
+		if (!cardService || !voteService) {
+			return res.status(503).json({ error: 'Service unavailable' });
+		}
+
+		const finalReason = reason === RejectionReason.CUSTOM ? customReason : reason;
+
+		const results = {
+			rejected: [] as number[],
+			failed: [] as { cardId: number; error: string }[]
+		};
+
+		for (const cardId of cardIds) {
+			try {
+				await cardService.rejectUserCard(cardId, moderatorId, finalReason);
+				await voteService.cleanupVoteData(cardId);
+				results.rejected.push(cardId);
+			} catch (error) {
+				results.failed.push({
+					cardId,
+					error: error instanceof Error ? error.message : 'Unknown error'
+				});
+			}
+		}
+
+		logger.info('Batch rejection completed', {
+			moderatorId,
+			reason,
+			rejected: results.rejected.length,
+			failed: results.failed.length
+		});
+
+		res.json({
+			success: true,
+			rejected: results.rejected.length,
+			failed: results.failed.length,
+			results
+		});
+	} catch (error) {
+		logger.error('Error in batch rejection', {
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to process batch rejection' });
+	}
+});
+
+/**
+ * Get moderation statistics
+ * GET /api/cards/moderator/stats
+ * Returns aggregate statistics about card submissions and moderation
+ * Requires: moderator or admin role
+ */
+router.get('/moderator/stats', requireModerator, async (req: Request, res: Response) => {
+	try {
+		const cardService = getCardService();
+		if (!cardService) {
+			return res.status(503).json({ error: 'Card service unavailable' });
+		}
+
+		// Get counts for each status
+		const [pendingA, pendingQ, approvedA, approvedQ] = await Promise.all([
+			cardService.getPendingUserCards('A', 10000), // Get all
+			cardService.getPendingUserCards('Q', 10000),
+			cardService.getApprovedUserCards('A'),
+			cardService.getApprovedUserCards('Q')
+		]);
+
+		const stats = {
+			pending: {
+				total: pendingA.length + pendingQ.length,
+				answerCards: pendingA.length,
+				questionCards: pendingQ.length
+			},
+			approved: {
+				total: approvedA.length + approvedQ.length,
+				answerCards: approvedA.length,
+				questionCards: approvedQ.length
+			},
+			// Note: We don't track rejected count in current implementation
+			// but it could be added by creating a getRejectedUserCards method
+			totalSubmissions: pendingA.length + pendingQ.length + approvedA.length + approvedQ.length,
+			approvalRate: 0
+		};
+
+		// Calculate approval rate
+		if (stats.totalSubmissions > 0) {
+			stats.approvalRate = (stats.approved.total / stats.totalSubmissions) * 100;
+		}
+
+		res.json({
+			success: true,
+			stats
+		});
+	} catch (error) {
+		logger.error('Error getting moderation stats', {
+			error: error instanceof Error ? error.message : String(error)
+		});
+		res.status(500).json({ error: 'Failed to get moderation statistics' });
 	}
 });
 

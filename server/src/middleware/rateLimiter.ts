@@ -151,3 +151,54 @@ export const submissionRateLimiter = rateLimit({
         return role === 'moderator' || role === 'admin';
     }
 });
+
+/**
+ * Rate limiter for voting on cards
+ * Prevents rapid-fire voting spam and vote manipulation
+ *
+ * Configuration:
+ * - 30 votes per minute per session
+ * - Allows normal voting behavior while preventing abuse
+ * - Session-based tracking
+ */
+export const votingRateLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 30, // 30 votes per minute (0.5 votes/second average)
+    message: {
+        error: 'Too many votes. Please slow down.',
+        retryAfter: '1 minute',
+        limit: 30
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+
+    // Use session ID as key (similar to submissionRateLimiter)
+    // Note: We use session ID instead of IP to avoid IPv6 complexity
+    // Sessions are more reliable for tracking user-specific rate limits anyway
+    keyGenerator: (req) => {
+        const sessionId = req.session?.id;
+        // Always use session ID if available
+        // If no session, use a generic key (general rate limiter will catch IP-based abuse)
+        return sessionId || 'no-session';
+    },
+
+    // Handler when rate limit is exceeded
+    handler: (req, res) => {
+        const sessionId = req.session?.id || 'no-session';
+        const ip = req.ip || 'unknown';
+
+        logger.warn('Voting rate limit exceeded', {
+            sessionId,
+            ip,
+            endpoint: req.path,
+            limitType: 'voting',
+            message: 'Too many votes - possible vote manipulation'
+        });
+
+        res.status(429).json({
+            error: 'Too many votes. Please slow down.',
+            retryAfter: '1 minute',
+            limit: 30
+        });
+    }
+});

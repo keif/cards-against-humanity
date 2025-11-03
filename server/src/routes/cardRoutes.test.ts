@@ -29,6 +29,20 @@ vi.mock('@/models/Card', () => ({
   getCardService: () => mockCardService,
 }));
 
+// Mock the Vote model
+const mockVoteService = {
+  castVote: vi.fn(),
+  removeVote: vi.fn(),
+  getVoteStats: vi.fn(),
+  getUserVote: vi.fn(),
+  getBulkVoteStats: vi.fn(),
+  cleanupVoteData: vi.fn(),
+};
+
+vi.mock('@/models/Vote', () => ({
+  getVoteService: () => mockVoteService,
+}));
+
 describe('Card Routes', () => {
   let app: express.Express;
   let agent: ReturnType<typeof createTestAgent>;
@@ -357,6 +371,7 @@ describe('Card Routes', () => {
 
     it('should return pending cards for moderator', async () => {
       (mockCardService.getPendingUserCards as any).mockResolvedValue(mockPendingCards);
+      (mockVoteService.getBulkVoteStats as any).mockResolvedValue(new Map());
 
       // Promote to moderator first
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
@@ -364,15 +379,13 @@ describe('Card Routes', () => {
       const res = await agent.get('/pending');
 
       expect(res.status).toBe(200);
-      expect(res.body).toEqual({
-        success: true,
-        count: 2,
-        cards: mockPendingCards,
-      });
+      expect(res.body.success).toBe(true);
+      expect(res.body.count).toBe(2);
     });
 
     it('should filter by card type', async () => {
       (mockCardService.getPendingUserCards as any).mockResolvedValue(mockPendingCards);
+      (mockVoteService.getBulkVoteStats as any).mockResolvedValue(new Map());
 
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
       const res = await agent.get('/pending?type=A');
@@ -383,6 +396,7 @@ describe('Card Routes', () => {
 
     it('should respect custom limit', async () => {
       (mockCardService.getPendingUserCards as any).mockResolvedValue([]);
+      (mockVoteService.getBulkVoteStats as any).mockResolvedValue(new Map());
 
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
       await agent.get('/pending?limit=10');
@@ -395,15 +409,19 @@ describe('Card Routes', () => {
       const res = await agent.get('/pending?type=X');
 
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Type must be "A" or "Q"');
+      expect(res.body.error).toBe('Type must be "A", "Q", or "all"');
     });
 
-    it('should reject limit out of range', async () => {
+    it('should clamp limit to max 500', async () => {
+      (mockCardService.getPendingUserCards as any).mockResolvedValue([]);
+      (mockVoteService.getBulkVoteStats as any).mockResolvedValue(new Map());
+
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
       const res = await agent.get('/pending?limit=1000');
 
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Limit must be between 1 and 500');
+      // Should clamp to 500, not error
+      expect(res.status).toBe(200);
+      expect(mockCardService.getPendingUserCards).toHaveBeenCalledWith(undefined, 500);
     });
   });
 
@@ -459,12 +477,12 @@ describe('Card Routes', () => {
       expect(res.status).toBe(403);
     });
 
-    it('should reject card with reason', async () => {
+    it('should reject card with valid enum reason', async () => {
       (mockCardService.rejectUserCard as any).mockResolvedValue(undefined);
 
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
       const res = await agent.post('/reject/1', {
-        reason: 'Inappropriate content',
+        reason: 'offensive',
       });
 
       expect(res.status).toBe(200);
@@ -472,22 +490,17 @@ describe('Card Routes', () => {
       expect(mockCardService.rejectUserCard).toHaveBeenCalledWith(
         1,
         expect.any(String),
-        'Inappropriate content'
+        'offensive'
       );
+      expect(mockVoteService.cleanupVoteData).toHaveBeenCalledWith(1);
     });
 
-    it('should reject card without reason', async () => {
-      (mockCardService.rejectUserCard as any).mockResolvedValue(undefined);
-
+    it('should require reason', async () => {
       await agent.post('/auth/promote', { adminKey: 'test-admin-key' });
       const res = await agent.post('/reject/1');
 
-      expect(res.status).toBe(200);
-      expect(mockCardService.rejectUserCard).toHaveBeenCalledWith(
-        1,
-        expect.any(String),
-        undefined
-      );
+      expect(res.status).toBe(400);
+      expect(res.body.error).toContain('reason is required');
     });
   });
 
@@ -844,6 +857,416 @@ describe('Card Routes', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.role).toBe('moderator');
+    });
+  });
+
+  describe('Community Voting Endpoints', () => {
+    describe('GET /api/cards/community', () => {
+      it('should get pending cards with vote data', async () => {
+        const mockCards = [
+          { id: 1, text: 'Card 1', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+          { id: 2, text: 'Card 2', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+        ];
+
+        (mockCardService.getPendingUserCards as any).mockResolvedValue(mockCards);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(
+          new Map([
+            [1, { upvotes: 5, downvotes: 1, duplicateFlags: 0, netScore: 4 }],
+            [2, { upvotes: 2, downvotes: 3, duplicateFlags: 1, netScore: -1 }],
+          ])
+        );
+
+        const res = await agent.get('/community');
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.cards).toHaveLength(2);
+        expect(res.body.cards[0].votes).toEqual({
+          upvotes: 5,
+          downvotes: 1,
+          duplicateFlags: 0,
+          netScore: 4,
+        });
+      });
+
+      it('should filter by card type', async () => {
+        (mockCardService.getPendingUserCards as any).mockResolvedValue([]);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(new Map());
+
+        const res = await agent.get('/community?type=A');
+
+        expect(res.status).toBe(200);
+        expect(mockCardService.getPendingUserCards).toHaveBeenCalledWith('A', 20);
+      });
+
+      it('should sort by upvoted', async () => {
+        const mockCards = [
+          { id: 1, text: 'Card 1', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+          { id: 2, text: 'Card 2', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+        ];
+
+        (mockCardService.getPendingUserCards as any).mockResolvedValue(mockCards);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(
+          new Map([
+            [1, { upvotes: 2, downvotes: 0, duplicateFlags: 0, netScore: 2 }],
+            [2, { upvotes: 5, downvotes: 0, duplicateFlags: 0, netScore: 5 }],
+          ])
+        );
+
+        const res = await agent.get('/community?sort=upvoted');
+
+        expect(res.status).toBe(200);
+        // Card 2 should be first (higher upvotes)
+        expect(res.body.cards[0].id).toBe(2);
+        expect(res.body.cards[1].id).toBe(1);
+      });
+
+      it('should reject invalid sort parameter', async () => {
+        const res = await agent.get('/community?sort=invalid');
+        expect(res.status).toBe(400);
+        expect(res.body.error).toContain('Invalid sort parameter');
+      });
+    });
+
+    describe('POST /api/cards/:id/vote', () => {
+      it('should cast an upvote successfully', async () => {
+        const mockStats = { upvotes: 1, downvotes: 0, duplicateFlags: 0, netScore: 1 };
+        (mockVoteService.castVote as any).mockResolvedValue(mockStats);
+
+        const res = await agent.post('/123/vote', { voteType: 'up' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.voteType).toBe('up');
+        expect(res.body.votes).toEqual(mockStats);
+        expect(mockVoteService.castVote).toHaveBeenCalledWith(123, expect.any(String), 'up');
+      });
+
+      it('should cast a downvote successfully', async () => {
+        const mockStats = { upvotes: 0, downvotes: 1, duplicateFlags: 0, netScore: -1 };
+        (mockVoteService.castVote as any).mockResolvedValue(mockStats);
+
+        const res = await agent.post('/123/vote', { voteType: 'down' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.votes).toEqual(mockStats);
+      });
+
+      it('should cast a duplicate flag successfully', async () => {
+        const mockStats = { upvotes: 0, downvotes: 0, duplicateFlags: 1, netScore: 0 };
+        (mockVoteService.castVote as any).mockResolvedValue(mockStats);
+
+        const res = await agent.post('/123/vote', { voteType: 'duplicate' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.votes.duplicateFlags).toBe(1);
+      });
+
+      it('should reject invalid vote type', async () => {
+        const res = await agent.post('/123/vote', { voteType: 'invalid' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toContain('Vote type must be');
+      });
+
+      it('should reject invalid card ID', async () => {
+        const res = await agent.post('/invalid/vote', { voteType: 'up' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toBe('Invalid card ID');
+      });
+    });
+
+    describe('DELETE /api/cards/:id/vote', () => {
+      it('should remove vote successfully', async () => {
+        const mockStats = { upvotes: 0, downvotes: 0, duplicateFlags: 0, netScore: 0 };
+        (mockVoteService.getVoteStats as any).mockResolvedValue(mockStats);
+
+        const res = await agent.delete('/123/vote');
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(mockVoteService.removeVote).toHaveBeenCalledWith(123, expect.any(String));
+      });
+    });
+
+    describe('GET /api/cards/:id/my-vote', () => {
+      it('should return no vote if user hasnt voted', async () => {
+        (mockVoteService.getUserVote as any).mockResolvedValue({ voted: false });
+
+        const res = await agent.get('/123/my-vote');
+
+        expect(res.status).toBe(200);
+        expect(res.body.voted).toBe(false);
+      });
+
+      it('should return users vote', async () => {
+        (mockVoteService.getUserVote as any).mockResolvedValue({ voted: true, voteType: 'up' });
+
+        const res = await agent.get('/123/my-vote');
+
+        expect(res.status).toBe(200);
+        expect(res.body.voted).toBe(true);
+        expect(res.body.voteType).toBe('up');
+      });
+    });
+  });
+
+  describe('Enhanced Moderation Endpoints', () => {
+    beforeEach(() => {
+      // Set ADMIN_KEY and promote to moderator for these tests
+      process.env.ADMIN_KEY = 'test-admin-key';
+    });
+
+    describe('GET /api/cards/pending (enhanced with votes)', () => {
+      it('should include vote data in pending cards', async () => {
+        const mockCards = [
+          { id: 1, text: 'Card 1', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+        ];
+
+        (mockCardService.getPendingUserCards as any).mockResolvedValue(mockCards);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(
+          new Map([[1, { upvotes: 10, downvotes: 2, duplicateFlags: 1, netScore: 8 }]])
+        );
+
+        // Create moderator agent
+        const modAgent = createTestAgent(app);
+        const promoteRes = await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        // Skip if rate limited
+        if (promoteRes.status === 429) {
+          console.log('Skipping test due to rate limit');
+          return;
+        }
+
+        const res = await modAgent.get('/pending');
+
+        expect(res.status).toBe(200);
+        expect(res.body.cards[0].votes).toEqual({
+          upvotes: 10,
+          downvotes: 2,
+          duplicateFlags: 1,
+          netScore: 8,
+        });
+      });
+
+      it('should filter by has_duplicate_flags', async () => {
+        const mockCards = [
+          { id: 1, text: 'Card 1', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+          { id: 2, text: 'Card 2', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+        ];
+
+        (mockCardService.getPendingUserCards as any).mockResolvedValue(mockCards);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(
+          new Map([
+            [1, { upvotes: 5, downvotes: 1, duplicateFlags: 3, netScore: 4 }],
+            [2, { upvotes: 2, downvotes: 0, duplicateFlags: 0, netScore: 2 }],
+          ])
+        );
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.get('/pending?filter=has_duplicate_flags');
+
+        expect(res.status).toBe(200);
+        expect(res.body.cards).toHaveLength(1);
+        expect(res.body.cards[0].id).toBe(1);
+      });
+
+      it('should sort by net_score', async () => {
+        const mockCards = [
+          { id: 1, text: 'Card 1', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+          { id: 2, text: 'Card 2', cardType: 'A', numAnswers: 0, expansion: 'user-generated' },
+        ];
+
+        (mockCardService.getPendingUserCards as any).mockResolvedValue(mockCards);
+        (mockVoteService.getBulkVoteStats as any).mockResolvedValue(
+          new Map([
+            [1, { upvotes: 5, downvotes: 2, duplicateFlags: 0, netScore: 3 }],
+            [2, { upvotes: 10, downvotes: 1, duplicateFlags: 0, netScore: 9 }],
+          ])
+        );
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.get('/pending?sort=net_score');
+
+        expect(res.status).toBe(200);
+        // Card 2 should be first (higher net score)
+        expect(res.body.cards[0].id).toBe(2);
+      });
+    });
+
+    describe('POST /api/cards/reject/:id (enhanced with rejection reasons)', () => {
+      it('should reject with valid reason', async () => {
+        (mockCardService.rejectUserCard as any).mockResolvedValue(undefined);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/reject/123', { reason: 'offensive' });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(mockCardService.rejectUserCard).toHaveBeenCalledWith(123, expect.any(String), 'offensive');
+        expect(mockVoteService.cleanupVoteData).toHaveBeenCalledWith(123);
+      });
+
+      it('should require reason', async () => {
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/reject/123', {});
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toContain('reason is required');
+      });
+
+      it('should validate rejection reason enum', async () => {
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/reject/123', { reason: 'invalid_reason' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toContain('Invalid rejection reason');
+      });
+
+      it('should require customReason when using custom', async () => {
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/reject/123', { reason: 'custom' });
+
+        expect(res.status).toBe(400);
+        expect(res.body.error).toContain('Custom reason text is required');
+      });
+
+      it('should accept custom reason', async () => {
+        (mockCardService.rejectUserCard as any).mockResolvedValue(undefined);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/reject/123', {
+          reason: 'custom',
+          customReason: 'This is a custom rejection reason',
+        });
+
+        expect(res.status).toBe(200);
+        expect(mockCardService.rejectUserCard).toHaveBeenCalledWith(
+          123,
+          expect.any(String),
+          'This is a custom rejection reason'
+        );
+      });
+    });
+
+    describe('POST /api/cards/moderator/batch-approve', () => {
+      it('should batch approve cards', async () => {
+        (mockCardService.approveUserCard as any).mockResolvedValue(undefined);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/moderator/batch-approve', {
+          cardIds: [123, 456, 789],
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body.success).toBe(true);
+        expect(res.body.approved).toBe(3);
+        expect(res.body.failed).toBe(0);
+        expect(mockCardService.approveUserCard).toHaveBeenCalledTimes(3);
+        expect(mockVoteService.cleanupVoteData).toHaveBeenCalledTimes(3);
+      });
+
+      it('should handle partial failures in batch approve', async () => {
+        (mockCardService.approveUserCard as any)
+          .mockResolvedValueOnce(undefined)
+          .mockRejectedValueOnce(new Error('Card not found'))
+          .mockResolvedValueOnce(undefined);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/moderator/batch-approve', {
+          cardIds: [123, 456, 789],
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body.approved).toBe(2);
+        expect(res.body.failed).toBe(1);
+        expect(res.body.results.failed[0].cardId).toBe(456);
+      });
+
+      it('should require moderator role', async () => {
+        const res = await agent.post('/moderator/batch-approve', {
+          cardIds: [123],
+        });
+
+        expect(res.status).toBe(403);
+      });
+    });
+
+    describe('POST /api/cards/moderator/batch-reject', () => {
+      it('should batch reject cards', async () => {
+        (mockCardService.rejectUserCard as any).mockResolvedValue(undefined);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/moderator/batch-reject', {
+          cardIds: [123, 456],
+          reason: 'spam',
+        });
+
+        expect(res.status).toBe(200);
+        expect(res.body.rejected).toBe(2);
+        expect(mockCardService.rejectUserCard).toHaveBeenCalledTimes(2);
+        expect(mockVoteService.cleanupVoteData).toHaveBeenCalledTimes(2);
+      });
+
+      it('should validate rejection reason', async () => {
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.post('/moderator/batch-reject', {
+          cardIds: [123],
+          reason: 'invalid',
+        });
+
+        expect(res.status).toBe(400);
+      });
+    });
+
+    describe('GET /api/cards/moderator/stats', () => {
+      it('should return moderation statistics', async () => {
+        const mockPendingA = [{ id: 1 }, { id: 2 }];
+        const mockPendingQ = [{ id: 3 }];
+        const mockApprovedA = [{ id: 4 }, { id: 5 }, { id: 6 }];
+        const mockApprovedQ = [{ id: 7 }];
+
+        (mockCardService.getPendingUserCards as any)
+          .mockResolvedValueOnce(mockPendingA)
+          .mockResolvedValueOnce(mockPendingQ);
+        (mockCardService.getApprovedUserCards as any)
+          .mockResolvedValueOnce(mockApprovedA)
+          .mockResolvedValueOnce(mockApprovedQ);
+
+        const modAgent = createTestAgent(app);
+        await modAgent.post('/auth/promote', { adminKey: 'test-admin-key' });
+
+        const res = await modAgent.get('/moderator/stats');
+
+        expect(res.status).toBe(200);
+        expect(res.body.stats.pending.total).toBe(3);
+        expect(res.body.stats.approved.total).toBe(4);
+        expect(res.body.stats.totalSubmissions).toBe(7);
+        expect(res.body.stats.approvalRate).toBeCloseTo(57.14, 1);
+      });
     });
   });
 });

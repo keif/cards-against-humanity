@@ -20,6 +20,8 @@ import morgan from 'morgan';
 import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter';
 import { CardService } from '@/services/cardService';
 import { initializeCardService } from '@/models/Card';
+import { VoteService } from '@/services/voteService';
+import { initializeVoteService } from '@/models/Vote';
 import cards from '@/data/cards';
 import cardRoutes from '@/routes/cardRoutes';
 
@@ -104,6 +106,10 @@ redisClient.on('error', (err) => {
 // Initialize CardService and seed cards
 const cardService = new CardService(redisClient);
 initializeCardService(cardService);
+
+// Initialize VoteService
+const voteService = new VoteService(redisClient);
+initializeVoteService(voteService);
 
 // Seed cards on startup (only runs once)
 cardService.seedOfficialCards(cards).catch((err) => {
