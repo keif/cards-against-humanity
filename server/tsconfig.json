@@ -52,10 +52,13 @@
     "node_modules",
     "**/*.spec.ts",
     "**/*.spec.tsx",
+    "**/*.test.ts",
     "**/*.stories.*",
     "**/__mocks__/*.tsx",
     "**/mocks.tsx",
     "**/test.*",
+    "src/test/**/*",
+    "src/socket/**/*.test.ts",
     "vitest.config.ts"
   ]
 }

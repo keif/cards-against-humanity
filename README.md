@@ -132,15 +132,18 @@ pnpm test:coverage
 pnpm test:ui
 ```
 
-**Server test coverage:** 45 passing tests
+**Server test coverage:** 68 passing tests
 - 10 authentication middleware tests
 - 35 card routes API tests
+- 23 Socket.IO event handler tests (validation & game flow)
 
 ### Run All Tests
 ```bash
 # Run both client and server tests
 pnpm test
 ```
+
+**Total test coverage:** 187 tests (119 client + 68 server)
 
 ## Project Structure
 
