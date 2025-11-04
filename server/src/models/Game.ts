@@ -212,13 +212,16 @@ class Game implements GameInterface {
 		};
 	}
 
-	playCard(cardID: number, sessionID: string, cb: CallbackType): void {
+	playCard(cardIDs: number | number[], sessionID: string, cb: CallbackType): void {
+		// Normalize to array
+		const cardIDArray = Array.isArray(cardIDs) ? cardIDs : [cardIDs];
+
 		// Validate player exists
 		let player = this.getPlayer(sessionID);
 		if (player === null) {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				reason: 'player_not_found',
 				partyCode: this.partyCode
 			});
@@ -231,7 +234,7 @@ class Game implements GameInterface {
 		if (!latestRound) {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
 				reason: 'no_active_round',
 				partyCode: this.partyCode
@@ -244,7 +247,7 @@ class Game implements GameInterface {
 		if (latestRound.roundState !== 'players-selecting') {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
 				reason: 'wrong_round_state',
 				currentState: latestRound.roundState,
@@ -258,7 +261,7 @@ class Game implements GameInterface {
 		if (this.isRoundJudge(sessionID, latestRound)) {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
 				reason: 'judge_cannot_play',
 				partyCode: this.partyCode
@@ -267,19 +270,40 @@ class Game implements GameInterface {
 			return;
 		}
 
-		// Validate card ownership
-		let card = find(player?.cards, (c): boolean => c?.id === cardID);
-		if (card === undefined) {
+		// Validate correct number of cards
+		const requiredCards = latestRound.QCard?.numAnswers || 1;
+		if (cardIDArray.length !== requiredCards) {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
-				reason: 'card_not_owned',
-				playerCards: player.cards.map(c => c.id),
+				reason: 'wrong_card_count',
+				required: requiredCards,
+				provided: cardIDArray.length,
 				partyCode: this.partyCode
 			});
-			cb(false, 'You do not own this card');
+			cb(false, `This question requires exactly ${requiredCards} card${requiredCards > 1 ? 's' : ''}`);
 			return;
+		}
+
+		// Validate card ownership for all cards
+		const cards: typeof player.cards = [];
+		for (const cardID of cardIDArray) {
+			const card = find(player?.cards, (c): boolean => c?.id === cardID);
+			if (card === undefined) {
+				logger.warn('Invalid playCard attempt', {
+					sessionID,
+					cardIDs: cardIDArray,
+					playerName: player.name,
+					reason: 'card_not_owned',
+					missingCardID: cardID,
+					playerCards: player.cards.map(c => c.id),
+					partyCode: this.partyCode
+				});
+				cb(false, 'You do not own one or more of these cards');
+				return;
+			}
+			cards.push(card);
 		}
 
 		// Validate player hasn't already played
@@ -287,7 +311,7 @@ class Game implements GameInterface {
 		if (existingCard) {
 			logger.warn('Invalid playCard attempt', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
 				reason: 'already_played',
 				partyCode: this.partyCode
@@ -299,48 +323,62 @@ class Game implements GameInterface {
 		// All validations passed - execute the card play
 		try {
 			const playerSize = Object.keys(this.players).length;
-			remove(player.cards, c => c.id === cardID);
-			latestRound?.otherPlayerCards?.push({
-				...card,
-				owner: { 'name': player.name, 'pID': player.pID }
-			});
 
-			// Give player a new card
-			if (this.ACardDeck.length > 0) {
-				player.cards = player.cards.concat(this.ACardDeck.splice(0, 1));
+			// Remove cards from player's hand
+			for (const cardID of cardIDArray) {
+				remove(player.cards, c => c.id === cardID);
 			}
 
-			logger.info('Card played successfully', {
+			// Add all cards to round (with same owner)
+			for (const card of cards) {
+				latestRound?.otherPlayerCards?.push({
+					...card,
+					owner: { 'name': player.name, 'pID': player.pID }
+				});
+			}
+
+			// Give player replacement cards (same number as played)
+			const replacementCount = Math.min(cardIDArray.length, this.ACardDeck.length);
+			if (replacementCount > 0) {
+				player.cards = player.cards.concat(this.ACardDeck.splice(0, replacementCount));
+			}
+
+			logger.info('Cards played successfully', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
-				cardsPlayed: latestRound?.otherPlayerCards?.length,
+				cardsPlayed: cardIDArray.length,
 				totalPlayers: playerSize,
 				partyCode: this.partyCode
 			});
 
-			// Check if all players have played
-			if (latestRound?.otherPlayerCards?.length === (playerSize - 1)) {
+			// Check if all players have played (count unique players who submitted)
+			const uniquePlayersPIDs = new Set(
+				latestRound?.otherPlayerCards?.map(card => card.owner?.pID).filter(pID => pID !== undefined)
+			);
+			const allPlayersSubmitted = uniquePlayersPIDs.size === (playerSize - 1);
+
+			if (allPlayersSubmitted) {
 				latestRound.roundState = JUDGE_SELECTING;
 				clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
 				this.roundFinishedNotifier(true, 'All players have played - judge selection phase');
-				cb(true, 'Card played - all players ready, judge is selecting');
+				cb(true, 'Cards played - all players ready, judge is selecting');
 			} else {
-				cb(true, 'Card played successfully');
+				cb(true, `${cardIDArray.length} card${cardIDArray.length > 1 ? 's' : ''} played successfully`);
 			}
 		} catch (error) {
 			let errorMessage = 'Unknown error';
 			if (error instanceof Error) {
 				errorMessage = error.message;
 			}
-			logger.error('Error playing card', {
+			logger.error('Error playing cards', {
 				sessionID,
-				cardID,
+				cardIDs: cardIDArray,
 				playerName: player.name,
 				error: errorMessage,
 				partyCode: this.partyCode
 			});
-			cb(false, 'Failed to play card');
+			cb(false, 'Failed to play cards');
 		}
 	}
 

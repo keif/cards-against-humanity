@@ -58,9 +58,9 @@ export const getPlayerRoundState = async (partyCode: string, sessionID: string):
     return game.getPlayerRoundState(sessionID);
 };
 
-export const playCard = async (partyCode: string, cardID: number, sessionID: string, cb: CallbackType): Promise<void> => {
+export const playCard = async (partyCode: string, cardIDs: number | number[], sessionID: string, cb: CallbackType): Promise<void> => {
     let game = await getGame(partyCode);
-    game.playCard(cardID, sessionID, cb);
+    game.playCard(cardIDs, sessionID, cb);
 };
 
 export const judgeSelectCard = async (partyCode: string, cardID: number, sessionID: string, cb: CallbackType): Promise<void> => {

@@ -147,8 +147,8 @@ export function newGameState(partyCode: string) {
 	});
 }
 
-export function playCard(partyCode: string, cardID: number) {
-	socket.emit('playCard', partyCode, cardID);
+export function playCard(partyCode: string, cardIDs: number | number[]) {
+	socket.emit('playCard', partyCode, cardIDs);
 }
 
 export function judgeSelectCard(partyCode: string, cardID: number) {

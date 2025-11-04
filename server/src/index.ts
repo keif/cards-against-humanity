@@ -353,23 +353,35 @@ io.on('connection', (socket) => {
 		socket.emit('getPlayerRoundState', gameState);
 	});
 
-	socket.on('playCard', async (partyCode, cardID) => {
-		console.log(`${sessionID} | playCard`);
+	socket.on('playCard', async (partyCode, cardIDs) => {
+		console.log(`${sessionID} | playCard | cards:`, cardIDs);
 		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
-		const cardIdValidation = InputValidator.validateCardId(cardID);
 
-		if (!partyCodeValidation.isValid || !cardIdValidation.isValid) {
+		// Normalize to array for validation
+		const cardIDArray = Array.isArray(cardIDs) ? cardIDs : [cardIDs];
+
+		// Validate all card IDs
+		const invalidCard = cardIDArray.find(id => !InputValidator.validateCardId(id).isValid);
+		if (!partyCodeValidation.isValid || invalidCard !== undefined) {
 			socket.emit('error', { message: 'Invalid input parameters' });
 			return;
 		}
 
-		await game.playCard(partyCodeValidation.sanitizedValue!, parseInt(cardIdValidation.sanitizedValue!), sessionID, (success, message) => {
-			if (success) {
-				io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
-			} else {
-				socket.emit('error', { message });
+		// Convert validated IDs to numbers
+		const validatedCardIDs = cardIDArray.map(id => parseInt(String(id)));
+
+		await game.playCard(
+			partyCodeValidation.sanitizedValue!,
+			validatedCardIDs.length === 1 ? validatedCardIDs[0] : validatedCardIDs,
+			sessionID,
+			(success, message) => {
+				if (success) {
+					io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
+				} else {
+					socket.emit('error', { message });
+				}
 			}
-		});
+		);
 	});
 
 	socket.on('judgeSelectCard', async (partyCode, cardID) => {

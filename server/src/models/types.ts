@@ -13,7 +13,7 @@ export interface GameInterface {
     getPlayerRoundState: (sessionID: string) => RoundInterface | null;
     judgeSelectCard: (sessionID: string, cardID: number, cb: CallbackType) => void;
     partyCode: string;
-    playCard: (cardID: number, sessionID: string, cb: CallbackType) => void;
+    playCard: (cardIDs: number | number[], sessionID: string, cb: CallbackType) => void;
     players: { [index: string]: any };
     QCardDeck: Card[];
     roundLength: number;
