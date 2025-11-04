@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import './PlayerSelectionScreen.css';
 
 // Import SharedComponents
@@ -135,7 +135,10 @@ const PlayerSelectionScreen = () => {
 
 	// Load DnD backend dynamically based on device type
 	useEffect(() => {
-		loadDndBackend().then(setDndBackend);
+		loadDndBackend().then(backend => {
+			// Wrap in function to prevent React from treating it as a state updater
+			setDndBackend(() => backend);
+		});
 	}, []);
 
 	useEffect(() => {
@@ -259,11 +262,12 @@ const PlayerSelectionScreen = () => {
 
 	// Don't render until DnD backend is loaded
 	if (!dndBackend) {
-		return null;
+		return <div>Loading...</div>;
 	}
 
 	return (
 		<Screen>
+			{dndBackend && (
 			<DndProvider backend={dndBackend}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
 					<HeaderMenu
@@ -300,6 +304,7 @@ const PlayerSelectionScreen = () => {
 					</Footer>
 				</Bottom>
 			</DndProvider>
+			)}
 		</Screen>
 	);
 };
