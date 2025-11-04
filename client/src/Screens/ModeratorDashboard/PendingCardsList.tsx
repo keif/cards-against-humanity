@@ -108,7 +108,7 @@ const PendingCardsList: React.FC<PendingCardsListProps> = ({
 								)}
 
 								<div className="card-date">
-									Submitted: {card.createdAt ? new Date(card.createdAt).toLocaleDateString() : 'Unknown'}
+									Submitted: {card.createdAt ? new Date(Number(card.createdAt)).toLocaleDateString() : 'Unknown'}
 								</div>
 							</div>
 						</div>
