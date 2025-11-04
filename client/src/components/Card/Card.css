@@ -93,6 +93,48 @@
     color: black;
 }
 
+/* Selected Card State */
+.A.selected {
+    border: 3px solid #2196F3;
+    transform: translateY(-10px);
+    box-shadow: 0 8px 16px rgba(33, 150, 243, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Multi-Answer Badge on Question Cards */
+.multi-answer-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #FF9800;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: bold;
+    z-index: 2;
+}
+
+@media (max-width: 380px) {
+    .multi-answer-badge {
+        font-size: 12px;
+        padding: 3px 6px;
+        top: 8px;
+        right: 8px;
+    }
+}
+
+/* Player Group Spacing for Judge View */
+.player-group-start {
+    margin-left: 30px;
+}
+
+@media (max-width: 380px) {
+    .player-group-start {
+        margin-left: 20px;
+    }
+}
+
 .link {
     line-height: 1;
     margin-top: 40%;

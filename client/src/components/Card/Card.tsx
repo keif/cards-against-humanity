@@ -19,8 +19,10 @@ export interface CardProps {
 	expansion?: string;
 	id?: number;
 	index?: number;
+	isSelected?: boolean;
 	link?: string;
 	numAnswers?: number;
+	onClick?: (id: number) => void;
 	owner?: {
 		name: string;
 		pID: number;
@@ -29,12 +31,17 @@ export interface CardProps {
 	text?: string;
 }
 
-const Card = ({ cardType, className, id, index, link, status, text }: CardProps) => {
+const Card = ({ cardType, className, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
 	if (cardType === "Q" && text) {
 		const formattedText = text.replace("_", "__________");
 		return (
 			<div>
 				<div className={`card Q ${className}`}>
+					{numAnswers && numAnswers > 1 && (
+						<div className="multi-answer-badge">
+							Pick {numAnswers}
+						</div>
+					)}
 					<p dangerouslySetInnerHTML={{ __html: formattedText }} />
 				</div>
 				{
@@ -76,12 +83,21 @@ const Card = ({ cardType, className, id, index, link, status, text }: CardProps)
 			}),
 		});
 
+		const handleClick = () => {
+			if (onClick && id !== undefined) {
+				onClick(id);
+			}
+		};
+
+		const selectedClass = isSelected ? 'selected' : '';
+
 		return (
 			<div
-				className={`card A ${className}`}
+				className={`card A ${className} ${selectedClass}`}
 				ref={drag}
+				onClick={handleClick}
 				style={{
-					cursor: 'move',
+					cursor: onClick ? 'pointer' : 'move',
 					opacity: isDragging ? 0.5 : 1,
 				}}
 			>

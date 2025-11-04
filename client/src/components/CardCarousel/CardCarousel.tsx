@@ -5,9 +5,11 @@ import "./CardCarousel.css";
 
 interface CardCarouselProps {
 	cards: CardProps[];
+	onCardClick?: (id: number) => void;
+	selectedCards?: number[];
 }
 
-const CardCarousel = ({ cards }: CardCarouselProps) => {
+const CardCarousel = ({ cards, onCardClick, selectedCards = [] }: CardCarouselProps) => {
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -32,7 +34,15 @@ const CardCarousel = ({ cards }: CardCarouselProps) => {
 			className="scrolling-wrapper"
 			ref={drop}
 		>
-			{cards.map((card, index) => <Card {...card} index={index} key={card.id} />)}
+			{cards.map((card, index) => (
+				<Card
+					{...card}
+					index={index}
+					key={card.id}
+					onClick={onCardClick}
+					isSelected={card.id !== undefined && selectedCards.includes(card.id)}
+				/>
+			))}
 		</div>
 	);
 }

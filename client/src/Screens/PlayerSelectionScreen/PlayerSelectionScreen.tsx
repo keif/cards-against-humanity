@@ -52,6 +52,7 @@ const PlayerSelectionScreen = () => {
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
+	const [selectedCards, setSelectedCards] = useState<number[]>([]);
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -170,7 +171,8 @@ const PlayerSelectionScreen = () => {
 			} else {
 				headerText = `${roundState.roundJudge.name} is the Judge`;
 				if (roundState.roundState === 'player-selecting') {
-					directions = 'Choose one Card';
+					const numCards = roundState.QCard?.numAnswers || 1;
+					directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
 				} else if (roundState.roundState === 'player-waiting') {
 					directions = 'Waiting for other players';
 				} else if (roundState.roundState === JUDGE_SELECTING) {
@@ -193,6 +195,9 @@ const PlayerSelectionScreen = () => {
 				winningCard: roundState.winningCard,
 				directions
 			});
+
+			// Clear selected cards when round state changes
+			setSelectedCards([]);
 
 			// Clear existing ticker if any
 			if (state.ticker) {
@@ -240,6 +245,80 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
+	// Toggle card selection for multi-card questions
+	const toggleCardSelection = (cardId: number) => {
+		const numCardsRequired = state.QCard?.numAnswers || 1;
+
+		// For single-card questions, submit immediately (backward compatibility)
+		if (numCardsRequired === 1) {
+			if (partyCode) {
+				playCard(partyCode, cardId);
+			}
+			return;
+		}
+
+		// Multi-card selection logic
+		setSelectedCards(prev => {
+			if (prev.includes(cardId)) {
+				// Deselect card
+				return prev.filter(id => id !== cardId);
+			} else if (prev.length < numCardsRequired) {
+				// Add card to selection
+				return [...prev, cardId];
+			} else {
+				// Already at max, don't add more
+				return prev;
+			}
+		});
+	};
+
+	// Submit selected cards
+	const handleSubmitCards = () => {
+		if (!partyCode || selectedCards.length === 0) {
+			return;
+		}
+
+		const numCardsRequired = state.QCard?.numAnswers || 1;
+		if (selectedCards.length !== numCardsRequired) {
+			return;
+		}
+
+		// Submit cards
+		playCard(partyCode, selectedCards);
+		// Clear selection
+		setSelectedCards([]);
+	};
+
+	// Group cards by player for judge view
+	const groupCardsByPlayer = (cards: CardProps[]): CardProps[] => {
+		const grouped: { [pID: number]: CardProps[] } = {};
+
+		// Group cards by player ID
+		cards.forEach(card => {
+			const pID = card.owner?.pID;
+			if (pID !== undefined) {
+				if (!grouped[pID]) {
+					grouped[pID] = [];
+				}
+				grouped[pID].push(card);
+			}
+		});
+
+		// Flatten back to array with spacing markers (add className for spacing)
+		const result: CardProps[] = [];
+		Object.keys(grouped).forEach((pIDStr, index) => {
+			const pID = parseInt(pIDStr);
+			grouped[pID].forEach((card, cardIndex) => {
+				result.push({
+					...card,
+					className: cardIndex === 0 && index > 0 ? 'player-group-start' : ''
+				});
+			});
+		});
+
+		return result;
+	};
+
 	// Drop handler for react-dnd (receives dropped item with id)
 	const handleCardDrop = (item: DraggedCard) => {
 		if (!partyCode || !item || !item.id) {
@@ -255,8 +334,14 @@ const PlayerSelectionScreen = () => {
 			// Judge selecting winner card
 			judgeSelectCard(partyCode, item.id);
 		} else if (state.roundState === PLAYER_SELECTING && state.roundRole === 'player') {
-			// Player selecting card to play
-			playCard(partyCode, item.id);
+			// For multi-card questions, use click selection instead of drag
+			const numCardsRequired = state.QCard?.numAnswers || 1;
+			if (numCardsRequired > 1) {
+				toggleCardSelection(item.id);
+			} else {
+				// Single card - submit immediately
+				playCard(partyCode, item.id);
+			}
 		}
 	};
 
@@ -293,11 +378,46 @@ const PlayerSelectionScreen = () => {
 				</Top>
 				<Bottom>
 					<Status message={state.directions} />
+					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (
+						<div style={{ textAlign: 'center', padding: '10px' }}>
+							{selectedCards.length > 0 && (
+								<span style={{ marginRight: '10px', color: '#fff' }}>
+									Selected: {selectedCards.length} / {state.QCard?.numAnswers || 1}
+								</span>
+							)}
+							{selectedCards.length === (state.QCard?.numAnswers || 1) && (state.QCard?.numAnswers || 1) > 1 && (
+								<button
+									onClick={handleSubmitCards}
+									style={{
+										padding: '10px 20px',
+										fontSize: '16px',
+										fontWeight: 'bold',
+										backgroundColor: '#2196F3',
+										color: '#fff',
+										border: 'none',
+										borderRadius: '5px',
+										cursor: 'pointer',
+									}}
+								>
+									Submit Cards
+								</button>
+							)}
+						</div>
+					)}
 					<CardCarousel
 						cards={
-							state.roundState === JUDGE_SELECTING ? state.otherPlayerCards :
-								state.roundState === JUDGE_WAITING ? [] : state.cards
+							state.roundState === JUDGE_SELECTING
+								? groupCardsByPlayer(state.otherPlayerCards)
+								: state.roundState === JUDGE_WAITING
+									? []
+									: state.cards
 						}
+						onCardClick={
+							state.roundState === PLAYER_SELECTING && state.roundRole === 'player'
+								? toggleCardSelection
+								: undefined
+						}
+						selectedCards={selectedCards}
 					/>
 					<Footer>
 						Share Link or Party Code: {partyCode}
