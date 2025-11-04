@@ -7,7 +7,10 @@ import {
 	VoteStats,
 	UserVote,
 	SortOption,
-	CardTypeFilter
+	CardTypeFilter,
+	ModeratorStats,
+	BatchOperationResult,
+	RejectionReason
 } from "@/types";
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080';
@@ -290,4 +293,120 @@ export function onCardSubmitted(callback: (data: { cardId: number }) => void) {
  */
 export function offCardSubmitted() {
 	socket.off('cardSubmitted');
+}
+
+// Moderator API
+
+/**
+ * Promote current user to moderator role
+ * @param adminKey - Admin key for authentication
+ * @returns Promise with promotion result
+ */
+export async function promoteToModerator(adminKey: string): Promise<{ success: boolean; message: string }> {
+	const response = await fetch(`${SERVER_URL}/api/cards/auth/promote`, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify({ adminKey })
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || 'Failed to promote to moderator');
+	}
+
+	return response.json();
+}
+
+/**
+ * Get moderation statistics
+ * @returns Promise with moderator stats
+ */
+export async function getModeratorStats(): Promise<ModeratorStats> {
+	const response = await fetch(`${SERVER_URL}/api/cards/moderator/stats`, {
+		credentials: 'include',
+		headers: {
+			'Accept': 'application/json'
+		}
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || 'Failed to fetch moderator stats');
+	}
+
+	const data = await response.json();
+	return data.stats; // Unwrap stats from { success: true, stats: {...} }
+}
+
+/**
+ * Batch approve cards
+ * @param cardIds - Array of card IDs to approve
+ * @returns Promise with batch operation result
+ */
+export async function batchApproveCards(cardIds: number[]): Promise<BatchOperationResult> {
+	const response = await fetch(`${SERVER_URL}/api/cards/moderator/batch-approve`, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify({ cardIds })
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || 'Failed to approve cards');
+	}
+
+	return response.json();
+}
+
+/**
+ * Batch reject cards
+ * @param cardIds - Array of card IDs to reject
+ * @param reason - Rejection reason
+ * @param customReason - Optional custom reason text
+ * @returns Promise with batch operation result
+ */
+export async function batchRejectCards(
+	cardIds: number[],
+	reason: RejectionReason,
+	customReason?: string
+): Promise<BatchOperationResult> {
+	const response = await fetch(`${SERVER_URL}/api/cards/moderator/batch-reject`, {
+		method: 'POST',
+		credentials: 'include',
+		headers: {
+			'Content-Type': 'application/json',
+			'Accept': 'application/json'
+		},
+		body: JSON.stringify({ cardIds, reason, customReason })
+	});
+
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || 'Failed to reject cards');
+	}
+
+	return response.json();
+}
+
+/**
+ * Subscribe to card moderation events (approval/rejection)
+ * @param callback - Function called when card is moderated
+ */
+export function onCardModerated(callback: (data: { cardId: number; status: string }) => void) {
+	socket.on('cardModerated', callback);
+}
+
+/**
+ * Unsubscribe from card moderation events
+ */
+export function offCardModerated() {
+	socket.off('cardModerated');
 }

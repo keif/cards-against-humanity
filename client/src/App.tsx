@@ -7,6 +7,7 @@ const JoinPartyScreen = lazy(() => import("./Screens/JoinPartyScreen/JoinPartySc
 const StartGameScreen = lazy(() => import("./Screens/StartGameScreen/StartGameScreen"));
 const PlayerSelectionScreen = lazy(() => import('./Screens/PlayerSelectionScreen/PlayerSelectionScreen'));
 const CommunityVotingScreen = lazy(() => import('./Screens/CommunityVotingScreen/CommunityVotingScreen'));
+const ModeratorDashboard = lazy(() => import('./Screens/ModeratorDashboard/ModeratorDashboard'));
 
 // Routing
 export const enum ROUTE_PARAM {
@@ -19,6 +20,7 @@ export const enum ROUTE_PATH {
 	START_GAME = `/join/:${ROUTE_PARAM.PARTY_CODE}`,
 	PLAYER_SELECTION = `/:${ROUTE_PARAM.PARTY_CODE}`,
 	COMMUNITY_VOTING = '/community/cards',
+	MODERATOR_DASHBOARD = '/moderator',
 }
 
 const App = () => {
@@ -46,6 +48,10 @@ const App = () => {
 					<Route
 						path={`${ROUTE_PATH.COMMUNITY_VOTING}`}
 						element={<CommunityVotingScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.MODERATOR_DASHBOARD}`}
+						element={<ModeratorDashboard/>}
 					/>
 					<Route
 						path={`${ROUTE_PATH.PLAYER_SELECTION}`}

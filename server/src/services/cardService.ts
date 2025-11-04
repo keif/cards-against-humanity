@@ -157,7 +157,8 @@ export class CardService {
 					cardType: (data as any).cardType,
 					text: (data as any).text,
 					numAnswers: Number((data as any).numAnswers),
-					expansion: (data as any).expansion
+					expansion: (data as any).expansion,
+					createdAt: (data as any).createdAt
 				} as Card;
 			})
 			.filter((card): card is Card => card !== null);

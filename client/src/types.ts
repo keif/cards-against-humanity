@@ -60,3 +60,28 @@ export interface CommunityCardsResponse {
 	total: number;
 	hasMore: boolean;
 }
+
+// Moderator Types
+export interface ModeratorStats {
+	pending: {
+		total: number;
+		answerCards: number;
+		questionCards: number;
+	};
+	approved: {
+		total: number;
+		answerCards: number;
+		questionCards: number;
+	};
+	totalSubmissions: number;
+	approvalRate: number;
+}
+
+export interface BatchOperationResult {
+	success: boolean;
+	processed: number;
+	failed: number;
+	errors?: Array<{ cardId: number; error: string }>;
+}
+
+export type RejectionReason = 'inappropriate' | 'duplicate' | 'low-quality' | 'other';

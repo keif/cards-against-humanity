@@ -1,4 +1,7 @@
-import 'module-alias/register';
+// Only use module-alias in production (dev uses tsconfig-paths)
+if (process.env.NODE_ENV === 'production') {
+	require('module-alias/register');
+}
 import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import cookieSession from 'cookie-session';

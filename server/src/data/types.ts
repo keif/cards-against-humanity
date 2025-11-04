@@ -4,6 +4,7 @@ export interface Card {
     text: string;
     numAnswers: number;
     expansion: string;
+    createdAt?: string;
     owner?: {
         name: string;
         pID: number;
