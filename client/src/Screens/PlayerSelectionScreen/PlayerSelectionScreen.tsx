@@ -309,9 +309,10 @@ const PlayerSelectionScreen = () => {
 		Object.keys(grouped).forEach((pIDStr, index) => {
 			const pID = parseInt(pIDStr);
 			grouped[pID].forEach((card, cardIndex) => {
+				const spacingClass = cardIndex === 0 && index > 0 ? 'player-group-start' : '';
 				result.push({
 					...card,
-					className: cardIndex === 0 && index > 0 ? 'player-group-start' : ''
+					className: card.className ? `${card.className} ${spacingClass}` : spacingClass
 				});
 			});
 		});
