@@ -55,6 +55,7 @@ export interface RoundInterface {
     winner?: string;
     winningCard?: Card | null;
     winningCards?: Card[] | null; // All cards from winning player (for multi-card submissions)
+    playerScores?: Array<{ name: string; score: number; pID: number }>;
 }
 
 export interface PlayerInterface {

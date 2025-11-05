@@ -7,6 +7,7 @@ import CardCarousel from '@/components/CardCarousel/CardCarousel';
 import DropCardSpace from '@/components/DropCardSpace/DropCardSpace';
 import Footer from '@/components/Footer/Footer';
 import HeaderMenu from '@/components/HeaderMenu/HeaderMenu';
+import Scoreboard from '@/components/Scoreboard/Scoreboard';
 import Screen from '@/components/Screen/Screen';
 import Status from '@/components/Status/Status';
 import Top from '@/components/Top/Top';
@@ -42,6 +43,7 @@ export interface RoundInterface {
 	winner: string,
 	winningCard: CardProps | null,
 	winningCards?: CardProps[] | null, // All cards from winning player (for multi-card submissions)
+	playerScores?: Array<{ name: string; score: number; pID: number }>;
 }
 
 interface ParamTypes {
@@ -135,6 +137,7 @@ const PlayerSelectionScreen = () => {
 			id: 42,
 			text: `Go to localhost:3000/game/${partyCode}`,
 		},
+		playerScores: [],
 	});
 
 	// Load DnD backend dynamically based on device type
@@ -432,6 +435,10 @@ const PlayerSelectionScreen = () => {
 				</Top>
 				<Bottom>
 					<Status message={state.directions} />
+					<Scoreboard
+						playerScores={state.playerScores || []}
+						currentPlayerName={state.currentPlayerName}
+					/>
 					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (state.QCard?.numAnswers || 1) > 1 && (
 						<div style={{ textAlign: 'center', padding: '10px' }}>
 							{droppedCards.length > 0 && (
