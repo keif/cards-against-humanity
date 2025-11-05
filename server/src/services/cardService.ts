@@ -110,6 +110,11 @@ export class CardService {
 
 	/**
 	 * Get shuffled question cards for a specific expansion
+	 * @param expansion - Card expansion pack (default: 'Base')
+	 * @param numAnswers - Filter by number of answers required:
+	 *   - positive number (1, 2, 3, etc): exact match (e.g., numAnswers === 2)
+	 *   - 0: get all cards with numAnswers > 1 (multi-answer only)
+	 *   - default (1): single-answer cards only
 	 */
 	async getShuffledQuestionCards(expansion: string = 'Base', numAnswers: number = 1): Promise<Card[]> {
 		try {
@@ -123,7 +128,17 @@ export class CardService {
 			const cards = await this.getCardsByIds(cardIds.map(Number));
 
 			// Filter by numAnswers
-			const filteredCards = cards.filter(card => card.numAnswers === numAnswers);
+			// numAnswers = 0 means "any multi-answer card (>1)"
+			const filteredCards = numAnswers === 0
+				? cards.filter(card => card.numAnswers > 1)
+				: cards.filter(card => card.numAnswers === numAnswers);
+
+			logger.info('Question cards filtered', {
+				expansion,
+				requestedNumAnswers: numAnswers,
+				totalCards: cards.length,
+				filteredCount: filteredCards.length
+			});
 
 			return shuffle(filteredCards);
 		} catch (error) {

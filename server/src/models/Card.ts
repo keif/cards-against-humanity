@@ -28,18 +28,27 @@ function getShuffledACardStatic(): Card[] {
 
 /**
  * Fallback to static cards if Redis is unavailable
+ * @param numAnswers - Filter by number of answers:
+ *   - 0: get all cards with numAnswers > 1 (multi-answer only)
+ *   - positive number: exact match
  */
-function getShuffledQCardStatic(): Card[] {
-    // TODO: return cards with more than 1 answer after we implement that feature
+function getShuffledQCardStatic(numAnswers: number = 1): Card[] {
     let QCards = cards.filter(({
                                    cardType,
                                    expansion,
-                                   numAnswers
+                                   numAnswers: cardNumAnswers
                                }: {
         cardType: string,
         expansion: string,
         numAnswers: number
-    }) => cardType === "Q" && expansion === 'Base' && numAnswers === 1);
+    }) => {
+        if (cardType !== "Q" || expansion !== 'Base') return false;
+
+        // numAnswers = 0 means "any multi-answer card (>1)"
+        return numAnswers === 0
+            ? cardNumAnswers > 1
+            : cardNumAnswers === numAnswers;
+    });
     return shuffle(QCards);
 }
 
@@ -64,6 +73,10 @@ export async function getShuffledACard(expansion: string = 'Base'): Promise<Card
 
 /**
  * Get shuffled question cards (uses Redis if available, falls back to static)
+ * @param expansion - Card expansion pack (default: 'Base')
+ * @param numAnswers - Filter by number of answers:
+ *   - 0: get all cards with numAnswers > 1 (multi-answer only)
+ *   - positive number: exact match (default: 1)
  */
 export async function getShuffledQCard(expansion: string = 'Base', numAnswers: number = 1): Promise<Card[]> {
     if (cardService) {
@@ -73,12 +86,12 @@ export async function getShuffledQCard(expansion: string = 'Base', numAnswers: n
             logger.error('Failed to get cards from Redis, falling back to static', {
                 error: error instanceof Error ? error.message : String(error)
             });
-            return getShuffledQCardStatic();
+            return getShuffledQCardStatic(numAnswers);
         }
     }
 
     logger.warn('CardService not initialized, using static cards');
-    return getShuffledQCardStatic();
+    return getShuffledQCardStatic(numAnswers);
 }
 
 /**

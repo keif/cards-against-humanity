@@ -57,12 +57,26 @@ class Game implements GameInterface {
 	 */
 	async initialize(expansion: string = 'Base'): Promise<void> {
 		logger.info('Initializing game cards', { partyCode: this.partyCode, expansion });
-		this.QCardDeck = await getShuffledQCard(expansion);
+
+		// Check for testing mode - filter to only multi-answer questions
+		const testMultiAnswerOnly = process.env.TEST_MULTI_ANSWER_ONLY === 'true';
+		const numAnswersFilter = testMultiAnswerOnly ? 0 : 1;
+
+		if (testMultiAnswerOnly) {
+			logger.warn('TEST MODE: Filtering deck to multi-answer questions only', {
+				partyCode: this.partyCode,
+				expansion
+			});
+		}
+
+		this.QCardDeck = await getShuffledQCard(expansion, numAnswersFilter);
 		this.ACardDeck = await getShuffledACard(expansion);
+
 		logger.info('Game cards initialized', {
 			partyCode: this.partyCode,
 			qCards: this.QCardDeck.length,
-			aCards: this.ACardDeck.length
+			aCards: this.ACardDeck.length,
+			testMode: testMultiAnswerOnly
 		});
 	}
 
@@ -455,8 +469,15 @@ class Game implements GameInterface {
 
   		// All validations passed - execute the selection
   		try {
+  			// Find ALL cards from the winning player (for multi-card submissions)
+  			const winningPlayerPID = winningCard.owner?.pID;
+  			const allWinningCards = latestRound.otherPlayerCards?.filter(
+  				card => card.owner?.pID === winningPlayerPID
+  			) || [];
+
   			latestRound.roundState = VIEWING_WINNER;
-  			latestRound.winningCard = winningCard;
+  			latestRound.winningCard = winningCard; // First card clicked (for backwards compatibility)
+  			latestRound.winningCards = allWinningCards; // All cards from winning player
   			latestRound.winner = winningCard.owner?.name;
   			latestRound.roundEndTime = new Date();
 
@@ -471,12 +492,13 @@ class Game implements GameInterface {
 
   			this.roundsIdle = 0;
 
-  			logger.info('Judge selected winning card', {
+  			logger.info('Judge selected winning card(s)', {
   				sessionID,
   				cardID,
   				judgeName: player.name,
   				winnerName: latestRound.winner,
   				winningCardText: winningCard.text,
+  				totalWinningCards: allWinningCards.length,
   				roundNum: latestRound.roundNum,
   				partyCode: this.partyCode
   			});
