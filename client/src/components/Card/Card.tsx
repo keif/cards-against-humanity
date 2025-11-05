@@ -79,12 +79,20 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 			</div>
 		);
 	} else if (cardType === LINK && link) {
+		// Extract party code from URL (last segment)
+		const partyCode = window.location.pathname.split('/').filter(Boolean).pop() || '';
+
 		return (
 			<div className={`card Title Link ${className}`}>
 				<h3>Invite friends</h3>
 				<h3>with party code:</h3>
-				<h6 className="link" onClick={handleCopyLink} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', cursor: 'pointer' }}>
-					{window.location.href}
+				<h6
+					className="link"
+					onClick={handleCopyLink}
+					style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', cursor: 'pointer' }}
+					title="Click to copy invite link"
+				>
+					{partyCode}
 					{copied ? (
 						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
 							<polyline points="20 6 9 17 4 12"></polyline>
@@ -98,7 +106,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 				</h6>
 				{copied && (
 					<p style={{ color: '#4CAF50', fontSize: '14px', fontWeight: 'bold', textAlign: 'center', margin: '10px 0 0 0' }}>
-						Copied!
+						Link copied!
 					</p>
 				)}
 			</div>
