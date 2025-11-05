@@ -1,6 +1,7 @@
 import "./Card.css";
 
 // external imports
+import { useState } from "react";
 import { SITE_NAME } from "@/constants/constants";
 import { ItemTypes } from "@/types";
 import { useDrag } from "react-dnd";
@@ -33,6 +34,18 @@ export interface CardProps {
 }
 
 const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
+	const [copied, setCopied] = useState(false);
+
+	const handleCopyLink = async () => {
+		try {
+			await navigator.clipboard.writeText(window.location.href);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error('Failed to copy:', err);
+		}
+	};
+
 	if (cardType === "Q" && text) {
 		const formattedText = text.replaceAll("_", "__________");
 		return (
@@ -70,9 +83,24 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 			<div className={`card Title Link ${className}`}>
 				<h3>Invite friends</h3>
 				<h3>with party code:</h3>
-				<h6 className="link" onClick={() => navigator.clipboard.writeText(window.location.href)}>
-					(Click to copy) {window.location.href}
+				<h6 className="link" onClick={handleCopyLink} style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', cursor: 'pointer' }}>
+					{window.location.href}
+					{copied ? (
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+					) : (
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+						</svg>
+					)}
 				</h6>
+				{copied && (
+					<p style={{ color: '#4CAF50', fontSize: '14px', fontWeight: 'bold', textAlign: 'center', margin: '10px 0 0 0' }}>
+						Copied!
+					</p>
+				)}
 			</div>
 		)
 	} else {
