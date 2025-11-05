@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import './PlayerSelectionScreen.css';
 
 // Import SharedComponents
@@ -54,6 +54,7 @@ const PlayerSelectionScreen = () => {
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
 	const [selectedCards, setSelectedCards] = useState<number[]>([]);
+	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -194,11 +195,21 @@ const PlayerSelectionScreen = () => {
 				roundState: roundState.roundState,
 				winner: roundState.winner,
 				winningCard: roundState.winningCard,
+				winningCards: roundState.winningCards,
 				directions
 			});
 
-			// Clear selected cards when round state changes
-			setSelectedCards([]);
+			// Only clear selected cards when round number or round state actually changes
+			const roundChanged = roundState.roundNum !== previousRoundRef.current.roundNum;
+			const stateChanged = roundState.roundState !== previousRoundRef.current.roundState;
+
+			if (roundChanged || stateChanged) {
+				setSelectedCards([]);
+				previousRoundRef.current = {
+					roundNum: roundState.roundNum ?? 0,
+					roundState: roundState.roundState ?? ''
+				};
+			}
 
 			// Clear existing ticker if any
 			if (state.ticker) {
@@ -290,8 +301,8 @@ const PlayerSelectionScreen = () => {
 		setSelectedCards([]);
 	};
 
-	// Group cards by player for judge view
-	const groupCardsByPlayer = (cards: CardProps[]): CardProps[] => {
+	// Group cards by player for judge view - returns structured groups
+	const groupCardsByPlayerStructured = (cards: CardProps[]) => {
 		const grouped: { [pID: number]: CardProps[] } = {};
 
 		// Group cards by player ID
@@ -305,20 +316,15 @@ const PlayerSelectionScreen = () => {
 			}
 		});
 
-		// Flatten back to array with spacing markers (add className for spacing)
-		const result: CardProps[] = [];
-		Object.keys(grouped).forEach((pIDStr, index) => {
+		// Convert to array of CardGroup objects
+		return Object.keys(grouped).map(pIDStr => {
 			const pID = parseInt(pIDStr);
-			grouped[pID].forEach((card, cardIndex) => {
-				const spacingClass = cardIndex === 0 && index > 0 ? 'player-group-start' : '';
-				result.push({
-					...card,
-					className: card.className ? `${card.className} ${spacingClass}` : spacingClass
-				});
-			});
+			return {
+				playerID: pID,
+				playerName: grouped[pID][0]?.owner?.name,
+				cards: grouped[pID]
+			};
 		});
-
-		return result;
 	};
 
 	// Drop handler for react-dnd (receives dropped item with id)
@@ -410,10 +416,15 @@ const PlayerSelectionScreen = () => {
 					<CardCarousel
 						cards={
 							state.roundState === JUDGE_SELECTING
-								? groupCardsByPlayer(state.otherPlayerCards)
+								? undefined
 								: state.roundState === JUDGE_WAITING
 									? []
 									: state.cards
+						}
+						cardGroups={
+							state.roundState === JUDGE_SELECTING
+								? groupCardsByPlayerStructured(state.otherPlayerCards)
+								: undefined
 						}
 						onCardClick={
 							state.roundState === PLAYER_SELECTING && state.roundRole === 'player'
