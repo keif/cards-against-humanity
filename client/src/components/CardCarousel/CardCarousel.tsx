@@ -18,7 +18,8 @@ const CardCarousel = ({ cards, onCardClick, selectedCards = [] }: CardCarouselPr
 				canDrop: !!monitor.canDrop(),
 			}),
 			drop: (item, monitor) => {
-				return true;
+				// Return undefined - cards dropped here are returned to hand
+				return undefined;
 			},
 			hover(item, monitor) {
 				// Vibrate when dragging card over carousel
