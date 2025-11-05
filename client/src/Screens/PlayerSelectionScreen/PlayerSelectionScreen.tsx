@@ -200,6 +200,7 @@ const PlayerSelectionScreen = () => {
 				winner: roundState.winner,
 				winningCard: roundState.winningCard,
 				winningCards: roundState.winningCards,
+				playerScores: roundState.playerScores,
 				directions
 			});
 
