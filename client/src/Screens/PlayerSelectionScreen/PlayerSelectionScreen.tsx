@@ -41,6 +41,7 @@ export interface RoundInterface {
 	timeLeft?: number;
 	winner: string,
 	winningCard: CardProps | null,
+	winningCards?: CardProps[] | null, // All cards from winning player (for multi-card submissions)
 }
 
 interface ParamTypes {
@@ -365,6 +366,7 @@ const PlayerSelectionScreen = () => {
 						cardsIn={state.otherPlayerCards.length}
 						dropHandler={handleCardDrop}
 						playerChoice={state.roundState === VIEWING_WINNER ? state.winningCard : state.playerChoice}
+						winningCards={state.roundState === VIEWING_WINNER ? state.winningCards : null}
 						QCard={state.QCard}
 						roundRole={state.roundRole}
 						roundState={state.roundState}

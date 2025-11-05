@@ -54,6 +54,7 @@ export interface RoundInterface {
     timeLeft?: number;
     winner?: string;
     winningCard?: Card | null;
+    winningCards?: Card[] | null; // All cards from winning player (for multi-card submissions)
 }
 
 export interface PlayerInterface {

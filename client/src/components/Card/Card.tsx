@@ -33,7 +33,7 @@ export interface CardProps {
 
 const Card = ({ cardType, className, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
 	if (cardType === "Q" && text) {
-		const formattedText = text.replace("_", "__________");
+		const formattedText = text.replaceAll("_", "__________");
 		return (
 			<div>
 				<div className={`card Q ${className}`}>

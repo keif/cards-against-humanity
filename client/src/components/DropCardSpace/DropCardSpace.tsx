@@ -21,9 +21,10 @@ interface DropCardSpaceProps {
 	roundState: string;
 	QCard: CardProps;
 	playerChoice: CardProps | null;
+	winningCards?: CardProps[] | null;
 }
 
-const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler }: DropCardSpaceProps) => {
+const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler, winningCards }: DropCardSpaceProps) => {
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -42,18 +43,42 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		[dropHandler]);
 	let status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : undefined;
 
+	// Determine which cards to display
+	const getCardsToDisplay = (): CardProps[] => {
+		if (roundState === VIEWING_WINNER && winningCards && winningCards.length > 0) {
+			return winningCards;
+		} else if (playerChoice) {
+			return [playerChoice];
+		} else {
+			return [{ cardType: PLACEHOLDER } as CardProps];
+		}
+	};
+
 	// draggable
 	if ((roundRole === PLAYER && roundState === PLAYER_SELECTING) ||
 		(roundRole === JUDGE && roundState === JUDGE_SELECTING) ||
 		(roundState === VIEWING_WINNER)) {
+		const cardsToDisplay = getCardsToDisplay();
+
 		return (
 			<div className="drop-space">
 				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 				<div
 					ref={drop}
+					style={{
+						display: 'flex',
+						gap: '10px',
+						flexWrap: 'wrap',
+						justifyContent: 'center'
+					}}
 				>
-					{(playerChoice && <Card {...playerChoice} index={0} />) ||
-						<Card cardType={PLACEHOLDER} />}
+					{cardsToDisplay.map((card, index) => (
+						<Card
+							key={card.id ?? `card-${index}`}
+							{...card}
+							index={index}
+						/>
+					))}
 				</div>
 			</div>
 		);
