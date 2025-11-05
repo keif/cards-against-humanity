@@ -22,9 +22,10 @@ interface DropCardSpaceProps {
 	QCard: CardProps;
 	playerChoice: CardProps | null;
 	winningCards?: CardProps[] | null;
+	droppedCards?: CardProps[];
 }
 
-const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler, winningCards }: DropCardSpaceProps) => {
+const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler, winningCards, droppedCards = [] }: DropCardSpaceProps) => {
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -47,6 +48,8 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 	const getCardsToDisplay = (): CardProps[] => {
 		if (roundState === VIEWING_WINNER && winningCards && winningCards.length > 0) {
 			return winningCards;
+		} else if (roundState === PLAYER_SELECTING && droppedCards.length > 0) {
+			return droppedCards;
 		} else if (playerChoice) {
 			return [playerChoice];
 		} else {
@@ -60,23 +63,28 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		(roundState === VIEWING_WINNER)) {
 		const cardsToDisplay = getCardsToDisplay();
 
+		// Check if we should show fanning effect (player selecting with dropped cards)
+		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1;
+
 		return (
 			<div className="drop-space">
 				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 				<div
 					ref={drop}
-					style={{
+					className={shouldFan ? "fan-container" : ""}
+					style={!shouldFan ? {
 						display: 'flex',
 						gap: '10px',
 						flexWrap: 'wrap',
 						justifyContent: 'center'
-					}}
+					} : undefined}
 				>
 					{cardsToDisplay.map((card, index) => (
 						<Card
 							key={card.id ?? `card-${index}`}
 							{...card}
 							index={index}
+							className={shouldFan ? "fanned-card" : ""}
 						/>
 					))}
 				</div>

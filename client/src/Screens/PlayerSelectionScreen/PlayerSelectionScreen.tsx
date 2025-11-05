@@ -54,6 +54,7 @@ const PlayerSelectionScreen = () => {
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
 	const [selectedCards, setSelectedCards] = useState<number[]>([]);
+	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 
 	if (!partyCode) {
@@ -205,6 +206,7 @@ const PlayerSelectionScreen = () => {
 
 			if (roundChanged || stateChanged) {
 				setSelectedCards([]);
+				setDroppedCards([]); // Clear dropped cards on round change
 				previousRoundRef.current = {
 					roundNum: roundState.roundNum ?? 0,
 					roundState: roundState.roundState ?? ''
@@ -284,21 +286,22 @@ const PlayerSelectionScreen = () => {
 		});
 	};
 
-	// Submit selected cards
+	// Submit dropped cards
 	const handleSubmitCards = () => {
-		if (!partyCode || selectedCards.length === 0) {
+		if (!partyCode || droppedCards.length === 0) {
 			return;
 		}
 
 		const numCardsRequired = state.QCard?.numAnswers || 1;
-		if (selectedCards.length !== numCardsRequired) {
+		if (droppedCards.length !== numCardsRequired) {
 			return;
 		}
 
-		// Submit cards
-		playCard(partyCode, selectedCards);
-		// Clear selection
-		setSelectedCards([]);
+		// Submit cards (extract IDs)
+		const cardIds = droppedCards.map(c => c.id).filter((id): id is number => id !== undefined);
+		playCard(partyCode, cardIds);
+		// Clear dropped cards
+		setDroppedCards([]);
 	};
 
 	// Group cards by player for judge view - returns structured groups
@@ -342,16 +345,44 @@ const PlayerSelectionScreen = () => {
 			// Judge selecting winner card
 			judgeSelectCard(partyCode, item.id);
 		} else if (state.roundState === PLAYER_SELECTING && state.roundRole === 'player') {
-			// For multi-card questions, use click selection instead of drag
 			const numCardsRequired = state.QCard?.numAnswers || 1;
+
+			// Find the card from hand
+			const card = state.cards.find(c => c.id === item.id);
+			if (!card) return;
+
 			if (numCardsRequired > 1) {
-				toggleCardSelection(item.id);
+				// Multi-card: add to drop zone if not already there and not at max
+				setDroppedCards(prev => {
+					if (prev.some(c => c.id === item.id)) {
+						return prev; // Already dropped
+					}
+					if (prev.length >= numCardsRequired) {
+						return prev; // Already at max
+					}
+					return [...prev, card];
+				});
 			} else {
 				// Single card - submit immediately
 				playCard(partyCode, item.id);
 			}
 		}
 	};
+
+	// Handler for removing card from drop zone (drag back to hand)
+	const handleCardRemove = (item: DraggedCard) => {
+		if (!item || !item.id) {
+			return;
+		}
+		setDroppedCards(prev => prev.filter(c => c.id !== item.id));
+	};
+
+	// Filter cards in hand to exclude dropped cards
+	const cardsInHand = useMemo(() => {
+		return state.cards.filter(card =>
+			!droppedCards.some(dropped => dropped.id === card.id)
+		);
+	}, [state.cards, droppedCards]);
 
 	// Don't render until DnD backend is loaded
 	if (!dndBackend) {
@@ -373,6 +404,7 @@ const PlayerSelectionScreen = () => {
 						dropHandler={handleCardDrop}
 						playerChoice={state.roundState === VIEWING_WINNER ? state.winningCard : state.playerChoice}
 						winningCards={state.roundState === VIEWING_WINNER ? state.winningCards : null}
+						droppedCards={droppedCards}
 						QCard={state.QCard}
 						roundRole={state.roundRole}
 						roundState={state.roundState}
@@ -387,14 +419,14 @@ const PlayerSelectionScreen = () => {
 				</Top>
 				<Bottom>
 					<Status message={state.directions} />
-					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (
+					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (state.QCard?.numAnswers || 1) > 1 && (
 						<div style={{ textAlign: 'center', padding: '10px' }}>
-							{selectedCards.length > 0 && (
+							{droppedCards.length > 0 && (
 								<span style={{ marginRight: '10px', color: '#fff' }}>
-									Selected: {selectedCards.length} / {state.QCard?.numAnswers || 1}
+									Cards Played: {droppedCards.length} / {state.QCard?.numAnswers || 1}
 								</span>
 							)}
-							{selectedCards.length === (state.QCard?.numAnswers || 1) && (state.QCard?.numAnswers || 1) > 1 && (
+							{droppedCards.length === (state.QCard?.numAnswers || 1) && (
 								<button
 									onClick={handleSubmitCards}
 									style={{
@@ -419,19 +451,14 @@ const PlayerSelectionScreen = () => {
 								? undefined
 								: state.roundState === JUDGE_WAITING
 									? []
-									: state.cards
+									: cardsInHand
 						}
 						cardGroups={
 							state.roundState === JUDGE_SELECTING
 								? groupCardsByPlayerStructured(state.otherPlayerCards)
 								: undefined
 						}
-						onCardClick={
-							state.roundState === PLAYER_SELECTING && state.roundRole === 'player'
-								? toggleCardSelection
-								: undefined
-						}
-						selectedCards={selectedCards}
+						onCardRemove={handleCardRemove}
 					/>
 					<Footer>
 						Share Link or Party Code: {partyCode}

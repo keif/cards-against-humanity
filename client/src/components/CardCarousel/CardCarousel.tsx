@@ -13,6 +13,7 @@ interface CardCarouselProps {
 	cards?: CardProps[];
 	cardGroups?: CardGroup[];
 	onCardClick?: (id: number) => void;
+	onCardRemove?: (item: { id: number }) => void;
 	selectedCards?: number[];
 }
 
@@ -63,7 +64,7 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 	);
 };
 
-const CardCarousel = ({ cards, cardGroups, onCardClick, selectedCards = [] }: CardCarouselProps) => {
+const CardCarousel = ({ cards, cardGroups, onCardClick, onCardRemove, selectedCards = [] }: CardCarouselProps) => {
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -72,7 +73,10 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, selectedCards = [] }: Ca
 				canDrop: !!monitor.canDrop(),
 			}),
 			drop: (item, monitor) => {
-				// Return undefined - cards dropped here are returned to hand
+				// Call onCardRemove to remove card from drop zone
+				if (onCardRemove && item && typeof item === 'object' && 'id' in item) {
+					onCardRemove(item as { id: number });
+				}
 				return undefined;
 			},
 			hover(item, monitor) {
@@ -82,7 +86,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, selectedCards = [] }: Ca
 				}
 			}
 		}),
-		[]);
+		[onCardRemove]);
 
 	// Render grouped cards for judge selection
 	if (cardGroups) {
