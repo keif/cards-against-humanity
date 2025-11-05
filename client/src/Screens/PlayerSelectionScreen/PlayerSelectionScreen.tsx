@@ -409,13 +409,26 @@ const PlayerSelectionScreen = () => {
 						roundRole={state.roundRole}
 						roundState={state.roundState}
 					/>
-					<div
-						className={state.roundState === VIEWING_WINNER ? 'continueMsg' : ''}
-						id="continueMsg"
-						onClick={restoreScreen}
-					>
-						{state.roundState === VIEWING_WINNER ? 'Tap anywhere to Continue' : ''}
-					</div>
+					{state.roundState === VIEWING_WINNER && (
+						<div style={{ textAlign: 'center', marginTop: '20px' }}>
+							<button
+								onClick={restoreScreen}
+								style={{
+									padding: '12px 30px',
+									fontSize: '18px',
+									fontWeight: 'bold',
+									backgroundColor: '#4CAF50',
+									color: '#fff',
+									border: 'none',
+									borderRadius: '5px',
+									cursor: 'pointer',
+									boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
+								}}
+							>
+								Next Round
+							</button>
+						</div>
+					)}
 				</Top>
 				<Bottom>
 					<Status message={state.directions} />
