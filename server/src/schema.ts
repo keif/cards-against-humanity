@@ -26,7 +26,11 @@ const getGame = async (partyCode: string, cb?: CallbackType): Promise<GameInterf
         return existingGame;
     } else {
         // if game doesn't exist, create a new one
-        await createGame(partyCode, 60, cb!);
+        // Provide a default callback if none was supplied
+        const defaultCallback: CallbackType = (success, message) => {
+            console.log(`Game event (no callback provided): ${success} | ${message}`);
+        };
+        await createGame(partyCode, 60, cb || defaultCallback);
     }
     return games[partyCode];
 };

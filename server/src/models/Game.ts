@@ -23,7 +23,7 @@ class Game implements GameInterface {
 	constructor(
 		partyCode: string,
 		roundLength: number = 10,
-		roundFinishedNotifier: CallbackType
+		roundFinishedNotifier?: CallbackType
 	) {
 		console.group('Game constructor');
 		console.log('partyCode:', partyCode);
@@ -40,7 +40,10 @@ class Game implements GameInterface {
 		this.players = {};
 		this.rounds = [];
 		this.roundLength = roundLength;
-		this.roundFinishedNotifier = roundFinishedNotifier;
+		// Ensure roundFinishedNotifier is always a function
+		this.roundFinishedNotifier = roundFinishedNotifier || ((success, message) => {
+			console.warn(`Game ${partyCode}: roundFinishedNotifier not provided - ${success} | ${message}`);
+		});
 		this.roundTimer = null;
 
 		this.addNewPlayer = this.addNewPlayer.bind(this);
@@ -211,6 +214,13 @@ class Game implements GameInterface {
 			roundState = PLAYER_SELECTING;
 		}
 
+		// Build player scores array for leaderboard
+		const playerScores = Object.values(this.players).map(p => ({
+			name: p.name,
+			score: p.roundsWon.length,
+			pID: p.pID
+		}));
+
 		return {
 			cards,
 			currentPlayerName: player.name,
@@ -225,6 +235,7 @@ class Game implements GameInterface {
 			winner,
 			winningCard,
 			winningCards,
+			playerScores,
 		};
 	}
 
