@@ -2,7 +2,6 @@
 import Bottom from "../../components/Bottom/Bottom";
 import Button from "../../components/Button/Button";
 import Card, { TITLE } from "../../components/Card/Card";
-import Footer from "../../components/Footer/Footer";
 import Screen from "../../components/Screen/Screen";
 import Title from "../../components/Title/Title";
 import Top from "../../components/Top/Top";
@@ -38,9 +37,6 @@ const HomeScreen = () => {
                     link="/join"
                     text="Join Party"
                 />
-                <Footer>
-                    Like us on <a href="https://www.instagram.com/cardipartygame/"> Instagram!</a>
-                </Footer>
             </Bottom>
         </Screen>
     );
