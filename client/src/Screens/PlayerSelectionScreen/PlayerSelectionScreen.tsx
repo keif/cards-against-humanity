@@ -58,6 +58,7 @@ const PlayerSelectionScreen = () => {
 	const [selectedCards, setSelectedCards] = useState<number[]>([]);
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
+	const [copied, setCopied] = useState(false);
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 
 	if (!partyCode) {
@@ -261,6 +262,18 @@ const PlayerSelectionScreen = () => {
 	const restoreScreen = () => {
 		if (partyCode) {
 			endRound(partyCode);
+		}
+	};
+
+	// Copy party URL to clipboard
+	const handleCopyLink = async () => {
+		const url = window.location.href;
+		try {
+			await navigator.clipboard.writeText(url);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch (err) {
+			console.error('Failed to copy:', err);
 		}
 	};
 
@@ -487,7 +500,37 @@ const PlayerSelectionScreen = () => {
 						onCardRemove={handleCardRemove}
 					/>
 					<Footer>
-						Share Link or Party Code: {partyCode}
+						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+							<span>Share Link or Party Code: {partyCode}</span>
+							<button
+								onClick={handleCopyLink}
+								style={{
+									background: 'transparent',
+									border: 'none',
+									cursor: 'pointer',
+									padding: '5px',
+									display: 'flex',
+									alignItems: 'center',
+									fontSize: '18px',
+									transition: 'transform 0.2s',
+								}}
+								title="Copy link to clipboard"
+								onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
+								onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+							>
+								{copied ? '✓' : '📋'}
+							</button>
+							{copied && (
+								<span style={{
+									color: '#4CAF50',
+									fontSize: '14px',
+									fontWeight: 'bold',
+									animation: 'fadeIn 0.3s'
+								}}>
+									Copied!
+								</span>
+							)}
+						</div>
 					</Footer>
 				</Bottom>
 			</DndProvider>
