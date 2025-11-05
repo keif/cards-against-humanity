@@ -16,6 +16,7 @@ export const LINK: CardType = "Link";
 export interface CardProps {
 	cardType: CardType;
 	className?: string;
+	disableDrag?: boolean;
 	expansion?: string;
 	id?: number;
 	index?: number;
@@ -31,7 +32,7 @@ export interface CardProps {
 	text?: string;
 }
 
-const Card = ({ cardType, className, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
+const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
 	if (cardType === "Q" && text) {
 		const formattedText = text.replaceAll("_", "__________");
 		return (
@@ -81,6 +82,7 @@ const Card = ({ cardType, className, id, index, isSelected, link, numAnswers, on
 			collect: monitor => ({
 				isDragging: !!monitor.isDragging(),
 			}),
+			canDrag: () => !disableDrag,
 		});
 
 		const handleClick = () => {
@@ -94,10 +96,10 @@ const Card = ({ cardType, className, id, index, isSelected, link, numAnswers, on
 		return (
 			<div
 				className={`card A ${className} ${selectedClass}`}
-				ref={drag}
+				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
 				style={{
-					cursor: onClick ? 'pointer' : 'move',
+					cursor: disableDrag ? 'default' : (onClick ? 'pointer' : 'move'),
 					opacity: isDragging ? 0.5 : 1,
 				}}
 			>
