@@ -7,6 +7,51 @@
 	max-width: 300px;
 }
 
+/* Dropdown/Modal styling */
+.scoreboard-dropdown {
+	position: fixed;
+	top: 70px;
+	right: 20px;
+	z-index: 1000;
+	margin: 0;
+	box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+	animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.scoreboard-close {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	background: transparent;
+	border: none;
+	color: #fff;
+	font-size: 20px;
+	cursor: pointer;
+	width: 28px;
+	height: 28px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	transition: background-color 0.2s;
+	padding: 0;
+}
+
+.scoreboard-close:hover {
+	background-color: rgba(255, 255, 255, 0.2);
+}
+
 .scoreboard-title {
 	color: #fff;
 	font-size: 18px;

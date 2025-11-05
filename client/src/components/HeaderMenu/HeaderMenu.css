@@ -14,6 +14,42 @@
   font-size: 21px;
 }
 
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: opacity 0.2s;
+}
+
+.player-info:hover {
+  opacity: 0.8;
+}
+
+.player-name-text {
+  font-weight: normal;
+}
+
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 2px 8px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.score-badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
 /* Hamburger Menu CSS below */
 .hamburgerMenu {
   margin-top: 15px;

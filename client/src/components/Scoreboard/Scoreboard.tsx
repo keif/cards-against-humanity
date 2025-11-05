@@ -10,17 +10,30 @@ interface PlayerScore {
 interface ScoreboardProps {
 	playerScores: PlayerScore[];
 	currentPlayerName?: string;
+	isOpen?: boolean;
+	onClose?: () => void;
 }
 
-const Scoreboard = ({ playerScores, currentPlayerName }: ScoreboardProps) => {
+const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }: ScoreboardProps) => {
 	// Debug logging
 	console.log('Scoreboard render - playerScores:', playerScores);
 	console.log('Scoreboard render - currentPlayerName:', currentPlayerName);
+	console.log('Scoreboard render - isOpen:', isOpen);
+
+	// Don't render if not open in dropdown mode
+	if (onClose && !isOpen) {
+		return null;
+	}
 
 	if (!playerScores || playerScores.length === 0) {
 		// Show scoreboard with placeholder when no scores yet
 		return (
-			<div className="scoreboard">
+			<div className={`scoreboard ${onClose ? 'scoreboard-dropdown' : ''}`}>
+				{onClose && (
+					<button className="scoreboard-close" onClick={onClose} aria-label="Close scoreboard">
+						✕
+					</button>
+				)}
 				<h3 className="scoreboard-title">Scores</h3>
 				<div className="scoreboard-list">
 					<div className="scoreboard-item">
@@ -35,7 +48,12 @@ const Scoreboard = ({ playerScores, currentPlayerName }: ScoreboardProps) => {
 	const sortedPlayers = [...playerScores].sort((a, b) => b.score - a.score);
 
 	return (
-		<div className="scoreboard">
+		<div className={`scoreboard ${onClose ? 'scoreboard-dropdown' : ''}`}>
+			{onClose && (
+				<button className="scoreboard-close" onClick={onClose} aria-label="Close scoreboard">
+					✕
+				</button>
+			)}
 			<h3 className="scoreboard-title">Scores</h3>
 			<div className="scoreboard-list">
 				{sortedPlayers.map((player, index) => (

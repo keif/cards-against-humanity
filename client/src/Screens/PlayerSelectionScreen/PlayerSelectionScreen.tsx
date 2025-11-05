@@ -57,6 +57,7 @@ const PlayerSelectionScreen = () => {
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
 	const [selectedCards, setSelectedCards] = useState<number[]>([]);
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
+	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 
 	if (!partyCode) {
@@ -402,6 +403,14 @@ const PlayerSelectionScreen = () => {
 						text={state.headerText}
 						timeLeft={timeLeft}
 						playerName={state.currentPlayerName}
+						playerScore={state.playerScores?.find(p => p.name === state.currentPlayerName)?.score}
+						onScoreClick={() => setScoreboardOpen(!scoreboardOpen)}
+					/>
+					<Scoreboard
+						playerScores={state.playerScores || []}
+						currentPlayerName={state.currentPlayerName}
+						isOpen={scoreboardOpen}
+						onClose={() => setScoreboardOpen(false)}
 					/>
 					<DropCardSpace
 						cardsIn={state.otherPlayerCards.length}
@@ -436,10 +445,6 @@ const PlayerSelectionScreen = () => {
 				</Top>
 				<Bottom>
 					<Status message={state.directions} />
-					<Scoreboard
-						playerScores={state.playerScores || []}
-						currentPlayerName={state.currentPlayerName}
-					/>
 					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (state.QCard?.numAnswers || 1) > 1 && (
 						<div style={{ textAlign: 'center', padding: '10px' }}>
 							{droppedCards.length > 0 && (
