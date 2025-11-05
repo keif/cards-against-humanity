@@ -22,6 +22,9 @@ const JoinPartyScreen = () => {
 		});
 	}
 
+	// Get app domain from env var, default to current host
+	const appDomain = import.meta.env.VITE_APP_DOMAIN || window.location.host;
+
 	return (
 		<Screen>
 			<Top>
@@ -32,7 +35,7 @@ const JoinPartyScreen = () => {
 				<Title text={`Join an existing party`} />
 				<div className="enterCode center">
 					<p className="label">Enter the Party Code</p>
-					<input className="input" type="text" name="partyCode" placeholder="cardiparty.co/<party_code>" onChange={updatePartyCode} />
+					<input className="input" type="text" name="partyCode" placeholder={`${appDomain}/<party_code>`} onChange={updatePartyCode} />
 				</div>
 				<Button
 					asLink
