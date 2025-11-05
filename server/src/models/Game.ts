@@ -182,6 +182,7 @@ class Game implements GameInterface {
 		let roundNum = latestRound?.roundNum;
 		let roundJudge = latestRound?.roundJudge;
 		let winningCard = latestRound?.winningCard;
+		let winningCards = latestRound?.winningCards;
 		let winner = latestRound?.winner;
 		// timeRemaining in seconds
 		let timeLeft = Math.max(...[0, Math.floor(this.roundLength - ((Number(new Date()) - Number(latestRound?.roundStartTime)) / 1000))]);
@@ -223,6 +224,7 @@ class Game implements GameInterface {
 			timeLeft,
 			winner,
 			winningCard,
+			winningCards,
 		};
 	}
 
