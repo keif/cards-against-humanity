@@ -36,8 +36,8 @@ describe('HeaderMenu Component', () => {
 
 		it('shows empty string when playerName is not provided', () => {
 			const { container } = render(<HeaderMenu text="Status" timeLeft={20} />);
-			const paragraphs = container.querySelectorAll('p');
-			expect(paragraphs[0].textContent).toBe('');
+			const playerName = container.querySelector('.player-name-text');
+			expect(playerName?.textContent).toBe('');
 		});
 
 		it('handles long player names', () => {
@@ -58,10 +58,9 @@ describe('HeaderMenu Component', () => {
 		});
 
 		it('displays empty text', () => {
-			render(<HeaderMenu text="" timeLeft={10} />);
 			const { container } = render(<HeaderMenu text="" timeLeft={10} />);
 			const paragraphs = container.querySelectorAll('p');
-			expect(paragraphs[1].textContent).toBe('');
+			expect(paragraphs[0].textContent).toBe('');
 		});
 
 		it('displays long text messages', () => {
@@ -99,18 +98,17 @@ describe('HeaderMenu Component', () => {
 	});
 
 	describe('Component Structure', () => {
-		it('renders three paragraph elements', () => {
+		it('renders two paragraph elements', () => {
 			const { container } = render(<HeaderMenu text="Test" timeLeft={10} playerName="User" />);
 			const paragraphs = container.querySelectorAll('p');
-			expect(paragraphs).toHaveLength(3);
+			expect(paragraphs).toHaveLength(2);
 		});
 
 		it('renders paragraphs in correct order', () => {
 			const { container } = render(<HeaderMenu text="Middle" timeLeft={99} playerName="First" />);
 			const paragraphs = container.querySelectorAll('p');
-			expect(paragraphs[0]).toHaveTextContent('First');
-			expect(paragraphs[1]).toHaveTextContent('Middle');
-			expect(paragraphs[2]).toHaveTextContent('99');
+			expect(paragraphs[0]).toHaveTextContent('Middle');
+			expect(paragraphs[1]).toHaveTextContent('99');
 		});
 
 		it('contains innerHeaderMenu inside headerMenu', () => {
@@ -118,6 +116,28 @@ describe('HeaderMenu Component', () => {
 			const headerMenu = container.querySelector('.headerMenu');
 			const innerHeaderMenu = headerMenu?.querySelector('.innerHeaderMenu');
 			expect(innerHeaderMenu).toBeInTheDocument();
+		});
+	});
+
+	describe('Score Badge', () => {
+		it('shows score badge when playerScore is provided', () => {
+			const { container } = render(<HeaderMenu text="Status" timeLeft={20} playerName="Alice" playerScore={5} />);
+			const badge = container.querySelector('.score-badge');
+			expect(badge).toBeInTheDocument();
+			expect(badge?.textContent).toBe('5');
+		});
+
+		it('does not show score badge when playerScore is undefined', () => {
+			const { container } = render(<HeaderMenu text="Status" timeLeft={20} playerName="Alice" />);
+			const badge = container.querySelector('.score-badge');
+			expect(badge).not.toBeInTheDocument();
+		});
+
+		it('shows zero score badge', () => {
+			const { container } = render(<HeaderMenu text="Status" timeLeft={20} playerName="Alice" playerScore={0} />);
+			const badge = container.querySelector('.score-badge');
+			expect(badge).toBeInTheDocument();
+			expect(badge?.textContent).toBe('0');
 		});
 	});
 });
