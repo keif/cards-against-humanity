@@ -1,5 +1,4 @@
 import React from 'react'
-import "./Footer.css"
 
 interface FooterProps {
 	children: React.ReactNode;
@@ -7,7 +6,7 @@ interface FooterProps {
 
 const Footer = ({children}: FooterProps) => {
 	return (
-		<div className="footer">
+		<div className="text-[15px] font-bold mt-4 mb-2 text-center">
 			{children}
 		</div>
 	);

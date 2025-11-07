@@ -41,4 +41,9 @@
   .skip-link:focus {
     @apply top-0;
   }
+
+  /* Legacy center utility for horizontal centering */
+  .center {
+    @apply mx-auto;
+  }
 }

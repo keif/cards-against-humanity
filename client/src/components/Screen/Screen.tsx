@@ -1,5 +1,4 @@
 import React from 'react';
-import "./Screen.css";
 
 interface ScreenProps {
 	children: React.ReactNode;
@@ -7,7 +6,7 @@ interface ScreenProps {
 
 const Screen = ({children}: ScreenProps) => {
 	return (
-		<div className="screen">
+		<div className="h-full">
 			{children}
 		</div>
 	);
