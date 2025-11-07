@@ -16,7 +16,6 @@ import {
 	VoteStats
 } from '@/types';
 import CardVoteItem from './CardVoteItem';
-import './CommunityVotingScreen.css';
 
 const CommunityVotingScreen: React.FC = () => {
 	// State
@@ -171,25 +170,26 @@ const CommunityVotingScreen: React.FC = () => {
 	};
 
 	return (
-		<div className="community-voting-screen">
-			<header className="voting-header">
-				<h1>Community Card Review</h1>
-				<p>Vote on submitted cards to help moderators decide what to approve!</p>
+		<div className="max-w-[1200px] mx-auto p-8 min-h-screen md:p-4">
+			<header className="text-center mb-8">
+				<h1 className="text-4xl mb-2 text-black md:text-[1.8rem]">Community Card Review</h1>
+				<p className="text-lg text-gray-600">Vote on submitted cards to help moderators decide what to approve!</p>
 			</header>
 
 			{error && (
-				<div className="error-banner">
+				<div className="bg-[#f44336] text-white p-4 rounded-lg mb-4 text-center font-bold">
 					{error}
 				</div>
 			)}
 
-			<div className="voting-controls">
-				<div className="filter-group">
-					<label htmlFor="card-type-filter">Card Type:</label>
+			<div className="flex gap-8 justify-center mb-8 p-6 bg-gray-100 rounded-xl md:flex-col md:gap-4">
+				<div className="flex flex-col gap-2">
+					<label htmlFor="card-type-filter" className="font-bold text-sm text-gray-800">Card Type:</label>
 					<select
 						id="card-type-filter"
 						value={cardType}
 						onChange={(e) => setCardType(e.target.value as CardTypeFilter)}
+						className="px-4 py-2 text-base border-2 border-gray-300 rounded-md bg-white cursor-pointer transition-colors hover:border-gray-600 focus:outline-none focus:border-black"
 					>
 						<option value="all">All Cards</option>
 						<option value="Q">Question Cards</option>
@@ -197,12 +197,13 @@ const CommunityVotingScreen: React.FC = () => {
 					</select>
 				</div>
 
-				<div className="filter-group">
-					<label htmlFor="sort-select">Sort By:</label>
+				<div className="flex flex-col gap-2">
+					<label htmlFor="sort-select" className="font-bold text-sm text-gray-800">Sort By:</label>
 					<select
 						id="sort-select"
 						value={sortBy}
 						onChange={(e) => setSortBy(e.target.value as SortOption)}
+						className="px-4 py-2 text-base border-2 border-gray-300 rounded-md bg-white cursor-pointer transition-colors hover:border-gray-600 focus:outline-none focus:border-black"
 					>
 						<option value="newest">Newest First</option>
 						<option value="oldest">Oldest First</option>
@@ -213,15 +214,15 @@ const CommunityVotingScreen: React.FC = () => {
 			</div>
 
 			{isLoading ? (
-				<div className="loading">Loading cards...</div>
+				<div className="text-center py-12 text-xl text-gray-600">Loading cards...</div>
 			) : cards.length === 0 ? (
-				<div className="no-cards">
-					<p>No cards to review right now.</p>
-					<p>Check back later!</p>
+				<div className="text-center py-12 text-xl text-gray-600">
+					<p className="my-2">No cards to review right now.</p>
+					<p className="my-2">Check back later!</p>
 				</div>
 			) : (
 				<>
-					<div className="cards-list">
+					<div className="flex flex-col gap-6">
 						{cards.map(card => (
 							<CardVoteItem
 								key={card.id}
@@ -235,9 +236,9 @@ const CommunityVotingScreen: React.FC = () => {
 					</div>
 
 					{hasMore && (
-						<div className="load-more-section">
+						<div className="text-center mt-8 py-8">
 							<button
-								className="load-more-btn"
+								className="px-8 py-4 text-lg font-bold bg-black text-white border-none rounded-lg cursor-pointer transition-all hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
 								onClick={handleLoadMore}
 								disabled={isLoadingMore}
 							>

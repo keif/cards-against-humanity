@@ -51,9 +51,40 @@ export default {
             transform: 'translateY(0)',
           },
         },
+        slideIn: {
+          'from': {
+            opacity: '0',
+            transform: 'translateY(-10px)',
+          },
+          'to': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+        fadeIn: {
+          'from': {
+            opacity: '0',
+          },
+          'to': {
+            opacity: '1',
+          },
+        },
+        slideUp: {
+          'from': {
+            transform: 'translateY(20px)',
+            opacity: '0',
+          },
+          'to': {
+            transform: 'translateY(0)',
+            opacity: '1',
+          },
+        },
       },
       animation: {
         slideDown: 'slideDown 0.2s ease-out',
+        slideIn: 'slideIn 0.3s ease',
+        fadeIn: 'fadeIn 0.2s ease',
+        slideUp: 'slideUp 0.3s ease',
       },
     },
   },

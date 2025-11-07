@@ -18,7 +18,6 @@ import {
 } from '@/types';
 import ModeratorStatsDisplay from './ModeratorStatsDisplay';
 import PendingCardsList from './PendingCardsList';
-import './ModeratorDashboard.css';
 
 const ModeratorDashboard: React.FC = () => {
 	// Authentication state
@@ -202,21 +201,21 @@ const ModeratorDashboard: React.FC = () => {
 	// Authentication screen
 	if (!isAuthenticated) {
 		return (
-			<div className="moderator-dashboard">
-				<div className="auth-screen">
-					<div className="auth-card">
-						<h1>Moderator Access</h1>
-						<p>Enter the admin key to access the moderator dashboard</p>
+			<div className="max-w-[1400px] mx-auto p-8 min-h-screen bg-gray-100">
+				<div className="flex justify-center items-center min-h-screen">
+					<div className="bg-white border-2 border-gray-300 rounded-xl p-12 max-w-[500px] w-full shadow-[0_4px_12px_rgba(0,0,0,0.1)]">
+						<h1 className="text-3xl mb-2 text-black text-center">Moderator Access</h1>
+						<p className="text-center text-gray-600 mb-8">Enter the admin key to access the moderator dashboard</p>
 
 						{authError && (
-							<div className="error-banner">
+							<div className="bg-[#f44336] text-white p-4 rounded-lg mb-4 text-center font-bold animate-[slideIn_0.3s_ease]">
 								{authError}
 							</div>
 						)}
 
 						<form onSubmit={handleAuthenticate}>
-							<div className="form-group">
-								<label htmlFor="admin-key">Admin Key:</label>
+							<div className="mb-6">
+								<label htmlFor="admin-key" className="block font-bold mb-2 text-gray-800">Admin Key:</label>
 								<input
 									id="admin-key"
 									type="password"
@@ -225,12 +224,13 @@ const ModeratorDashboard: React.FC = () => {
 									placeholder="Enter admin key"
 									disabled={isAuthenticating}
 									autoFocus
+									className="w-full px-3 py-3 text-base border-2 border-gray-300 rounded-lg transition-colors focus:outline-none focus:border-black"
 								/>
 							</div>
 
 							<button
 								type="submit"
-								className="auth-button"
+								className="w-full px-4 py-4 text-lg font-bold bg-black text-white border-none rounded-lg cursor-pointer transition-all hover:bg-gray-800 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
 								disabled={isAuthenticating || !adminKey.trim()}
 							>
 								{isAuthenticating ? 'Authenticating...' : 'Access Dashboard'}
@@ -244,37 +244,37 @@ const ModeratorDashboard: React.FC = () => {
 
 	// Main dashboard
 	return (
-		<div className="moderator-dashboard">
-			<header className="dashboard-header">
-				<h1>Moderator Dashboard</h1>
-				<p>Manage community-submitted cards</p>
+		<div className="max-w-[1400px] mx-auto p-8 min-h-screen bg-gray-100 md:p-4">
+			<header className="text-center mb-8 bg-white p-8 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+				<h1 className="text-4xl mb-2 text-black md:text-[1.8rem]">Moderator Dashboard</h1>
+				<p className="text-lg text-gray-600">Manage community-submitted cards</p>
 			</header>
 
 			{error && (
-				<div className="error-banner">
+				<div className="bg-[#f44336] text-white p-4 rounded-lg mb-4 text-center font-bold animate-[slideIn_0.3s_ease]">
 					{error}
 				</div>
 			)}
 
 			{successMessage && (
-				<div className="success-banner">
+				<div className="bg-green-600 text-white p-4 rounded-lg mb-4 text-center font-bold animate-[slideIn_0.3s_ease]">
 					{successMessage}
 				</div>
 			)}
 
 			<ModeratorStatsDisplay stats={stats} />
 
-			<div className="dashboard-content">
-				<div className="content-header">
-					<h2>Pending Cards ({cards.length})</h2>
-					<div className="batch-actions">
+			<div className="bg-white rounded-xl p-8 shadow-[0_2px_8px_rgba(0,0,0,0.05)]">
+				<div className="flex justify-between items-center mb-6 flex-wrap gap-4 md:flex-col md:items-start">
+					<h2 className="text-[1.8rem] text-black">Pending Cards ({cards.length})</h2>
+					<div className="flex gap-3 items-center">
 						{selectedCards.size > 0 && (
 							<>
-								<span className="selection-count">
+								<span className="font-bold text-[#2196F3] px-4 py-2 bg-[#E3F2FD] rounded-md">
 									{selectedCards.size} selected
 								</span>
 								<button
-									className="btn-select-action"
+									className="px-4 py-2 text-[0.95rem] font-bold bg-gray-100 text-gray-800 border-2 border-gray-300 rounded-md cursor-pointer transition-all hover:bg-gray-200 hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
 									onClick={clearSelection}
 									disabled={isBatchProcessing}
 								>
@@ -284,7 +284,7 @@ const ModeratorDashboard: React.FC = () => {
 						)}
 						{cards.length > 0 && (
 							<button
-								className="btn-select-action"
+								className="px-4 py-2 text-[0.95rem] font-bold bg-gray-100 text-gray-800 border-2 border-gray-300 rounded-md cursor-pointer transition-all hover:bg-gray-200 hover:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
 								onClick={selectAllCards}
 								disabled={isBatchProcessing}
 							>
@@ -295,11 +295,11 @@ const ModeratorDashboard: React.FC = () => {
 				</div>
 
 				{isLoading ? (
-					<div className="loading">Loading pending cards...</div>
+					<div className="text-center py-12 text-xl text-gray-600">Loading pending cards...</div>
 				) : cards.length === 0 ? (
-					<div className="no-cards">
-						<p>No pending cards to review!</p>
-						<p>All caught up!</p>
+					<div className="text-center py-12 text-xl text-gray-600">
+						<p className="my-2">No pending cards to review!</p>
+						<p className="my-2">All caught up!</p>
 					</div>
 				) : (
 					<PendingCardsList
