@@ -17,14 +17,14 @@ describe('HeaderMenu Component', () => {
 			expect(screen.getByText('15')).toBeInTheDocument();
 		});
 
-		it('applies headerMenu class', () => {
+		it('applies header-menu data attribute', () => {
 			const { container } = render(<HeaderMenu text="Test" timeLeft={10} />);
-			expect(container.querySelector('.headerMenu')).toBeInTheDocument();
+			expect(container.querySelector('[data-qa="header-menu"]')).toBeInTheDocument();
 		});
 
-		it('applies innerHeaderMenu class', () => {
+		it('applies inner-header-menu data attribute', () => {
 			const { container } = render(<HeaderMenu text="Test" timeLeft={10} />);
-			expect(container.querySelector('.innerHeaderMenu')).toBeInTheDocument();
+			expect(container.querySelector('[data-qa="inner-header-menu"]')).toBeInTheDocument();
 		});
 	});
 
@@ -111,10 +111,10 @@ describe('HeaderMenu Component', () => {
 			expect(paragraphs[1]).toHaveTextContent('99');
 		});
 
-		it('contains innerHeaderMenu inside headerMenu', () => {
+		it('contains inner-header-menu inside header-menu', () => {
 			const { container } = render(<HeaderMenu text="Test" timeLeft={10} />);
-			const headerMenu = container.querySelector('.headerMenu');
-			const innerHeaderMenu = headerMenu?.querySelector('.innerHeaderMenu');
+			const headerMenu = container.querySelector('[data-qa="header-menu"]');
+			const innerHeaderMenu = headerMenu?.querySelector('[data-qa="inner-header-menu"]');
 			expect(innerHeaderMenu).toBeInTheDocument();
 		});
 	});

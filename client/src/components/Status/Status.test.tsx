@@ -8,21 +8,22 @@ describe('Status Component', () => {
 		expect(screen.getByText('Game starting soon!')).toBeInTheDocument();
 	});
 
-	it('applies default classes', () => {
+	it('renders container div', () => {
 		const { container } = render(<Status message="Test message" />);
-		const statusDiv = container.querySelector('.statusModal');
-		expect(statusDiv).toHaveClass('statusModal', 'center');
+		const statusDiv = container.firstChild;
+		expect(statusDiv).toBeInTheDocument();
 	});
 
 	it('applies custom className', () => {
 		const { container } = render(<Status message="Test" className="custom-status" />);
-		const statusDiv = container.querySelector('.statusModal');
-		expect(statusDiv).toHaveClass('statusModal', 'center', 'custom-status');
+		const statusDiv = container.querySelector('.custom-status');
+		expect(statusDiv).toBeInTheDocument();
+		expect(statusDiv).toHaveClass('custom-status');
 	});
 
 	it('renders empty string message', () => {
 		const { container } = render(<Status message="" />);
-		const statusDiv = container.querySelector('.statusModal');
+		const statusDiv = container.firstChild;
 		expect(statusDiv).toBeInTheDocument();
 		expect(statusDiv?.textContent).toBe('');
 	});
@@ -40,8 +41,8 @@ describe('Status Component', () => {
 
 	it('renders without custom className', () => {
 		const { container } = render(<Status message="Test" />);
-		const statusDiv = container.querySelector('.statusModal');
-		expect(statusDiv).toHaveClass('statusModal', 'center');
-		expect(statusDiv?.className).toBe('statusModal center undefined');
+		const statusDiv = container.firstChild as HTMLElement;
+		expect(statusDiv).toBeInTheDocument();
+		expect(statusDiv.className).not.toContain('undefined');
 	});
 });

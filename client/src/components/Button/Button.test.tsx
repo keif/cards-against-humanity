@@ -17,17 +17,17 @@ describe('Button Component', () => {
 			expect(button).toHaveTextContent('Disabled Button');
 		});
 
-		it('has disabled class and data-qa attribute', () => {
+		it('has data-qa attribute and is disabled', () => {
 			renderWithRouter(<Button text="Test" disabled={true} />);
 			const button = screen.getByRole('button');
-			expect(button).toHaveClass('menuButton', 'disabled');
 			expect(button).toHaveAttribute('data-qa', 'button-disabled');
+			expect(button).toBeDisabled();
 		});
 
 		it('applies custom className', () => {
 			renderWithRouter(<Button text="Test" disabled={true} className="custom-class" />);
 			const button = screen.getByRole('button');
-			expect(button).toHaveClass('menuButton', 'disabled', 'custom-class');
+			expect(button).toHaveClass('custom-class');
 		});
 
 		it('respects button type', () => {
@@ -45,17 +45,16 @@ describe('Button Component', () => {
 			expect(link).toHaveAttribute('href', '/home');
 		});
 
-		it('has menuButton class and data-qa attribute', () => {
+		it('has data-qa attribute', () => {
 			renderWithRouter(<Button text="Test" asLink={true} link="/test" />);
 			const link = screen.getByRole('link');
-			expect(link).toHaveClass('menuButton');
 			expect(link).toHaveAttribute('data-qa', 'link');
 		});
 
 		it('applies custom className to link', () => {
 			renderWithRouter(<Button text="Test" asLink={true} link="/test" className="link-custom" />);
 			const link = screen.getByRole('link');
-			expect(link).toHaveClass('menuButton', 'link-custom');
+			expect(link).toHaveClass('link-custom');
 		});
 
 		it('does not render when asLink is true but link is not provided', () => {
@@ -89,11 +88,10 @@ describe('Button Component', () => {
 			expect(handleClick).toHaveBeenCalledTimes(1);
 		});
 
-		it('has button class and data-qa attribute', () => {
+		it('has data-qa attribute', () => {
 			const handleClick = vi.fn();
 			renderWithRouter(<Button text="Test" onClick={handleClick} />);
 			const button = screen.getByRole('button');
-			expect(button).toHaveClass('menuButton', 'button');
 			expect(button).toHaveAttribute('data-qa', 'button-clickable');
 		});
 
@@ -101,7 +99,7 @@ describe('Button Component', () => {
 			const handleClick = vi.fn();
 			renderWithRouter(<Button text="Test" onClick={handleClick} className="btn-primary" />);
 			const button = screen.getByRole('button');
-			expect(button).toHaveClass('menuButton', 'button', 'btn-primary');
+			expect(button).toHaveClass('btn-primary');
 		});
 
 		it('respects button type prop', () => {

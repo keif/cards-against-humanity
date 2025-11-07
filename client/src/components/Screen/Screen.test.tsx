@@ -13,13 +13,13 @@ describe('Screen Component', () => {
 			expect(screen.getByText('Screen Content')).toBeInTheDocument();
 		});
 
-		it('applies screen class', () => {
+		it('renders screen container', () => {
 			const { container } = render(
 				<Screen>
 					<div>Content</div>
 				</Screen>
 			);
-			const screenDiv = container.querySelector('.screen');
+			const screenDiv = container.firstChild;
 			expect(screenDiv).toBeInTheDocument();
 		});
 	});
@@ -99,7 +99,7 @@ describe('Screen Component', () => {
 
 		it('renders empty children', () => {
 			const { container } = render(<Screen>{null}</Screen>);
-			const screenDiv = container.querySelector('.screen');
+			const screenDiv = container.firstChild;
 			expect(screenDiv).toBeInTheDocument();
 			expect(screenDiv?.textContent).toBe('');
 		});
@@ -112,7 +112,7 @@ describe('Screen Component', () => {
 					<div data-testid="child">Child Element</div>
 				</Screen>
 			);
-			const screenDiv = container.querySelector('.screen');
+			const screenDiv = container.firstChild;
 			const child = screen.getByTestId('child');
 			expect(screenDiv?.contains(child)).toBe(true);
 		});
@@ -125,7 +125,7 @@ describe('Screen Component', () => {
 					</div>
 				</Screen>
 			);
-			const screenDiv = container.querySelector('.screen');
+			const screenDiv = container.firstChild;
 			const parentDiv = container.querySelector('.parent');
 			const childDiv = container.querySelector('.child');
 			expect(screenDiv).toContainElement(parentDiv as HTMLElement);
@@ -138,8 +138,7 @@ describe('Screen Component', () => {
 					<div>Content</div>
 				</Screen>
 			);
-			const screenDivs = container.querySelectorAll('.screen');
-			expect(screenDivs).toHaveLength(1);
+			expect(container.children).toHaveLength(1);
 		});
 	});
 

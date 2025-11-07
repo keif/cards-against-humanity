@@ -47,7 +47,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 	if (cardType === "Q" && text) {
 		const formattedText = text.replaceAll("_", "__________");
 		return (
-			<div>
+			<div data-qa="card">
 				<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
 					{numAnswers && numAnswers > 1 && (
 						<div className="absolute top-2.5 right-2.5 max-[380px]:top-2 max-[380px]:right-2 bg-[#FF9800] text-white px-2 py-1 max-[380px]:px-1.5 max-[380px]:py-0.5 rounded text-sm max-[380px]:text-xs font-bold z-[2]">
@@ -67,7 +67,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 	} else if (cardType === TITLE) {
 		return (
 			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
-				<h3 className="mt-0">{SITE_NAME}</h3>
+				<h3 className="mt-0 leading-tight">{SITE_NAME}</h3>
 			</div>
 		);
 	} else if (cardType === PLACEHOLDER) {
@@ -82,8 +82,8 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 
 		return (
 			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
-				<h3 className="mt-0">Invite friends</h3>
-				<h3 className="mt-0">with party code:</h3>
+				<h3 className="mt-0 leading-tight">Invite friends</h3>
+				<h3 className="mt-0 leading-tight">with party code:</h3>
 				<h6
 					className="leading-none mt-[40%] flex items-center gap-2 justify-center cursor-pointer"
 					onClick={handleCopyLink}
@@ -132,6 +132,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 				className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border p-3 break-words relative z-[1] select-none bg-[#F7F7F7] text-black border-[#979797] ${isSelected ? 'border-[3px] border-[#2196F3] -translate-y-2.5 shadow-[0_8px_16px_rgba(33,150,243,0.4)] transition-[transform_0.2s_ease,box-shadow_0.2s_ease]' : ''} ${className}`}
 				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
+				data-qa="card"
 				style={{
 					cursor: cursorStyle,
 					opacity: opacityValue,

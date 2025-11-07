@@ -9,16 +9,16 @@ interface HeaderMenuProps {
 }
 
 const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick}: HeaderMenuProps) => (
-	<div className="w-full h-[60px] bg-white">
-		<div className="flex flex-nowrap justify-between px-[30px] py-0 leading-[50%] text-[21px]">
+	<div className="w-full h-[60px] bg-white" data-qa="header-menu">
+		<div className="flex flex-nowrap justify-between px-[30px] py-0 leading-[50%] text-[21px]" data-qa="inner-header-menu">
 			<div
 				className={`flex items-center gap-2 transition-opacity hover:opacity-80 ${onScoreClick ? 'cursor-pointer' : 'cursor-default'}`}
 				onClick={onScoreClick}
 			>
-				<span className="font-normal">{playerName || ''}</span>
+				<span className="font-normal player-name-text">{playerName || ''}</span>
 				{playerScore !== undefined && (
 					<span
-						className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 py-0.5 bg-[#4CAF50] text-white rounded-xl text-sm font-bold shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform hover:scale-110 hover:shadow-[0_3px_6px_rgba(0,0,0,0.3)]"
+						className="inline-flex items-center justify-center min-w-[24px] h-6 px-2 py-0.5 bg-[#4CAF50] text-white rounded-xl text-sm font-bold shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-transform hover:scale-110 hover:shadow-[0_3px_6px_rgba(0,0,0,0.3)] score-badge"
 						title="Click to view scoreboard"
 					>
 						{playerScore}

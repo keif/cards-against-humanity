@@ -14,9 +14,9 @@ describe('Title Component', () => {
 		expect(heading.tagName).toBe('H1');
 	});
 
-	it('applies title class to wrapper', () => {
+	it('renders wrapper div', () => {
 		const { container } = render(<Title text="Test" />);
-		const titleDiv = container.querySelector('.title');
+		const titleDiv = container.firstChild;
 		expect(titleDiv).toBeInTheDocument();
 	});
 
@@ -48,9 +48,9 @@ describe('Title Component', () => {
 		expect(screen.getByRole('heading')).toHaveTextContent('Round 5 - Final Round');
 	});
 
-	it('contains h1 within title div', () => {
+	it('contains h1 within wrapper div', () => {
 		const { container } = render(<Title text="Test Title" />);
-		const titleDiv = container.querySelector('.title');
+		const titleDiv = container.firstChild as HTMLElement;
 		const heading = titleDiv?.querySelector('h1');
 		expect(heading).toBeInTheDocument();
 		expect(heading).toHaveTextContent('Test Title');

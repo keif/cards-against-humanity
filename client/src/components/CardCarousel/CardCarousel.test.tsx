@@ -67,7 +67,7 @@ describe('CardCarousel Component', () => {
 			}
 		];
 		const { container } = renderWithDnd(<CardCarousel cards={cards} />);
-		const cardElements = container.querySelectorAll('.card');
+		const cardElements = container.querySelectorAll('[data-qa="card"]');
 		expect(cardElements).toHaveLength(2);
 	});
 

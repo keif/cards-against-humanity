@@ -13,9 +13,9 @@ describe('Top Component', () => {
 			expect(screen.getByText('Test Content')).toBeInTheDocument();
 		});
 
-		it('applies top class', () => {
+		it('renders top container', () => {
 			const { container } = render(<Top><div>Content</div></Top>);
-			const topDiv = container.querySelector('.top');
+			const topDiv = container.querySelector('#top');
 			expect(topDiv).toBeInTheDocument();
 		});
 
@@ -33,14 +33,14 @@ describe('Top Component', () => {
 					<div>Content</div>
 				</Top>
 			);
-			const topDiv = container.querySelector('.top');
-			expect(topDiv).toHaveClass('custom-top', 'top');
+			const topDiv = container.querySelector('#top');
+			expect(topDiv).toHaveClass('custom-top');
 		});
 
 		it('renders without custom className', () => {
 			const { container } = render(<Top><div>Content</div></Top>);
-			const topDiv = container.querySelector('.top');
-			expect(topDiv?.className).toContain('top');
+			const topDiv = container.querySelector('#top');
+			expect(topDiv?.className).not.toContain('undefined');
 		});
 
 		it('applies multiple custom classes', () => {
@@ -49,8 +49,7 @@ describe('Top Component', () => {
 					<div>Content</div>
 				</Top>
 			);
-			const topDiv = container.querySelector('.top');
-			expect(topDiv).toHaveClass('top');
+			const topDiv = container.querySelector('#top');
 			expect(topDiv?.className).toContain('class-one');
 			expect(topDiv?.className).toContain('class-two');
 		});
@@ -116,7 +115,7 @@ describe('Top Component', () => {
 
 		it('renders empty children', () => {
 			const { container } = render(<Top>{null}</Top>);
-			const topDiv = container.querySelector('.top');
+			const topDiv = container.querySelector('#top');
 			expect(topDiv).toBeInTheDocument();
 			expect(topDiv?.textContent).toBe('');
 		});
@@ -129,7 +128,7 @@ describe('Top Component', () => {
 					<div data-testid="child">Child</div>
 				</Top>
 			);
-			const topDiv = container.querySelector('.top');
+			const topDiv = container.querySelector('#top');
 			const child = screen.getByTestId('child');
 			expect(topDiv?.contains(child)).toBe(true);
 		});
@@ -140,7 +139,7 @@ describe('Top Component', () => {
 					<div className="inner">Content</div>
 				</Top>
 			);
-			const topDiv = container.querySelector('.top');
+			const topDiv = container.querySelector('#top');
 			const innerDiv = container.querySelector('.inner');
 			expect(topDiv).toContainElement(innerDiv as HTMLElement);
 		});

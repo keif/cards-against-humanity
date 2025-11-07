@@ -72,8 +72,9 @@ describe('PlayerList Component', () => {
 					players={[]}
 				/>
 			);
-			const playerList = container.querySelector('.player-list');
-			expect(playerList).toHaveClass('player-list', 'custom-style');
+			const playerList = container.querySelector('.custom-style');
+			expect(playerList).toBeInTheDocument();
+			expect(playerList).toHaveClass('custom-style');
 		});
 	});
 
@@ -119,7 +120,6 @@ describe('PlayerList Component', () => {
 			const input = screen.getByPlaceholderText('Enter Name Here');
 			expect(input).toHaveAttribute('type', 'text');
 			expect(input).toHaveAttribute('id', 'playerName');
-			expect(input).toHaveClass('enterName');
 		});
 
 		it('calls onChange when typing in input', async () => {
