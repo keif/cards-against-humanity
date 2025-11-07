@@ -25,7 +25,7 @@ const PlayerList = ({className, joined, onChange, onEnter, players}: PlayerListP
                     <li className="text-xl font-bold mb-2 text-left">
 						<input
 							type="text"
-							className="rounded-2xl p-1"
+							className="w-full text-xl font-bold px-4 py-2 rounded-lg border-2 border-gray-300 bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all placeholder:text-gray-400 placeholder:font-normal hover:border-gray-400"
 							placeholder="Enter Name Here"
 							id="playerName"
 							onChange={handleOnChange}
