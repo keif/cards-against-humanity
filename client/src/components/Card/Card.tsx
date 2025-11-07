@@ -1,5 +1,3 @@
-import "./Card.css";
-
 // external imports
 import { useState } from "react";
 import { SITE_NAME } from "@/constants/constants";
@@ -50,9 +48,9 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 		const formattedText = text.replaceAll("_", "__________");
 		return (
 			<div>
-				<div className={`card Q ${className}`}>
+				<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
 					{numAnswers && numAnswers > 1 && (
-						<div className="multi-answer-badge">
+						<div className="absolute top-2.5 right-2.5 max-[380px]:top-2 max-[380px]:right-2 bg-[#FF9800] text-white px-2 py-1 max-[380px]:px-1.5 max-[380px]:py-0.5 rounded text-sm max-[380px]:text-xs font-bold z-[2]">
 							Pick {numAnswers}
 						</div>
 					)}
@@ -60,7 +58,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 				</div>
 				{
 					status &&
-					<div className={`status ${className}`}>
+					<div className={`bg-white rounded-b-lg -mt-[11px] h-[35px] max-[380px]:w-28 max-[380px]:text-[15px] leading-[45px] text-center border border-[#979797] z-0 relative w-[98%] mx-auto ${className}`}>
 						<span>{status}</span>
 					</div>
 				}
@@ -68,13 +66,13 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 		);
 	} else if (cardType === TITLE) {
 		return (
-			<div className={`card Title ${className}`}>
-				<h3>{SITE_NAME}</h3>
+			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
+				<h3 className="mt-0">{SITE_NAME}</h3>
 			</div>
 		);
 	} else if (cardType === PLACEHOLDER) {
 		return (
-			<div className={`card placeholder ${className}`}>
+			<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg p-3 cursor-pointer break-words relative z-[1] select-none bg-transparent border-[3px] border-dashed border-[#6F6F6F] text-[#6F6F6F] flex items-center text-center leading-none ${className}`}>
 				Drop Card Here
 			</div>
 		);
@@ -83,13 +81,12 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 		const partyCode = window.location.pathname.split('/').filter(Boolean).pop() || '';
 
 		return (
-			<div className={`card Title Link ${className}`}>
-				<h3>Invite friends</h3>
-				<h3>with party code:</h3>
+			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
+				<h3 className="mt-0">Invite friends</h3>
+				<h3 className="mt-0">with party code:</h3>
 				<h6
-					className="link"
+					className="leading-none mt-[40%] flex items-center gap-2 justify-center cursor-pointer"
 					onClick={handleCopyLink}
-					style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center', cursor: 'pointer' }}
 					title="Click to copy invite link"
 				>
 					{partyCode}
@@ -105,7 +102,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 					)}
 				</h6>
 				{copied && (
-					<p style={{ color: '#4CAF50', fontSize: '14px', fontWeight: 'bold', textAlign: 'center', margin: '10px 0 0 0' }}>
+					<p className="text-[#4CAF50] text-sm font-bold text-center mt-2.5">
 						Link copied!
 					</p>
 				)}
@@ -127,16 +124,17 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 			}
 		};
 
-		const selectedClass = isSelected ? 'selected' : '';
+		const cursorStyle = disableDrag ? 'default' : (onClick ? 'pointer' : 'move');
+		const opacityValue = isDragging ? 0.5 : 1;
 
 		return (
 			<div
-				className={`card A ${className} ${selectedClass}`}
+				className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border p-3 break-words relative z-[1] select-none bg-[#F7F7F7] text-black border-[#979797] ${isSelected ? 'border-[3px] border-[#2196F3] -translate-y-2.5 shadow-[0_8px_16px_rgba(33,150,243,0.4)] transition-[transform_0.2s_ease,box-shadow_0.2s_ease]' : ''} ${className}`}
 				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
 				style={{
-					cursor: disableDrag ? 'default' : (onClick ? 'pointer' : 'move'),
-					opacity: isDragging ? 0.5 : 1,
+					cursor: cursorStyle,
+					opacity: opacityValue,
 				}}
 			>
 				<p dangerouslySetInnerHTML={{ __html: text || '' }} />

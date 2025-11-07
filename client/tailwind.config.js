@@ -40,6 +40,21 @@ export default {
       spacing: {
         '18': '72px',
       },
+      keyframes: {
+        slideDown: {
+          'from': {
+            opacity: '0',
+            transform: 'translateY(-10px)',
+          },
+          'to': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+      },
+      animation: {
+        slideDown: 'slideDown 0.2s ease-out',
+      },
     },
   },
   plugins: [],
