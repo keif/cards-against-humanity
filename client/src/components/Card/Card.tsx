@@ -28,10 +28,11 @@ export interface CardProps {
 		pID: number;
 	}
 	status?: string;
+	style?: React.CSSProperties;
 	text?: string;
 }
 
-const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, numAnswers, onClick, status, text }: CardProps) => {
+const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, numAnswers, onClick, status, style, text }: CardProps) => {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopyLink = async () => {
@@ -136,6 +137,7 @@ const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, n
 				style={{
 					cursor: cursorStyle,
 					opacity: opacityValue,
+					...style
 				}}
 			>
 				<p dangerouslySetInnerHTML={{ __html: text || '' }} />

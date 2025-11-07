@@ -12,7 +12,7 @@ const renderWithDnd = (ui: React.ReactElement) => {
 describe('CardCarousel Component', () => {
 	it('renders empty carousel with no cards', () => {
 		const { container } = renderWithDnd(<CardCarousel cards={[]} />);
-		const wrapper = container.querySelector('.scrolling-wrapper');
+		const wrapper = container.firstChild as HTMLElement;
 		expect(wrapper).toBeInTheDocument();
 		expect(wrapper?.children).toHaveLength(0);
 	});
@@ -103,7 +103,7 @@ describe('CardCarousel Component', () => {
 		expect(cardElement.innerHTML).toContain('Line two');
 	});
 
-	it('renders with scrolling-wrapper class', () => {
+	it('renders with flex container for scrolling', () => {
 		const cards = [
 			{
 				cardType: A,
@@ -112,6 +112,8 @@ describe('CardCarousel Component', () => {
 			}
 		];
 		const { container } = renderWithDnd(<CardCarousel cards={cards} />);
-		expect(container.querySelector('.scrolling-wrapper')).toBeInTheDocument();
+		const wrapper = container.firstChild as HTMLElement;
+		expect(wrapper).toBeInTheDocument();
+		expect(wrapper).toHaveClass('flex', 'overflow-x-auto');
 	});
 });

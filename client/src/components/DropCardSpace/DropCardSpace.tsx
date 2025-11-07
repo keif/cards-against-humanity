@@ -2,7 +2,6 @@ import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER
 import { ItemTypes, DraggedCard } from "@/types";
 import { useDrop } from "react-dnd";
 import Card, { CardProps, PLACEHOLDER } from "../Card/Card";
-import "./DropCardSpace.css";
 
 // Draggable player IFF
 // player-selecting & player  (show status)
@@ -13,6 +12,37 @@ import "./DropCardSpace.css";
 // player-waiting & player    (show status)
 // judge-selecting & player   (don't show status)
 // judge-waiting & judge    (show status)
+
+// Helper function to calculate fan position styles
+const getFanStyle = (index: number, total: number, isMobile: boolean = false): React.CSSProperties => {
+	// Fan configurations for different card counts [translateX, rotate]
+	const desktopConfigs: Record<number, Array<[number, number]>> = {
+		2: [[-100, -12], [100, 12]],
+		3: [[-150, -15], [0, 0], [150, 15]],
+		4: [[-200, -18], [-70, -8], [70, 8], [200, 18]]
+	};
+
+	const mobileConfigs: Record<number, Array<[number, number]>> = {
+		2: [[-70, -10], [70, 10]],
+		3: [[-100, -12], [0, 0], [100, 12]],
+		4: [[-130, -15], [-50, -6], [50, 6], [130, 15]]
+	};
+
+	const configs = isMobile ? mobileConfigs : desktopConfigs;
+	const config = configs[total];
+
+	if (!config || index >= config.length) {
+		return {};
+	}
+
+	const [translateX, rotate] = config[index];
+	const zIndex = total === 3 && index === 1 ? 2 : (total === 4 && (index === 1 || index === 2) ? 2 : 1);
+
+	return {
+		transform: `translateX(${translateX}px) rotate(${rotate}deg)`,
+		zIndex
+	};
+};
 
 interface DropCardSpaceProps {
 	cardsIn: number;
@@ -26,6 +56,9 @@ interface DropCardSpaceProps {
 }
 
 const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dropHandler, winningCards, droppedCards = [] }: DropCardSpaceProps) => {
+	// Detect mobile viewport
+	const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
 	const [{ isOver, canDrop }, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -67,26 +100,24 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1;
 
 		return (
-			<div className="drop-space">
+			<div className="flex w-full justify-around flex-nowrap overflow-hidden pl-[1%] pr-[1%] pt-[5%]">
 				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 				<div
 					ref={drop}
-					className={shouldFan ? "fan-container" : ""}
-					style={!shouldFan ? {
-						display: 'flex',
-						gap: '10px',
-						flexWrap: 'wrap',
-						justifyContent: 'center'
-					} : undefined}
+					className={shouldFan ? `relative flex justify-center items-center ${isMobile ? 'min-h-[200px]' : 'min-h-[280px]'} w-full` : "flex gap-2.5 flex-wrap justify-center"}
 				>
-					{cardsToDisplay.map((card, index) => (
-						<Card
-							key={card.id ?? `card-${index}`}
-							{...card}
-							index={index}
-							className={shouldFan ? "fanned-card" : ""}
-						/>
-					))}
+					{cardsToDisplay.map((card, index) => {
+						const fanStyle = shouldFan ? getFanStyle(index, cardsToDisplay.length, isMobile) : {};
+						return (
+							<Card
+								key={card.id ?? `card-${index}`}
+								{...card}
+								index={index}
+								className={shouldFan ? "absolute transition-all duration-300 ease-in-out cursor-grab hover:!translate-y-[-20px] hover:!scale-105 hover:!z-10 hover:shadow-[0_10px_25px_rgba(0,0,0,0.5)]" : ""}
+								style={fanStyle}
+							/>
+						);
+					})}
 				</div>
 			</div>
 		);
@@ -96,7 +127,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		(roundRole === PLAYER && roundState === PLAYER_WAITING) ||
 		(roundRole === JUDGE && roundState === JUDGE_WAITING)) {
 		return (
-			<div className="drop-space">
+			<div className="flex w-full justify-around flex-nowrap overflow-hidden pl-[1%] pr-[1%] pt-[5%]">
 				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 			</div>
 		);

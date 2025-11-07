@@ -1,7 +1,6 @@
 import { ItemTypes } from "@/types";
 import { useDrag, useDrop } from "react-dnd";
 import Card, { CardProps } from "../Card/Card";
-import "./CardCarousel.css";
 
 export interface CardGroup {
 	playerID: number;
@@ -44,10 +43,9 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 		<div
 			ref={drag}
 			key={`group-${group.playerID}`}
-			className={`card-group ${isDragging ? 'dragging' : ''}`}
+			className={`flex flex-row gap-2 p-3 mr-5 bg-white/5 border-2 border-white/10 rounded-xl shrink-0 transition-all duration-200 ease-in-out hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] active:cursor-grabbing ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
 			style={{
-				opacity: isDragging ? 0.5 : 1,
-				cursor: 'grab'
+				opacity: isDragging ? 0.5 : 1
 			}}
 		>
 			{group.cards.map((card, cardIndex) => (
@@ -58,6 +56,7 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 					onClick={onCardClick}
 					isSelected={card.id !== undefined && selectedCards.includes(card.id)}
 					disableDrag={true}
+					className="pointer-events-none"
 				/>
 			))}
 		</div>
@@ -91,7 +90,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardRemove, selectedCa
 	// Render grouped cards for judge selection
 	if (cardGroups) {
 		return (
-			<div className="scrolling-wrapper" ref={drop}>
+			<div className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5" ref={drop}>
 				{cardGroups.map((group, groupIndex) => (
 					<DraggableCardGroup
 						key={`group-${group.playerID}`}
@@ -108,7 +107,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardRemove, selectedCa
 	// Render flat list for regular hand
 	return (
 		<div
-			className="scrolling-wrapper"
+			className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5"
 			ref={drop}
 		>
 			{cards?.map((card, index) => (
@@ -118,6 +117,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardRemove, selectedCa
 					key={card.id}
 					onClick={onCardClick}
 					isSelected={card.id !== undefined && selectedCards.includes(card.id)}
+					className="mr-[11px]"
 				/>
 			))}
 		</div>
