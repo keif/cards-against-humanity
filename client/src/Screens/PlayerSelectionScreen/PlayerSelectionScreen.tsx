@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import './PlayerSelectionScreen.css';
 
 // Import SharedComponents
 import Bottom from '@/components/Bottom/Bottom';

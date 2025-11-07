@@ -1,5 +1,4 @@
 import React from 'react';
-import './Button.css';
 import { Link } from 'react-router-dom';
 
 interface ButtonProps {
@@ -12,11 +11,16 @@ interface ButtonProps {
 	type?: 'button' | 'submit' | 'reset' | undefined;
 }
 
+const baseButtonClasses = 'bg-[#979797] rounded-lg border-0 w-[182px] h-[50px] leading-[50px] text-center font-bold text-[23px] cursor-pointer text-black no-underline hover:text-black hover:no-underline';
+
 const Button = ({asLink = false, disabled = false, className = '', link, onClick, text, type = 'button'}: ButtonProps) => {
+	const buttonClasses = `${baseButtonClasses} ${className}`;
+	const disabledClasses = `${baseButtonClasses} opacity-50 ${className}`;
+
 	// disabled btn
 	if (disabled) {
 		return (
-			<button disabled type={type} className={`menuButton disabled ${className}`} data-qa={'button-disabled'}>
+			<button disabled type={type} className={disabledClasses} data-qa={'button-disabled'}>
 				{text}
 			</button>
 		);
@@ -24,7 +28,7 @@ const Button = ({asLink = false, disabled = false, className = '', link, onClick
 	// link btn
 	if (asLink && link) {
 		return (
-			<Link to={link ? link : '/404'} className={`menuButton ${className}`} data-qa={'link'}>
+			<Link to={link ? link : '/404'} className={buttonClasses} data-qa={'link'}>
 				{text}
 			</Link>
 		);
@@ -32,7 +36,7 @@ const Button = ({asLink = false, disabled = false, className = '', link, onClick
 	// onClick btn
 	if (onClick) {
 		return (
-			<button type={type} className={`menuButton button ${className}`} data-qa={'button-clickable'}
+			<button type={type} className={buttonClasses} data-qa={'button-clickable'}
 			        onClick={onClick}>
 				{text}
 			</button>

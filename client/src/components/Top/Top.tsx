@@ -1,5 +1,4 @@
 import React from 'react'
-import "./Top.css"
 
 interface TopProps {
 	className?: string;
@@ -8,7 +7,7 @@ interface TopProps {
 
 const Top = ({className, children}: TopProps) => {
 	return (
-		<div className={`${className} top`} id="top">
+		<div className={`w-full h-[55%] bg-[#D8D8D8] z-0 overflow-hidden transition-all duration-1000 ${className || ''}`} id="top">
 			{children}
 		</div>
 	);

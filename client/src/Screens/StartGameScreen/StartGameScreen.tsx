@@ -9,7 +9,6 @@ import Screen from '@/components/Screen/Screen';
 import Title from '@/components/Title/Title';
 import Top from '@/components/Top/Top';
 import Banner from 'react-js-banner';
-import './StartGameScreen.css';
 
 import { getLobbyState, joinParty, newLobbyState, startGame, onGameStarted, offGameStarted } from '@/api';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -106,7 +105,7 @@ const StartGameScreen = () => {
 			</Top>
 			<Bottom>
 				<Title text="Players Joined" />
-				<form className={'join-form'} onSubmit={handleFormSubmit}>
+				<form className="mx-auto text-center max-w-[20rem]" onSubmit={handleFormSubmit}>
 					<PlayerList players={state.players} joined={state.joined} className="center"
 						onChange={updatePlayerName} />
 					{state.joined ? renderStartButton() : renderButton()}

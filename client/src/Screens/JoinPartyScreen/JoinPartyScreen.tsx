@@ -7,7 +7,6 @@ import Card, { TITLE } from "../../components/Card/Card";
 import Screen from "../../components/Screen/Screen";
 import Title from "../../components/Title/Title";
 import Top from "../../components/Top/Top";
-import "./JoinPartyScreen.css";
 
 
 const JoinPartyScreen = () => {
@@ -33,9 +32,15 @@ const JoinPartyScreen = () => {
 			</Top>
 			<Bottom>
 				<Title text={`Join an existing party`} />
-				<div className="enterCode center">
-					<p className="label">Enter the Party Code</p>
-					<input className="input" type="text" name="partyCode" placeholder={`${appDomain}/<party_code>`} onChange={updatePartyCode} />
+				<div className="text-center">
+					<p className="mb-0">Enter the Party Code</p>
+					<input
+						className="w-full border border-solid border-black rounded-sm px-2 py-1"
+						type="text"
+						name="partyCode"
+						placeholder={`${appDomain}/<party_code>`}
+						onChange={updatePartyCode}
+					/>
 				</div>
 				<Button
 					asLink

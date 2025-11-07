@@ -1,5 +1,4 @@
 import React, { FC } from 'react';
-import "./Title.css";
 
 interface TitleProps {
 	text: string;
@@ -7,7 +6,7 @@ interface TitleProps {
 
 const Title = ({text}: TitleProps) => {
 	return (
-		<div className="title">
+		<div className="text-center">
 			<h1>{text}</h1>
 		</div>
 	);
