@@ -1,44 +1,19 @@
+import React from 'react';
+import HeroSection from './HeroSection';
+import HowItWorksSection from './HowItWorksSection';
+import FeaturesSection from './FeaturesSection';
+import CommunitySection from './CommunitySection';
+import FooterSection from './FooterSection';
 
-import Bottom from "../../components/Bottom/Bottom";
-import Button from "../../components/Button/Button";
-import Card, { TITLE } from "../../components/Card/Card";
-import Screen from "../../components/Screen/Screen";
-import Title from "../../components/Title/Title";
-import Top from "../../components/Top/Top";
-import "./HomeScreen.css";
-
-function CreateGame() {
-    // TODO: call backend api to create a game and return the party code,
-    // mocking the response for now...
-    let partyCodeFromServer = Math.random().toString(36).slice(2).substring(5).toLowerCase();
-    return partyCodeFromServer;
-}
-
-const HomeScreen = () => {
+const HomeScreen: React.FC = () => {
     return (
-        <Screen>
-            <Top>
-                <Card cardType={TITLE} />
-            </Top>
-            <Bottom>
-                <Title text="A party game for horrible people" />
-                <Button
-                    asLink
-                    className="center"
-                    link={`/join/${CreateGame()}`}
-                    text="Create Party"
-                />
-                <div className="orDiv">
-                    <span className="orText">or</span>
-                </div>
-                <Button
-                    asLink
-                    className="center"
-                    link="/join"
-                    text="Join Party"
-                />
-            </Bottom>
-        </Screen>
+        <main id="main-content" className="w-full min-h-screen m-0 p-0">
+            <HeroSection />
+            <HowItWorksSection />
+            <FeaturesSection />
+            <CommunitySection />
+            <FooterSection />
+        </main>
     );
 }
 
