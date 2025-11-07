@@ -435,20 +435,10 @@ const PlayerSelectionScreen = () => {
 						roundState={state.roundState}
 					/>
 					{state.roundState === VIEWING_WINNER && (
-						<div style={{ textAlign: 'center', marginTop: '20px' }}>
+						<div className="text-center mt-5">
 							<button
 								onClick={restoreScreen}
-								style={{
-									padding: '12px 30px',
-									fontSize: '18px',
-									fontWeight: 'bold',
-									backgroundColor: '#4CAF50',
-									color: '#fff',
-									border: 'none',
-									borderRadius: '5px',
-									cursor: 'pointer',
-									boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)',
-								}}
+								className="px-8 py-3 text-lg font-bold bg-[#4CAF50] text-white border-0 rounded cursor-pointer shadow-lg hover:bg-[#45a049] transition-colors"
 							>
 								Next Round
 							</button>
@@ -458,25 +448,16 @@ const PlayerSelectionScreen = () => {
 				<Bottom>
 					<Status message={state.directions} />
 					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (state.QCard?.numAnswers || 1) > 1 && (
-						<div style={{ textAlign: 'center', padding: '10px' }}>
+						<div className="text-center p-2.5">
 							{droppedCards.length > 0 && (
-								<span style={{ marginRight: '10px', color: '#fff' }}>
+								<span className="mr-2.5 text-white">
 									Cards Played: {droppedCards.length} / {state.QCard?.numAnswers || 1}
 								</span>
 							)}
 							{droppedCards.length === (state.QCard?.numAnswers || 1) && (
 								<button
 									onClick={handleSubmitCards}
-									style={{
-										padding: '10px 20px',
-										fontSize: '16px',
-										fontWeight: 'bold',
-										backgroundColor: '#2196F3',
-										color: '#fff',
-										border: 'none',
-										borderRadius: '5px',
-										cursor: 'pointer',
-									}}
+									className="px-5 py-2.5 text-base font-bold bg-[#2196F3] text-white border-0 rounded cursor-pointer hover:bg-[#1976D2] transition-colors"
 								>
 									Submit Cards
 								</button>
@@ -499,22 +480,12 @@ const PlayerSelectionScreen = () => {
 						onCardRemove={handleCardRemove}
 					/>
 					<Footer>
-						<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+						<div className="flex items-center justify-center gap-2.5">
 							<span>Share Link or Party Code: {partyCode}</span>
 							<button
 								onClick={handleCopyLink}
-								style={{
-									background: 'transparent',
-									border: 'none',
-									cursor: 'pointer',
-									padding: '5px',
-									display: 'flex',
-									alignItems: 'center',
-									transition: 'transform 0.2s',
-								}}
+								className="bg-transparent border-0 cursor-pointer p-1.5 flex items-center transition-transform hover:scale-110"
 								title="Copy link to clipboard"
-								onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.2)')}
-								onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
 							>
 								{copied ? (
 									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
@@ -528,12 +499,7 @@ const PlayerSelectionScreen = () => {
 								)}
 							</button>
 							{copied && (
-								<span style={{
-									color: '#4CAF50',
-									fontSize: '14px',
-									fontWeight: 'bold',
-									animation: 'fadeIn 0.3s'
-								}}>
+								<span className="text-[#4CAF50] text-sm font-bold">
 									Copied!
 								</span>
 							)}
