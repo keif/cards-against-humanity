@@ -16,7 +16,7 @@ import { Server } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import Redis from 'ioredis';
 import { RoundInterface } from '@/models/types';
-import game from '@/schema';
+import game, { checkAllGamesForAdvancement } from '@/schema';
 import { InputValidator } from '@/utils/validation';
 import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
@@ -274,9 +274,15 @@ io.on('connection', (socket) => {
   	});
 
 	// Clean up on disconnect
-	socket.on('disconnect', () => {
+	socket.on('disconnect', async () => {
 		socketToSession.delete(socket.id);
 		logger.info('User disconnected', { socketId: socket.id, sessionID });
+
+		// Check all games to see if we should advance any rounds
+		// Get all currently connected session IDs
+		const connectedSessionIDs = new Set(socketToSession.values());
+
+		await checkAllGamesForAdvancement(connectedSessionIDs);
 	});
 
 	// StartGameScreen

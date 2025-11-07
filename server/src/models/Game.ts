@@ -561,6 +561,58 @@ class Game implements GameInterface {
 		player.cards = newCardOrder;
 		cb(true, `shuffled ${srcCardIDIndex} <=> ${destCardIDIndex} for ${player.name}`);
 	}
+
+	/**
+	 * Check if all connected players have submitted their cards
+	 * If yes, advance to judge-selecting phase
+	 * Called when a player disconnects to avoid blocking the game
+	 */
+	checkAndAdvanceIfAllConnectedPlayersSubmitted(connectedSessionIDs: Set<string>): void {
+		const latestRound = this.getLatestRound();
+
+		// Only check if we're in players-selecting phase
+		if (!latestRound || latestRound.roundState !== 'players-selecting') {
+			return;
+		}
+
+		// Get all player sessionIDs in this game
+		const allPlayerSessionIDs = Object.keys(this.players);
+
+		// Filter to only connected players
+		const connectedPlayerSessionIDs = allPlayerSessionIDs.filter(sid => connectedSessionIDs.has(sid));
+
+		// Find judge sessionID
+		const judgeSessionID = allPlayerSessionIDs.find(sid =>
+			this.players[sid].pID === latestRound.roundJudge?.pID
+		);
+
+		// Count connected non-judge players
+		const connectedNonJudgePlayers = connectedPlayerSessionIDs.filter(sid => sid !== judgeSessionID);
+
+		// Get unique players who have submitted cards
+		const submittedPlayerPIDs = new Set(
+			latestRound.otherPlayerCards?.map(card => card.owner?.pID).filter(pID => pID !== undefined)
+		);
+
+		// Check if all connected non-judge players have submitted
+		const allConnectedPlayersSubmitted = connectedNonJudgePlayers.every(sid => {
+			const player = this.players[sid];
+			return player && submittedPlayerPIDs.has(player.pID);
+		});
+
+		if (allConnectedPlayersSubmitted && connectedNonJudgePlayers.length > 0) {
+			logger.info('All connected players submitted - advancing round', {
+				partyCode: this.partyCode,
+				roundNum: latestRound.roundNum,
+				connectedPlayers: connectedNonJudgePlayers.length,
+				submittedPlayers: submittedPlayerPIDs.size
+			});
+
+			latestRound.roundState = JUDGE_SELECTING;
+			clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
+			this.roundFinishedNotifier(true, 'All connected players have played - judge selection phase');
+		}
+	}
 }
 
 export default Game;

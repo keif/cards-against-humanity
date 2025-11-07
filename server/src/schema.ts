@@ -82,4 +82,14 @@ export const endRound = async (partyCode: string, cb: CallbackType): Promise<voi
     game.endRound(cb);
 };
 
+export const checkAllGamesForAdvancement = async (connectedSessionIDs: Set<string>): Promise<void> => {
+    // Iterate through all active games
+    for (const partyCode in games) {
+        const game = games[partyCode];
+        if (game) {
+            game.checkAndAdvanceIfAllConnectedPlayersSubmitted(connectedSessionIDs);
+        }
+    }
+};
+
 export default { joinGame, getLobbyState, getPlayerRoundState, playCard, judgeSelectCard, shuffleCards, endRound };
