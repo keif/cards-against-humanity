@@ -14,7 +14,8 @@
     "build:server": "pnpm --filter cah_backend build",
     "test": "pnpm test:client && pnpm test:server",
     "test:client": "pnpm --filter cah_frontend test",
-    "test:server": "pnpm --filter cah_backend test"
+    "test:server": "pnpm --filter cah_backend test",
+    "clear-cards": "./scripts/clear-redis-cards.sh"
   },
   "devDependencies": {
     "concurrently": "^8.0.1"
