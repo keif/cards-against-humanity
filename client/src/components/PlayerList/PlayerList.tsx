@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import "./PlayerList.css";
 
 interface PlayerListProps {
 	className: string;
@@ -19,12 +18,20 @@ const PlayerList = ({className, joined, onChange, onEnter, players}: PlayerListP
 	};
 
 	return (
-		<div className={`player-list ${className}`}>
-			<ol>
-				{players.map(((player, index) => <li key={index}>{player}</li>))}
+		<div className={className}>
+			<ol className="flex flex-col m-0 min-w-[15rem]">
+				{players.map(((player, index) => <li key={index} className="text-xl font-bold mb-2 text-left">{player}</li>))}
 				{!joined &&
-                    <li><input type="text" className="enterName" placeholder="Enter Name Here" id="playerName"
-                               onChange={handleOnChange} value={playerName}/></li>}
+                    <li className="text-xl font-bold mb-2 text-left">
+						<input
+							type="text"
+							className="rounded-2xl p-1"
+							placeholder="Enter Name Here"
+							id="playerName"
+							onChange={handleOnChange}
+							value={playerName}
+						/>
+					</li>}
 			</ol>
 		</div>
 	);
