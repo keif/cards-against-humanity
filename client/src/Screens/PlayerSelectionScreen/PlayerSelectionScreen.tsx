@@ -37,7 +37,6 @@ export interface RoundInterface {
 	roundRole: RoleTypes;
 	roundJudge: PlayerInfo;
 	roundNum: number;
-	ticker?: number;
 	timeLeft?: number;
 	winner: string,
 	winningCard: CardProps | null,
@@ -53,12 +52,14 @@ const PlayerSelectionScreen = () => {
 	const { partyCode } = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
+	const [serverTimeLeft, setServerTimeLeft] = useState(0); // Track server's timeLeft separately
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
 	const [selectedCards, setSelectedCards] = useState<number[]>([]);
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
+	const timerRef = useRef<number | null>(null);
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -218,32 +219,11 @@ const PlayerSelectionScreen = () => {
 				};
 			}
 
-			// Clear existing ticker if any
-			if (state.ticker) {
-				clearInterval(state.ticker);
-			}
-
-			// Initialize timeLeft from server
+			// Update server timeLeft when received
 			if (roundState?.timeLeft !== undefined) {
+				setServerTimeLeft(roundState.timeLeft);
 				setTimeLeft(roundState.timeLeft);
 			}
-
-			// Create countdown timer
-			let ticker = window.setInterval(() => {
-				setTimeLeft(prevTime => {
-					if (prevTime <= 0) {
-						clearInterval(ticker);
-						return 0;
-					}
-					return prevTime - 1;
-				});
-			}, 1000);
-
-			// Store ticker in state for cleanup
-			setState(prevState => ({
-				...prevState,
-				ticker
-			}));
 		};
 
 		if (partyCode) {
@@ -252,10 +232,43 @@ const PlayerSelectionScreen = () => {
 			// subscribe to newGameState events
 			newGameState(partyCode);
 		}
-		return () => {
-			clearInterval(state.ticker);
-		};
 	}, []);
+
+	// Separate useEffect to manage countdown timer
+	useEffect(() => {
+		// Clear any existing timer
+		if (timerRef.current) {
+			clearInterval(timerRef.current);
+			timerRef.current = null;
+		}
+
+		// Initialize timeLeft from server
+		setTimeLeft(serverTimeLeft);
+
+		// Only start countdown if there's time left
+		if (serverTimeLeft > 0) {
+			timerRef.current = window.setInterval(() => {
+				setTimeLeft(prev => {
+					if (prev <= 1) {
+						if (timerRef.current) {
+							clearInterval(timerRef.current);
+							timerRef.current = null;
+						}
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+		}
+
+		// Cleanup on unmount or when serverTimeLeft changes
+		return () => {
+			if (timerRef.current) {
+				clearInterval(timerRef.current);
+				timerRef.current = null;
+			}
+		};
+	}, [serverTimeLeft]);
 
 	// called after viewing-winner, resets state and gets new state from server. Begins new round
 	const restoreScreen = () => {
