@@ -1,6 +1,6 @@
 # Cards Against Humanity - Online Multiplayer
 
-A real-time multiplayer implementation of the popular party card game, built for mobile web browsers. Play with friends from any device with an internet connection.
+A free, real-time multiplayer online version of [Cards Against Humanity](https://www.cardsagainsthumanity.com/), the popular party card game. Play with friends from any device with an internet connection.
 
 **Based on:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
@@ -79,6 +79,12 @@ pnpm dev:client  # Frontend on http://localhost:5173
 pnpm dev:server  # Backend on http://localhost:8080
 ```
 
+## Tilt Dev Workflow
+
+1. Install Tilt (`brew install tilt` or follow https://tilt.dev).
+2. Run `tilt up` from the repo root to launch the Vite client, Socket.IO backend, and an auto-started Redis container.
+3. Use `tilt trigger lint` or `tilt trigger tests` for one-off checks, and run `tilt down` when you're done to stop all resources.
+
 ## Building for Production
 
 ### Build All
@@ -96,6 +102,14 @@ pnpm build:server  # Outputs to server/dist
 ```bash
 cd server
 pnpm start  # Runs compiled JS from dist/
+```
+
+## Linting
+
+```bash
+pnpm lint                # Runs ESLint for both workspaces (fails on warnings)
+pnpm --filter cah_frontend lint  # Lint client only
+pnpm --filter cah_backend lint   # Lint server only
 ```
 
 ## Testing
@@ -271,8 +285,10 @@ For detailed game rules, see the [official Cards Against Humanity rulebook](http
 
 ## License & Attribution
 
-**License:** MIT
+**License:** MIT (software) / CC BY-NC-SA 4.0 (game content)
+
+**Based on:** [Cards Against Humanity](https://www.cardsagainsthumanity.com/) by Cards Against Humanity LLC
 
 **Original Project:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
-**Disclaimer:** Cards Against Humanity is licensed under [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). This project is for educational and personal use only. Not affiliated with or endorsed by Cards Against Humanity LLC. Do not use for commercial purposes.
+**Disclaimer:** This is a fan-made project not affiliated with, endorsed by, or sponsored by Cards Against Humanity LLC. Cards Against Humanity game content is licensed under [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). This project is for educational and personal use only. Do not use for commercial purposes.

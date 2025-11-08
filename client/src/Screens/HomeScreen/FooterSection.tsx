@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const FooterSection: React.FC = () => {
     return (
@@ -10,7 +11,16 @@ const FooterSection: React.FC = () => {
                             🎴 Free Online Cards Against Humanity
                         </h3>
                         <p className="text-sm leading-relaxed text-footer-text m-0">
-                            A fan-made tribute to the party game we love.
+                            A free online version based on{' '}
+                            <a
+                                href="https://www.cardsagainsthumanity.com/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-white underline hover:text-brand-yellow"
+                            >
+                                Cards Against Humanity
+                            </a>{' '}
+                            by Cards Against Humanity LLC. A fan-made tribute to the party game we love.
                         </p>
                     </div>
 
@@ -18,28 +28,28 @@ const FooterSection: React.FC = () => {
                         <h4 className="text-base font-semibold mb-3 text-white">Play</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
-                                <a
-                                    href="#how-it-works"
+                                <Link
+                                    to="/how-to-play"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     How to Play
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#rules"
+                                <Link
+                                    to="/game-rules"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Game Rules
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#submit"
+                                <Link
+                                    to="/submit-cards"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Submit Cards
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -49,7 +59,7 @@ const FooterSection: React.FC = () => {
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
                                 <a
-                                    href="https://github.com"
+                                    href="https://github.com/keif/cards-against-humanity"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
@@ -59,19 +69,21 @@ const FooterSection: React.FC = () => {
                             </li>
                             <li>
                                 <a
-                                    href="#report"
+                                    href="https://github.com/keif/cards-against-humanity/issues"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Report Bugs
                                 </a>
                             </li>
                             <li>
-                                <a
-                                    href="#moderation"
+                                <Link
+                                    to="/moderation-guidelines"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Moderation Guidelines
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>
@@ -80,28 +92,28 @@ const FooterSection: React.FC = () => {
                         <h4 className="text-base font-semibold mb-3 text-white">Legal</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
-                                <a
-                                    href="#privacy"
+                                <Link
+                                    to="/privacy"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Privacy
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#content"
+                                <Link
+                                    to="/content-policy"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Content Policy
-                                </a>
+                                </Link>
                             </li>
                             <li>
-                                <a
-                                    href="#license"
+                                <Link
+                                    to="/license"
                                     className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
                                 >
                                     Open Source License
-                                </a>
+                                </Link>
                             </li>
                         </ul>
                     </div>

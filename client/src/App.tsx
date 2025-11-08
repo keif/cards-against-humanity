@@ -9,6 +9,15 @@ const PlayerSelectionScreen = lazy(() => import('./Screens/PlayerSelectionScreen
 const CommunityVotingScreen = lazy(() => import('./Screens/CommunityVotingScreen/CommunityVotingScreen'));
 const ModeratorDashboard = lazy(() => import('./Screens/ModeratorDashboard/ModeratorDashboard'));
 
+// Documentation screens
+const HowToPlayScreen = lazy(() => import('./Screens/HowToPlayScreen/HowToPlayScreen'));
+const GameRulesScreen = lazy(() => import('./Screens/GameRulesScreen/GameRulesScreen'));
+const SubmitCardsScreen = lazy(() => import('./Screens/SubmitCardsScreen/SubmitCardsScreen'));
+const PrivacyScreen = lazy(() => import('./Screens/PrivacyScreen/PrivacyScreen'));
+const ContentPolicyScreen = lazy(() => import('./Screens/ContentPolicyScreen/ContentPolicyScreen'));
+const ModerationGuidelinesScreen = lazy(() => import('./Screens/ModerationGuidelinesScreen/ModerationGuidelinesScreen'));
+const LicenseScreen = lazy(() => import('./Screens/LicenseScreen/LicenseScreen'));
+
 // Routing
 export const enum ROUTE_PARAM {
 	PARTY_CODE = 'partyCode',
@@ -21,6 +30,13 @@ export const enum ROUTE_PATH {
 	PLAYER_SELECTION = `/:${ROUTE_PARAM.PARTY_CODE}`,
 	COMMUNITY_VOTING = '/community/cards',
 	MODERATOR_DASHBOARD = '/moderator',
+	HOW_TO_PLAY = '/how-to-play',
+	GAME_RULES = '/game-rules',
+	SUBMIT_CARDS = '/submit-cards',
+	PRIVACY = '/privacy',
+	CONTENT_POLICY = '/content-policy',
+	MODERATION_GUIDELINES = '/moderation-guidelines',
+	LICENSE = '/license',
 }
 
 const App = () => {
@@ -52,6 +68,34 @@ const App = () => {
 					<Route
 						path={`${ROUTE_PATH.MODERATOR_DASHBOARD}`}
 						element={<ModeratorDashboard/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.HOW_TO_PLAY}`}
+						element={<HowToPlayScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.GAME_RULES}`}
+						element={<GameRulesScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.SUBMIT_CARDS}`}
+						element={<SubmitCardsScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.PRIVACY}`}
+						element={<PrivacyScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.CONTENT_POLICY}`}
+						element={<ContentPolicyScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.MODERATION_GUIDELINES}`}
+						element={<ModerationGuidelinesScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.LICENSE}`}
+						element={<LicenseScreen/>}
 					/>
 					<Route
 						path={`${ROUTE_PATH.PLAYER_SELECTION}`}
