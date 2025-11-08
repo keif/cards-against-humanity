@@ -4,6 +4,8 @@ A real-time multiplayer implementation of the popular party card game, built for
 
 **Based on:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
+**New contributors:** read the [Repository Guidelines](AGENTS.md) for structure, tooling, and workflow expectations.
+
 ## Tech Stack
 
 ### Frontend
