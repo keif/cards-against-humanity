@@ -1,0 +1,17 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🎴 Submit Cards (Web Form)
+    url: https://keif.github.io/cards-against-humanity/submit-cards
+    about: Submit custom cards through our web form (easier than GitHub!)
+  - name: 📖 How to Play
+    url: https://keif.github.io/cards-against-humanity/how-to-play
+    about: Learn how to play the game
+  - name: 📋 Game Rules
+    url: https://keif.github.io/cards-against-humanity/game-rules
+    about: View the complete game rules
+  - name: 💬 Discussions
+    url: https://github.com/keif/cards-against-humanity/discussions
+    about: Ask questions, share ideas, or chat with the community
+  - name: 🛡️ Content Policy
+    url: https://keif.github.io/cards-against-humanity/content-policy
+    about: Review our content guidelines before submitting cards

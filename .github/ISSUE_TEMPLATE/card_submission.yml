@@ -1,0 +1,86 @@
+name: Card Submission
+description: Submit a new card idea (alternative to web form)
+title: "[Card]: "
+labels: ["card-submission", "needs-review"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Submit a Card Idea
+
+        **Prefer using the web form?** You can also submit cards directly at: [/submit-cards](/submit-cards)
+
+        This GitHub template is an alternative for batch submissions or cards that need discussion.
+
+  - type: dropdown
+    id: card-type
+    attributes:
+      label: Card Type
+      description: Is this a Question Card (Black) or Answer Card (White)?
+      options:
+        - Answer Card (White)
+        - Question Card (Black)
+    validations:
+      required: true
+
+  - type: textarea
+    id: card-text
+    attributes:
+      label: Card Text
+      description: The text that should appear on the card
+      placeholder: |
+        For Answer Cards: "Puppies!" or "A micropenis."
+        For Question Cards: "What's that smell?" or "_____ and _____. Name a more iconic duo."
+
+        Use _____ for blank spaces in Question Cards
+    validations:
+      required: true
+
+  - type: dropdown
+    id: num-answers
+    attributes:
+      label: Number of Answers (Question Cards Only)
+      description: How many answer cards are needed to complete this question?
+      options:
+        - "1 (standard)"
+        - "2 (Pick 2)"
+        - "3 (Pick 3)"
+      default: 0
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Why this card?
+      description: Optional - Why do you think this card would be funny or fit the game?
+      placeholder: |
+        This is topical because...
+        This would work well with cards like...
+        This is funny because...
+
+  - type: checkboxes
+    id: content-policy
+    attributes:
+      label: Content Policy Compliance
+      description: Please confirm your card follows our guidelines
+      options:
+        - label: I have read the [Content Policy](/content-policy)
+          required: true
+        - label: My card does not violate the prohibited content rules
+          required: true
+        - label: This card is original and not a duplicate
+          required: true
+        - label: I have checked spelling and grammar
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        **What happens next?**
+        1. Community members can upvote/comment on this submission
+        2. Moderators will review for content policy compliance
+        3. If approved, the card will be added to the game
+        4. You'll be notified when the card is approved or if changes are needed
+
+        Thank you for contributing to the game! 🎴
