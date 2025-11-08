@@ -1,6 +1,6 @@
 import { RoundInterface } from "@/Screens/PlayerSelectionScreen/PlayerSelectionScreen";
+import type { Socket } from "socket.io-client";
 import {
-	CallbackType,
 	LobbyStateResponse,
 	CommunityCardsResponse,
 	VoteType,
@@ -36,43 +36,40 @@ const initializeSession = async () => {
 };
 
 // Lazy-load socket.io-client only when needed
-let realSocket: any = null;
+let realSocket: Socket | null = null;
 let initPromise: Promise<void> | null = null;
 
-// Create a proxy that queues operations until the real socket is initialized
-const socket = new Proxy({} as any, {
-	get(_target, prop) {
-		// If real socket exists, use it directly
-		if (realSocket) {
-			return realSocket[prop];
+type SocketMethod = 'emit' | 'on' | 'off';
+
+const callWithSocket = (method: SocketMethod, args: unknown[]) => {
+	const invoke = () => {
+		const implementation = realSocket?.[method];
+		if (typeof implementation === 'function') {
+			implementation.apply(realSocket, args as never);
 		}
+	};
 
-		// For methods, return a function that queues the operation
-		if (typeof prop === 'string' && ['emit', 'on', 'off', 'connect'].includes(prop)) {
-			return (...args: any[]) => {
-				// Start initialization if not already started
-				if (!initPromise) {
-					initPromise = initializeSocketConnection();
-				}
-
-				// If socket is ready, call immediately
-				if (realSocket) {
-					return realSocket[prop](...args);
-				}
-
-				// Otherwise, queue until ready
-				initPromise.then(() => {
-					if (realSocket) {
-						realSocket[prop](...args);
-					}
-				});
-			};
-		}
-
-		// For properties, return undefined or queue access
-		return realSocket?.[prop];
+	if (realSocket) {
+		invoke();
+		return;
 	}
-});
+
+	if (!initPromise) {
+		initPromise = initializeSocketConnection();
+	}
+
+	initPromise
+		?.then(invoke)
+		.catch((error) => {
+			console.error('❌ Socket initialization failed:', error);
+		});
+};
+
+const socket = {
+	emit: (...args: unknown[]) => callWithSocket('emit', args),
+	on: (...args: unknown[]) => callWithSocket('on', args),
+	off: (...args: unknown[]) => callWithSocket('off', args),
+} as Pick<Socket, SocketMethod>;
 
 async function initializeSocketConnection() {
 	// Dynamic import of socket.io-client (lazy-loaded)
@@ -90,14 +87,14 @@ async function initializeSocketConnection() {
 
 	// Set up event listeners
 	realSocket.on("connect", () => {
-		console.log('✅ Connected to server with socket ID:', realSocket.id);
+		console.log('✅ Connected to server with socket ID:', realSocket?.id);
 	});
 
-	realSocket.on("connect_error", (err: any) => {
+	realSocket.on("connect_error", (err: Error) => {
 		console.error('❌ Connection error:', err.message);
 	});
 
-	realSocket.on("disconnect", (reason: any) => {
+	realSocket.on("disconnect", (reason: string) => {
 		console.log('🔌 Disconnected:', reason);
 	});
 

@@ -13,7 +13,7 @@ import Top from '@/components/Top/Top';
 
 // Import Helper Libraries
 import { ROUTE_PARAM } from '@/App';
-import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, shuffleCards } from '@/api';
+import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
@@ -44,17 +44,12 @@ export interface RoundInterface {
 	playerScores?: Array<{ name: string; score: number; pID: number }>;
 }
 
-interface ParamTypes {
-	partyCode: string;
-}
-
 const PlayerSelectionScreen = () => {
 	const { partyCode } = useParams<ROUTE_PARAM>();
 	const navigate = useNavigate();
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [serverTimeLeft, setServerTimeLeft] = useState(0); // Track server's timeLeft separately
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
-	const [selectedCards, setSelectedCards] = useState<number[]>([]);
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
@@ -211,7 +206,6 @@ const PlayerSelectionScreen = () => {
 			const stateChanged = roundState.roundState !== previousRoundRef.current.roundState;
 
 			if (roundChanged || stateChanged) {
-				setSelectedCards([]);
 				setDroppedCards([]); // Clear dropped cards on round change
 				previousRoundRef.current = {
 					roundNum: roundState.roundNum ?? 0,
@@ -287,33 +281,6 @@ const PlayerSelectionScreen = () => {
 		} catch (err) {
 			console.error('Failed to copy:', err);
 		}
-	};
-
-	// Toggle card selection for multi-card questions
-	const toggleCardSelection = (cardId: number) => {
-		const numCardsRequired = state.QCard?.numAnswers || 1;
-
-		// For single-card questions, submit immediately (backward compatibility)
-		if (numCardsRequired === 1) {
-			if (partyCode) {
-				playCard(partyCode, cardId);
-			}
-			return;
-		}
-
-		// Multi-card selection logic
-		setSelectedCards(prev => {
-			if (prev.includes(cardId)) {
-				// Deselect card
-				return prev.filter(id => id !== cardId);
-			} else if (prev.length < numCardsRequired) {
-				// Add card to selection
-				return [...prev, cardId];
-			} else {
-				// Already at max, don't add more
-				return prev;
-			}
-		});
 	};
 
 	// Submit dropped cards

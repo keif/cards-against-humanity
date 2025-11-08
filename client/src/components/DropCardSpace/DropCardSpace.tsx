@@ -59,7 +59,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 	// Detect mobile viewport
 	const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
-	const [{ isOver, canDrop }, drop] = useDrop(
+	const [, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
 			canDrop: () => true,
@@ -68,14 +68,10 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 					dropHandler(item);
 				}
 				return { dropEffect: 'copy' };
-			},
-			collect: (monitor) => ({
-				isOver: !!monitor.isOver(),
-				canDrop: !!monitor.canDrop(),
-			})
+			}
 		}),
 		[dropHandler]);
-	let status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : undefined;
+	const status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : undefined;
 
 	// Determine which cards to display
 	const getCardsToDisplay = (): CardProps[] => {

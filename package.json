@@ -10,6 +10,7 @@
     "build": "pnpm --recursive run build",
     "dev:client": "pnpm --filter cah_frontend dev",
     "dev:server": "pnpm --filter cah_backend dev",
+    "lint": "pnpm --filter cah_frontend lint && pnpm --filter cah_backend lint",
     "build:client": "pnpm --filter cah_frontend build",
     "build:server": "pnpm --filter cah_backend build",
     "test": "pnpm test:client && pnpm test:server",

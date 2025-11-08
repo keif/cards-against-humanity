@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 function CreateGame() {
     // TODO: call backend api to create a game and return the party code
-    let partyCodeFromServer = Math.random().toString(36).slice(2).substring(5).toLowerCase();
+    const partyCodeFromServer = Math.random().toString(36).slice(2).substring(5).toLowerCase();
     return partyCodeFromServer;
 }
 

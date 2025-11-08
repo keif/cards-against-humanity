@@ -8,7 +8,7 @@ interface PlayerListProps {
 	players: string[];
 }
 
-const PlayerList = ({className, joined, onChange, onEnter, players}: PlayerListProps) => {
+const PlayerList = ({className, joined, onChange, players}: PlayerListProps) => {
 	const [playerName, setPlayerName] = useState("");
 
 	const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {

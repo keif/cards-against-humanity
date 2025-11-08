@@ -64,21 +64,17 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 };
 
 const CardCarousel = ({ cards, cardGroups, onCardClick, onCardRemove, selectedCards = [] }: CardCarouselProps) => {
-	const [{ isOver, canDrop }, drop] = useDrop(
+	const [, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
-			collect: (monitor) => ({
-				isOver: !!monitor.isOver(),
-				canDrop: !!monitor.canDrop(),
-			}),
-			drop: (item, monitor) => {
+			drop: (item) => {
 				// Call onCardRemove to remove card from drop zone
 				if (onCardRemove && item && typeof item === 'object' && 'id' in item) {
 					onCardRemove(item as { id: number });
 				}
 				return undefined;
 			},
-			hover(item, monitor) {
+			hover() {
 				// Vibrate when dragging card over carousel
 				if (window.navigator.vibrate) {
 					window.navigator.vibrate(100);

@@ -36,12 +36,22 @@ const Button = ({asLink = false, disabled = false, className = '', link, onClick
 	// onClick btn
 	if (onClick) {
 		return (
-			<button type={type} className={buttonClasses} data-qa={'button-clickable'}
-			        onClick={onClick}>
+			<button
+				type={type}
+				className={buttonClasses}
+				data-qa={'button-clickable'}
+				onClick={onClick}
+			>
 				{text}
 			</button>
 		);
 	}
+
+	return (
+		<button type={type} className={buttonClasses} data-qa={'button-default'}>
+			{text}
+		</button>
+	);
 };
 
 export default Button;

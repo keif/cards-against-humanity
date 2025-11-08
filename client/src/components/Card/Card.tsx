@@ -32,7 +32,7 @@ export interface CardProps {
 	text?: string;
 }
 
-const Card = ({ cardType, className, disableDrag, id, index, isSelected, link, numAnswers, onClick, status, style, text }: CardProps) => {
+const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswers, onClick, status, style, text }: CardProps) => {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopyLink = async () => {
