@@ -81,8 +81,8 @@ pnpm dev:server  # Backend on http://localhost:8080
 
 ## Tilt Dev Workflow
 
-1. Install Tilt (`brew install tilt` or follow https://tilt.dev).
-2. Run `tilt up` from the repo root to launch the Vite client, Socket.IO backend, and an auto-started Redis container.
+1. Install Tilt (`brew install tilt` or follow https://tilt.dev) and start Docker Desktop (the Redis helper runs as a container).
+2. Run `tilt up` from the repo root to launch the Vite client, Socket.IO backend, and an auto-started Redis container. If you already have Redis running elsewhere, disable the `redis` resource in the Tilt UI.
 3. Use `tilt trigger lint` or `tilt trigger tests` for one-off checks, and run `tilt down` when you're done to stop all resources.
 
 ## Building for Production
@@ -285,10 +285,10 @@ For detailed game rules, see the [official Cards Against Humanity rulebook](http
 
 ## License & Attribution
 
-**License:** MIT (software) / CC BY-NC-SA 4.0 (game content)
+**License:** MIT (software) / CC BY-NC-SA 2.0 (game content)
 
 **Based on:** [Cards Against Humanity](https://www.cardsagainsthumanity.com/) by Cards Against Humanity LLC
 
 **Original Project:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
-**Disclaimer:** This is a fan-made project not affiliated with, endorsed by, or sponsored by Cards Against Humanity LLC. Cards Against Humanity game content is licensed under [Creative Commons BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). This project is for educational and personal use only. Do not use for commercial purposes.
+**Disclaimer:** This is a fan-made project not affiliated with, endorsed by, or sponsored by Cards Against Humanity LLC. Cards Against Humanity game content is licensed under [Creative Commons BY-NC-SA 2.0](https://creativecommons.org/licenses/by-nc-sa/2.0/). This project is for educational and personal use only. Do not use for commercial purposes.

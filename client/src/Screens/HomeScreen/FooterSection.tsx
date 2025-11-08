@@ -126,12 +126,12 @@ const FooterSection: React.FC = () => {
                     <p className="text-xs md:text-xs leading-relaxed text-footer-text-muted m-0 md:text-left">
                         Cards Against Humanity game content is licensed under{' '}
                         <a
-                            href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
+                            href="https://creativecommons.org/licenses/by-nc-sa/2.0/"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-footer-text underline hover:text-white"
                         >
-                            CC BY-NC-SA 4.0
+                            CC BY-NC-SA 2.0
                         </a>.
                         This open-source implementation is provided under the MIT License for educational and non-commercial use only.
                     </p>
