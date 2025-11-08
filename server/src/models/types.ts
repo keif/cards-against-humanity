@@ -49,6 +49,7 @@ export interface GameInterface {
     playCard: (cardIDs: number | number[], sessionID: string, cb: CallbackType) => void;
     players: { [index: string]: any };
     QCardDeck: Card[];
+    rebootHand: (sessionID: string, cb: CallbackType) => void;
     roundLength: number;
     roundFinishedNotifier: CallbackType;
     rounds: RoundInterface[];
@@ -66,6 +67,7 @@ export interface RoundInterface {
     active?: boolean;
     cards?: Card[];
     currentPlayerName?: string;
+    gameConfig?: GameConfig;
     gameStartDate?: Date;
     otherPlayerCards: Card[] | undefined;
     partyCode?: string;

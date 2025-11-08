@@ -247,6 +247,7 @@ class Game implements GameInterface {
 		return {
 			cards,
 			currentPlayerName: player.name,
+			gameConfig: this.gameConfig,
 			otherPlayerCards,
 			playerChoice,
 			QCard,
@@ -688,6 +689,57 @@ class Game implements GameInterface {
 		});
 
 		cb(true, `Discarded "${discardedCard.text}" and drew a new card`);
+	}
+
+	/**
+	 * Rebooting the Universe: Trade a point for a completely new hand
+	 */
+	rebootHand(sessionID: string, cb: CallbackType): void {
+		// Check if rule is enabled
+		if (!this.gameConfig.enabledRules.rebootingTheUniverse) {
+			cb(false, 'Rebooting the Universe rule is not enabled');
+			return;
+		}
+
+		const player = this.getPlayer(sessionID);
+		if (!player) {
+			cb(false, 'Player not found');
+			return;
+		}
+
+		// Check if player has points to trade
+		if (player.roundsWon.length === 0) {
+			cb(false, 'You need at least 1 point to reboot your hand');
+			return;
+		}
+
+		// Remove last point
+		const removedRound = player.roundsWon.pop();
+
+		// Return current hand to deck
+		this.ACardDeck.push(...player.cards);
+		this.ACardDeck = shuffle(this.ACardDeck);
+
+		// Clear player's hand
+		player.cards = [];
+
+		// Draw new hand
+		const handSize = this.gameConfig.handSize;
+		for (let i = 0; i < handSize && this.ACardDeck.length > 0; i++) {
+			const newCard = this.ACardDeck.shift();
+			if (newCard) {
+				player.cards.push(newCard);
+			}
+		}
+
+		logger.info('Rebooting the Universe: Player traded point for new hand', {
+			partyCode: this.partyCode,
+			playerName: player.name,
+			pointsRemaining: player.roundsWon.length,
+			newHandSize: player.cards.length
+		});
+
+		cb(true, `Traded 1 point for a completely new hand (${player.cards.length} cards)`);
 	}
 
 	/**

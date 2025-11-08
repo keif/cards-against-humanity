@@ -160,6 +160,14 @@ export function endRound(partyCode: string) {
 	socket.emit('endRound', partyCode);
 }
 
+export function discardCard(partyCode: string, cardID: number) {
+	socket.emit('discardCard', partyCode, cardID);
+}
+
+export function rebootHand(partyCode: string) {
+	socket.emit('rebootHand', partyCode);
+}
+
 // Community Voting API
 
 /**

@@ -13,12 +13,12 @@ import Top from '@/components/Top/Top';
 
 // Import Helper Libraries
 import { ROUTE_PARAM } from '@/App';
-import { endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard } from '@/api';
+import { discardCard, endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, rebootHand } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DraggedCard, PlayerInfo } from '@/types';
+import { DraggedCard, GameConfig, PlayerInfo } from '@/types';
 import { loadDndBackend } from '@/utils/dndBackend';
 import type { BackendFactory } from 'dnd-core';
 
@@ -29,6 +29,7 @@ export interface RoundInterface {
 	cards: CardProps[];
 	currentPlayerName?: string;
 	directions: string;
+	gameConfig?: GameConfig;
 	headerText: string;
 	otherPlayerCards: CardProps[],
 	playerChoice: CardProps | null;
@@ -374,6 +375,57 @@ const PlayerSelectionScreen = () => {
 		setDroppedCards(prev => prev.filter(c => c.id !== item.id));
 	};
 
+	// Handler for discarding a card (Never Have I Ever rule)
+	const handleDiscardCard = (cardID: number) => {
+		if (!partyCode || cardID === undefined) {
+			return;
+		}
+
+		// Only allow discarding during player-selecting phase
+		if (state.roundState !== PLAYER_SELECTING || state.roundRole !== 'player') {
+			return;
+		}
+
+		// Check if rule is enabled
+		if (!state.gameConfig?.enabledRules?.neverHaveIEver) {
+			return;
+		}
+
+		// Confirm before discarding
+		if (window.confirm('Discard this card? You will receive a new random card.')) {
+			discardCard(partyCode, cardID);
+		}
+	};
+
+	// Handler for rebooting hand (Rebooting the Universe rule)
+	const handleRebootHand = () => {
+		if (!partyCode) {
+			return;
+		}
+
+		// Only allow during player-selecting phase
+		if (state.roundState !== PLAYER_SELECTING || state.roundRole !== 'player') {
+			return;
+		}
+
+		// Check if rule is enabled
+		if (!state.gameConfig?.enabledRules?.rebootingTheUniverse) {
+			return;
+		}
+
+		// Check if player has points
+		const currentPlayer = state.playerScores?.find(p => p.name === state.currentPlayerName);
+		if (!currentPlayer || currentPlayer.score === 0) {
+			alert('You need at least 1 point to reboot your hand');
+			return;
+		}
+
+		// Confirm before rebooting
+		if (window.confirm(`Trade 1 point for a completely new hand? You will go from ${currentPlayer.score} to ${currentPlayer.score - 1} points.`)) {
+			rebootHand(partyCode);
+		}
+	};
+
 	// Filter cards in hand to exclude dropped cards
 	const cardsInHand = useMemo(() => {
 		return state.cards.filter(card =>
@@ -444,6 +496,22 @@ const PlayerSelectionScreen = () => {
 							)}
 						</div>
 					)}
+					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && state.gameConfig?.enabledRules?.rebootingTheUniverse && (
+						<div className="text-center p-2.5">
+							<button
+								onClick={handleRebootHand}
+								className="px-5 py-2.5 text-base font-bold bg-[#FF9800] text-white border-0 rounded cursor-pointer hover:bg-[#F57C00] transition-colors"
+								disabled={!state.playerScores?.find(p => p.name === state.currentPlayerName)?.score}
+								title={
+									state.playerScores?.find(p => p.name === state.currentPlayerName)?.score
+										? 'Trade 1 point for a completely new hand'
+										: 'You need at least 1 point to use this'
+								}
+							>
+								🔄 Trade Point for New Hand ({state.playerScores?.find(p => p.name === state.currentPlayerName)?.score || 0} pts)
+							</button>
+						</div>
+					)}
 					<CardCarousel
 						cards={
 							state.roundState === JUDGE_SELECTING
@@ -458,6 +526,13 @@ const PlayerSelectionScreen = () => {
 								: undefined
 						}
 						onCardRemove={handleCardRemove}
+						onCardDiscard={
+							state.gameConfig?.enabledRules?.neverHaveIEver &&
+							state.roundState === PLAYER_SELECTING &&
+							state.roundRole === 'player'
+								? handleDiscardCard
+								: undefined
+						}
 					/>
 					<Footer>
 						<div className="flex items-center justify-center gap-2.5">

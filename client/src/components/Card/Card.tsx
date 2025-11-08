@@ -23,6 +23,7 @@ export interface CardProps {
 	link?: string;
 	numAnswers?: number;
 	onClick?: (id: number) => void;
+	onDiscard?: (id: number) => void;
 	owner?: {
 		name: string;
 		pID: number;
@@ -32,7 +33,7 @@ export interface CardProps {
 	text?: string;
 }
 
-const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswers, onClick, status, style, text }: CardProps) => {
+const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswers, onClick, onDiscard, status, style, text }: CardProps) => {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopyLink = async () => {
@@ -125,6 +126,13 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 			}
 		};
 
+		const handleDiscard = (e: React.MouseEvent) => {
+			e.stopPropagation(); // Prevent onClick from firing
+			if (onDiscard && id !== undefined) {
+				onDiscard(id);
+			}
+		};
+
 		const cursorStyle = disableDrag ? 'default' : (onClick ? 'pointer' : 'move');
 		const opacityValue = isDragging ? 0.5 : 1;
 
@@ -140,6 +148,16 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 					...style
 				}}
 			>
+				{onDiscard && (
+					<button
+						onClick={handleDiscard}
+						className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-pointer border-0 transition-colors z-10"
+						title="Discard this card (Never Have I Ever)"
+						aria-label="Discard card"
+					>
+						×
+					</button>
+				)}
 				<p dangerouslySetInnerHTML={{ __html: text || '' }} />
 			</div>
 		);

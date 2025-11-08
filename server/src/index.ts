@@ -391,6 +391,52 @@ io.on('connection', (socket) => {
 		);
 	});
 
+	socket.on('discardCard', async (partyCode, cardID) => {
+		console.log(`${sessionID} | discardCard | card: ${cardID}`);
+		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
+		const cardIDValidation = InputValidator.validateCardId(cardID);
+
+		if (!partyCodeValidation.isValid || !cardIDValidation.isValid) {
+			socket.emit('error', { message: 'Invalid input parameters' });
+			return;
+		}
+
+		await game.discardCard(
+			partyCodeValidation.sanitizedValue!,
+			parseInt(String(cardID)),
+			sessionID,
+			(success, message) => {
+				if (success) {
+					io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
+				} else {
+					socket.emit('error', { message });
+				}
+			}
+		);
+	});
+
+	socket.on('rebootHand', async (partyCode) => {
+		console.log(`${sessionID} | rebootHand`);
+		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
+
+		if (!partyCodeValidation.isValid) {
+			socket.emit('error', { message: 'Invalid party code' });
+			return;
+		}
+
+		await game.rebootHand(
+			partyCodeValidation.sanitizedValue!,
+			sessionID,
+			(success, message) => {
+				if (success) {
+					io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
+				} else {
+					socket.emit('error', { message });
+				}
+			}
+		);
+	});
+
 	socket.on('judgeSelectCard', async (partyCode, cardID) => {
 		console.log(`${sessionID} | judgeSelectCard`);
 		await game.judgeSelectCard(partyCode, cardID, sessionID, (success, message) => {

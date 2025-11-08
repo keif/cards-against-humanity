@@ -83,6 +83,16 @@ export const endRound = async (partyCode: string, cb: CallbackType): Promise<voi
     game.endRound(cb);
 };
 
+export const discardCard = async (partyCode: string, cardID: number, sessionID: string, cb: CallbackType): Promise<void> => {
+    let game = await getGame(partyCode);
+    game.discardCard(sessionID, cardID, cb);
+};
+
+export const rebootHand = async (partyCode: string, sessionID: string, cb: CallbackType): Promise<void> => {
+    let game = await getGame(partyCode);
+    game.rebootHand(sessionID, cb);
+};
+
 export const checkAllGamesForAdvancement = async (connectedSessionIDs: Set<string>): Promise<void> => {
     // Iterate through all active games
     for (const partyCode in games) {
@@ -93,4 +103,4 @@ export const checkAllGamesForAdvancement = async (connectedSessionIDs: Set<strin
     }
 };
 
-export default { joinGame, getLobbyState, getPlayerRoundState, playCard, judgeSelectCard, shuffleCards, endRound };
+export default { joinGame, getLobbyState, getPlayerRoundState, playCard, judgeSelectCard, shuffleCards, endRound, discardCard, rebootHand };
