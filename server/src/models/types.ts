@@ -2,11 +2,44 @@ import {Card} from "@/data/types";
 
 export type CallbackType = (success: boolean, message: string) => void;
 
+// Game Configuration Types
+export interface GameConfig {
+	winningScore: number; // Points needed to win (default: 10)
+	handSize: number; // Cards per player (default: 10)
+	roundTimer?: number; // seconds, undefined = no timer (default: undefined)
+	enabledRules: {
+		rebootingTheUniverse: boolean; // Discard hand and draw new cards
+		packingHeat: boolean; // Draw extra card (random bonus)
+		happyEnding: boolean; // Winner reads extra answer to end
+		neverHaveIEver: boolean; // Discard cards you don't understand
+		godIsDead: boolean; // Play without Card Czar
+		survivalOfTheFittest: boolean; // First player submits wins
+		seriousBusiness: boolean; // Point penalties for terrible answers
+	};
+}
+
+export const DEFAULT_GAME_CONFIG: GameConfig = {
+	winningScore: 10,
+	handSize: 10,
+	roundTimer: undefined,
+	enabledRules: {
+		rebootingTheUniverse: false,
+		packingHeat: false,
+		happyEnding: false,
+		neverHaveIEver: false,
+		godIsDead: false,
+		survivalOfTheFittest: false,
+		seriousBusiness: false,
+	},
+};
+
 export interface GameInterface {
     ACardDeck: Card[];
     active: boolean;
     addNewPlayer: (name: string, sessionID: string) => void;
+    discardCard: (sessionID: string, cardID: number, cb: CallbackType) => void;
     endRound: (cb: CallbackType) => void;
+    gameConfig: GameConfig;
     gameStartDate: Date;
     getLatestRound: () => RoundInterface | null;
     getPlayer: (sessionID: string) => PlayerInterface | null;

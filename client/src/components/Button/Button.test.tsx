@@ -57,11 +57,14 @@ describe('Button Component', () => {
 			expect(link).toHaveClass('link-custom');
 		});
 
-		it('does not render when asLink is true but link is not provided', () => {
+		it('renders fallback button when asLink is true but link is not provided', () => {
 			const { container } = renderWithRouter(<Button text="Broken Link" asLink={true} />);
 			const link = screen.queryByRole('link');
 			expect(link).not.toBeInTheDocument();
-			expect(container.querySelector('button')).not.toBeInTheDocument();
+			// Component renders a fallback button instead of a link
+			const button = container.querySelector('button');
+			expect(button).toBeInTheDocument();
+			expect(button).toHaveTextContent('Broken Link');
 		});
 
 		it('navigates to specified path', () => {

@@ -1,10 +1,10 @@
 import Game from '@/models/Game';
-import { CallbackType, GameInterface, LobbyInterface, RoundInterface } from "@/models/types";
+import { CallbackType, GameInterface, LobbyInterface, RoundInterface, GameConfig, DEFAULT_GAME_CONFIG } from "@/models/types";
 
 let games: { [index: string]: any } = {};
 
-const createGame = async (partyCode: string, roundLength: number, cb: CallbackType): Promise<GameInterface> => {
-    games[partyCode] = new Game(partyCode, roundLength, cb);
+const createGame = async (partyCode: string, roundLength: number, cb: CallbackType, gameConfig: GameConfig = DEFAULT_GAME_CONFIG): Promise<GameInterface> => {
+    games[partyCode] = new Game(partyCode, roundLength, cb, gameConfig);
 
     // Initialize game with cards from Redis
     await games[partyCode].initialize();
@@ -12,6 +12,7 @@ const createGame = async (partyCode: string, roundLength: number, cb: CallbackTy
     console.group('created game:');
     console.log('partyCode:', partyCode);
     console.log('cb:', cb);
+    console.log('gameConfig:', gameConfig);
     console.log('games[partyCode].active:', games[partyCode].active);
     console.log('games[partyCode].partyCode:', games[partyCode].partyCode);
     console.log('games[partyCode].players:', games[partyCode].players);
@@ -19,7 +20,7 @@ const createGame = async (partyCode: string, roundLength: number, cb: CallbackTy
     return games[partyCode];
 };
 
-const getGame = async (partyCode: string, cb?: CallbackType): Promise<GameInterface> => {
+const getGame = async (partyCode: string, cb?: CallbackType, gameConfig?: GameConfig): Promise<GameInterface> => {
     const existingGame = games[partyCode];
     if (existingGame) {
         console.log('game exists:', !!existingGame);
@@ -30,21 +31,21 @@ const getGame = async (partyCode: string, cb?: CallbackType): Promise<GameInterf
         const defaultCallback: CallbackType = (success, message) => {
             console.log(`Game event (no callback provided): ${success} | ${message}`);
         };
-        await createGame(partyCode, 60, cb || defaultCallback);
+        await createGame(partyCode, 60, cb || defaultCallback, gameConfig || DEFAULT_GAME_CONFIG);
     }
     return games[partyCode];
 };
 
-export const joinGame = async (partyCode: string, sessionID: string, name: string): Promise<void> => {
-    console.log("joinGame", partyCode, sessionID, name);
-    let game = await getGame(partyCode);
+export const joinGame = async (partyCode: string, sessionID: string, name: string, gameConfig?: GameConfig): Promise<void> => {
+    console.log("joinGame", partyCode, sessionID, name, gameConfig);
+    let game = await getGame(partyCode, undefined, gameConfig);
     game.addNewPlayer(name, sessionID);
 };
 
 // returns the players in the game []
-export const getLobbyState = async (partyCode: string, sessionID: string, cb: CallbackType): Promise<LobbyInterface> => {
-    console.log("getLobbyState", partyCode, sessionID, cb);
-    const game = await getGame(partyCode, cb);
+export const getLobbyState = async (partyCode: string, sessionID: string, cb: CallbackType, gameConfig?: GameConfig): Promise<LobbyInterface> => {
+    console.log("getLobbyState", partyCode, sessionID, cb, gameConfig);
+    const game = await getGame(partyCode, cb, gameConfig);
     const currentPlayer = game.getPlayer(sessionID);
     let players = [];
     for (let [key, value] of Object.entries(game.players)) {

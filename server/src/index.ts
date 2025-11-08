@@ -300,11 +300,12 @@ io.on('connection', (socket) => {
 		socket.emit('getLobbyState', response);
 	});
 
-	socket.on('joinParty', async ({ partyCode, name }) => {
+	socket.on('joinParty', async ({ partyCode, name, gameConfig }) => {
 		console.group(`${sessionID} | joinParty`);
 		console.log('sessionID:', sessionID);
 		console.log('partyCode:', partyCode);
 		console.log('name:', name);
+		console.log('gameConfig:', gameConfig);
 		console.groupEnd();
 
 		// Validate and sanitize inputs
@@ -324,7 +325,7 @@ io.on('connection', (socket) => {
 		const sanitizedName = nameValidation.sanitizedValue!;
 
 		try {
-			await game.joinGame(sanitizedPartyCode, sessionID, sanitizedName);
+			await game.joinGame(sanitizedPartyCode, sessionID, sanitizedName, gameConfig);
 			socket.join(sanitizedPartyCode);
 			io.to(sanitizedPartyCode).emit('newLobbyState');
 		} catch (error) {

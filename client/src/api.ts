@@ -104,8 +104,8 @@ async function initializeSocketConnection() {
 }
 
 // StartGameScreen
-export function joinParty({ partyCode, name }: { partyCode: string; name: string }) {
-	socket.emit('joinParty', { partyCode, name });
+export function joinParty({ partyCode, name, gameConfig }: { partyCode: string; name: string; gameConfig?: import('./types').GameConfig }) {
+	socket.emit('joinParty', { partyCode, name, gameConfig });
 }
 
 export function getLobbyState(partyCode: string, cb: (response: LobbyStateResponse) => void) {

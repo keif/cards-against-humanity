@@ -4,13 +4,14 @@ import shuffle from 'lodash/shuffle';
 import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants';
 import { Card } from '@/data/types';
 import { getShuffledACard, getShuffledQCard } from '@/models/Card';
-import { CallbackType, GameInterface, PlayerInterface, RoundInterface } from '@/models/types';
+import { CallbackType, GameInterface, PlayerInterface, RoundInterface, GameConfig, DEFAULT_GAME_CONFIG } from '@/models/types';
 import logger from '@/utils/logger';
 
 class Game implements GameInterface {
 	ACardDeck: Card[];
 	active: boolean;
 	partyCode: string;
+	gameConfig: GameConfig;
 	gameStartDate: Date;
 	players: { [index: string]: any };
 	QCardDeck: Card[];
@@ -23,23 +24,27 @@ class Game implements GameInterface {
 	constructor(
 		partyCode: string,
 		roundLength: number = 10,
-		roundFinishedNotifier?: CallbackType
+		roundFinishedNotifier?: CallbackType,
+		gameConfig: GameConfig = DEFAULT_GAME_CONFIG
 	) {
 		console.group('Game constructor');
 		console.log('partyCode:', partyCode);
 		console.log('roundLength:', roundLength);
 		console.log('roundFinishedNotifier:', roundFinishedNotifier);
+		console.log('gameConfig:', gameConfig);
 		console.groupEnd();
 		this.active = true;
 		this.roundsIdle = 0; // if at least |this.players.length.length| roundsIdle, then game state is inactive
 		this.partyCode = partyCode;
+		this.gameConfig = gameConfig;
 		this.gameStartDate = new Date();
 		// Initialize decks as empty - will be populated in initialize()
 		this.QCardDeck = [];
 		this.ACardDeck = [];
 		this.players = {};
 		this.rounds = [];
-		this.roundLength = roundLength;
+		// Use configured round timer if specified, otherwise use default
+		this.roundLength = gameConfig.roundTimer ?? roundLength;
 		// Ensure roundFinishedNotifier is always a function
 		this.roundFinishedNotifier = roundFinishedNotifier || ((success, message) => {
 			console.warn(`Game ${partyCode}: roundFinishedNotifier not provided - ${success} | ${message}`);
@@ -85,17 +90,18 @@ class Game implements GameInterface {
 
 	addNewPlayer(name: string, sessionID: string): void {
 		console.group(`addNewPlayer: name: ${name} | sessionID: ${sessionID}`);
+		const handSize = this.gameConfig.handSize;
 		if (name == undefined || sessionID == undefined) {
 			console.log(`trying to add ${name} to ${this.partyCode}`);
-		} else if (this.ACardDeck.length < 3) {
+		} else if (this.ACardDeck.length < handSize) {
 			console.log(`Cannot add new ${name} to deck, ACardDeck has ran out of cards!`);
 		} else {
-			console.log(`adding ${name} to ${this.partyCode}`);
+			console.log(`adding ${name} to ${this.partyCode} with hand size: ${handSize}`);
 			this.players[sessionID] = {
 				name,
 				pID: Object.keys(this.players).length,
 				roundsWon: [],
-				cards: this.ACardDeck.splice(0, 10),
+				cards: this.ACardDeck.splice(0, handSize),
 				roundState: 'lobby'
 			};
 		}
@@ -121,10 +127,27 @@ class Game implements GameInterface {
 
 			this.ACardDeck = shuffle(this.ACardDeck);
 
+			const qCard = (this.QCardDeck.splice(0, 1))[0];
+
+			// Packing Heat: For Pick 2s, all players draw an extra card before playing
+			if (this.gameConfig.enabledRules.packingHeat && qCard?.numAnswers === 2) {
+				logger.info('Packing Heat: Dealing extra card for Pick 2', {
+					partyCode: this.partyCode,
+					roundNum: this.rounds.length + 1
+				});
+
+				// Give each player one extra card
+				Object.values(this.players).forEach((player: any) => {
+					if (this.ACardDeck.length > 0) {
+						player.cards.push(this.ACardDeck.shift());
+					}
+				});
+			}
+
 			let round: RoundInterface = {
 				active: true,
 				otherPlayerCards: [],
-				QCard: (this.QCardDeck.splice(0, 1))[0],
+				QCard: qCard,
 				roundEndTime: undefined,
 				roundJudge: find(this.players, player => player.pID === (this.rounds.length % playerSize)),
 				roundNum: this.rounds.length + 1,
@@ -379,6 +402,37 @@ class Game implements GameInterface {
 				partyCode: this.partyCode
 			});
 
+			// Survival of the Fittest: First player to submit automatically wins
+			if (this.gameConfig.enabledRules.survivalOfTheFittest && latestRound?.otherPlayerCards?.length === cardIDArray.length) {
+				logger.info('Survival of the Fittest: First submission wins', {
+					partyCode: this.partyCode,
+					winner: player.name,
+					roundNum: latestRound.roundNum
+				});
+
+				const winningCards = latestRound.otherPlayerCards.filter(
+					card => card.owner?.pID === player.pID
+				);
+
+				latestRound.roundState = VIEWING_WINNER;
+				latestRound.winningCard = winningCards[0];
+				latestRound.winningCards = winningCards;
+				latestRound.winner = player.name;
+				latestRound.roundEndTime = new Date();
+
+				(player.roundsWon as any[]).push({
+					roundNum: latestRound.roundNum,
+					ACard: winningCards[0],
+					QCard: latestRound.QCard
+				});
+
+				clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
+				this.roundsIdle = 0;
+				this.roundFinishedNotifier(true, `${player.name} won by being first!`);
+				cb(true, 'You won by submitting first!');
+				return;
+			}
+
 			// Check if all players have played (count unique players who submitted)
 			const uniquePlayersPIDs = new Set(
 				latestRound?.otherPlayerCards?.map(card => card.owner?.pID).filter(pID => pID !== undefined)
@@ -538,6 +592,34 @@ class Game implements GameInterface {
 		if (latestRound) {
 			clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
 			latestRound.active = false;
+
+			// Happy Ending: Rotate cards to the left when round ends
+			if (this.gameConfig.enabledRules.happyEnding) {
+				logger.info('Happy Ending: Rotating cards between players', {
+					partyCode: this.partyCode,
+					roundNum: latestRound.roundNum
+				});
+
+				const playerSessionIDs = Object.keys(this.players);
+				const playerCount = playerSessionIDs.length;
+
+				if (playerCount > 1) {
+					// Save each player's cards
+					const savedCards = playerSessionIDs.map(sessionID => ({
+						sessionID,
+						cards: [...this.players[sessionID].cards]
+					}));
+
+					// Rotate cards: each player gets cards from player on their right
+					playerSessionIDs.forEach((sessionID, index) => {
+						const rightPlayerIndex = (index + 1) % playerCount;
+						const rightPlayerSessionID = playerSessionIDs[rightPlayerIndex];
+						const cardsFromRight = savedCards.find(p => p.sessionID === rightPlayerSessionID)?.cards || [];
+						this.players[sessionID].cards = [...cardsFromRight];
+					});
+				}
+			}
+
 			let cardsPlayed: Card[] = [];
 			latestRound?.otherPlayerCards?.forEach((card) => cardsPlayed.push({ ...card }));
 			cardsPlayed.map(card => delete card.owner);
@@ -560,6 +642,52 @@ class Game implements GameInterface {
 		newCardOrder.splice(destCardIDIndex, 0, player.cards[srcCardIDIndex]);
 		player.cards = newCardOrder;
 		cb(true, `shuffled ${srcCardIDIndex} <=> ${destCardIDIndex} for ${player.name}`);
+	}
+
+	/**
+	 * Never Have I Ever: Discard a card and draw a replacement
+	 */
+	discardCard(sessionID: string, cardID: number, cb: CallbackType): void {
+		// Check if rule is enabled
+		if (!this.gameConfig.enabledRules.neverHaveIEver) {
+			cb(false, 'Never Have I Ever rule is not enabled');
+			return;
+		}
+
+		const player = this.getPlayer(sessionID);
+		if (!player) {
+			cb(false, 'Player not found');
+			return;
+		}
+
+		// Find and remove the card
+		const cardIndex = player.cards.findIndex(c => c.id === cardID);
+		if (cardIndex === -1) {
+			cb(false, 'Card not in your hand');
+			return;
+		}
+
+		const discardedCard = player.cards.splice(cardIndex, 1)[0];
+
+		// Return card to deck
+		this.ACardDeck.push(discardedCard);
+		this.ACardDeck = shuffle(this.ACardDeck);
+
+		// Draw replacement card
+		if (this.ACardDeck.length > 0) {
+			const newCard = this.ACardDeck.shift();
+			if (newCard) {
+				player.cards.push(newCard);
+			}
+		}
+
+		logger.info('Never Have I Ever: Card discarded', {
+			partyCode: this.partyCode,
+			playerName: player.name,
+			cardText: discardedCard.text
+		});
+
+		cb(true, `Discarded "${discardedCard.text}" and drew a new card`);
 	}
 
 	/**
