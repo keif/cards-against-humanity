@@ -9,6 +9,7 @@ import Screen from '@/components/Screen/Screen';
 import Title from '@/components/Title/Title';
 import Top from '@/components/Top/Top';
 import Banner from 'react-js-banner';
+import FooterSection from '../HomeScreen/FooterSection';
 
 import { getLobbyState, joinParty, newLobbyState, startGame, onGameStarted, offGameStarted } from '@/api';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -97,24 +98,27 @@ const StartGameScreen = () => {
 		/>
 	)
 	return (
-		<Screen>
-			<Top>
-				<Banner
-					title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
-				<Card cardType={LINK} link={partyCode} />
-			</Top>
-			<Bottom>
-				<Title text="Players Joined" />
-				<form className="mx-auto text-center max-w-[20rem]" onSubmit={handleFormSubmit}>
-					<PlayerList players={state.players} joined={state.joined} className="center"
-						onChange={updatePlayerName} />
-					{state.joined ? renderStartButton() : renderButton()}
-				</form>
-				<Footer>
-					{state.players.length < 3 ? 'Need at least 3 players to start game' : 'Ready to start Game!'}
-				</Footer>
-			</Bottom>
-		</Screen>
+		<>
+			<Screen>
+				<Top>
+					<Banner
+						title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
+					<Card cardType={LINK} link={partyCode} />
+				</Top>
+				<Bottom>
+					<Title text="Players Joined" />
+					<form className="mx-auto text-center max-w-[20rem]" onSubmit={handleFormSubmit}>
+						<PlayerList players={state.players} joined={state.joined} className="center"
+							onChange={updatePlayerName} />
+						{state.joined ? renderStartButton() : renderButton()}
+					</form>
+					<Footer>
+						{state.players.length < 3 ? 'Need at least 3 players to start game' : 'Ready to start Game!'}
+					</Footer>
+				</Bottom>
+			</Screen>
+			<FooterSection />
+		</>
 	);
 };
 

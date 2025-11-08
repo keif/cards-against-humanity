@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import FooterSection from '../../Screens/HomeScreen/FooterSection';
 
 interface DocumentationLayoutProps {
 	title: string;
@@ -28,16 +29,7 @@ const DocumentationLayout: React.FC<DocumentationLayoutProps> = ({ title, childr
 				</div>
 			</main>
 
-			<footer className="bg-brand-gray-light py-8 px-6 mt-12">
-				<div className="max-w-content-md mx-auto text-center">
-					<Link
-						to="/"
-						className="text-brand-gray hover:text-black transition-colors no-underline font-semibold"
-					>
-						Return to Home
-					</Link>
-				</div>
-			</footer>
+			<FooterSection />
 		</div>
 	);
 };
