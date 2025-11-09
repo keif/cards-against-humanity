@@ -78,11 +78,22 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		if (roundState === VIEWING_WINNER && winningCards && winningCards.length > 0) {
 			return winningCards;
 		} else if (roundState === PLAYER_SELECTING && droppedCards.length > 0) {
-			return droppedCards;
+			const requiredCards = QCard?.numAnswers || 1;
+			const placeholdersNeeded = Math.max(0, requiredCards - droppedCards.length);
+			const placeholders = Array(placeholdersNeeded).fill(null).map((_, i) => ({
+				cardType: PLACEHOLDER,
+				id: -1 - i // Unique negative IDs for placeholders
+			} as CardProps));
+			return [...droppedCards, ...placeholders];
 		} else if (playerChoice) {
 			return [playerChoice];
 		} else {
-			return [{ cardType: PLACEHOLDER } as CardProps];
+			// For Pick 2/3, show multiple placeholders initially
+			const requiredCards = QCard?.numAnswers || 1;
+			return Array(requiredCards).fill(null).map((_, i) => ({
+				cardType: PLACEHOLDER,
+				id: -1 - i
+			} as CardProps));
 		}
 	};
 
@@ -92,8 +103,10 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		(roundState === VIEWING_WINNER)) {
 		const cardsToDisplay = getCardsToDisplay();
 
-		// Check if we should show fanning effect (player selecting with dropped cards)
-		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1;
+		// Check if we should show fanning effect (only when all required cards are dropped, no placeholders)
+		const requiredCards = QCard?.numAnswers || 1;
+		const allCardsDropped = droppedCards.length === requiredCards;
+		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1 && allCardsDropped;
 
 		return (
 			<div className="flex w-full flex-nowrap overflow-hidden pl-[5%] pr-[5%] pt-[5%] gap-8">
