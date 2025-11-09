@@ -187,6 +187,7 @@ const PlayerSelectionScreen = () => {
 			setState({
 				...state,
 				currentPlayerName: roundState.currentPlayerName,
+				gameConfig: roundState.gameConfig,
 				QCard: roundState.QCard,
 				cards: roundState.cards,
 				otherPlayerCards: roundState.otherPlayerCards,

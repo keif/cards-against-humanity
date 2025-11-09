@@ -9,8 +9,8 @@ interface HeaderMenuProps {
 }
 
 const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick}: HeaderMenuProps) => (
-	<div className="w-full h-[60px] bg-white" data-qa="header-menu">
-		<div className="flex flex-nowrap justify-between px-[30px] py-0 leading-[50%] text-[21px]" data-qa="inner-header-menu">
+	<div className="w-full h-[60px] bg-white flex items-center" data-qa="header-menu">
+		<div className="flex flex-nowrap justify-between items-center px-[30px] py-0 leading-[50%] text-[21px] w-full" data-qa="inner-header-menu">
 			<div
 				className={`flex items-center gap-2 transition-opacity hover:opacity-80 ${onScoreClick ? 'cursor-pointer' : 'cursor-default'}`}
 				onClick={onScoreClick}
