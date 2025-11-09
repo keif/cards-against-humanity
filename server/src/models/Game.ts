@@ -455,7 +455,9 @@ class Game implements GameInterface {
 			const uniquePlayersPIDs = new Set(
 				latestRound?.otherPlayerCards?.map(card => card.owner?.pID).filter(pID => pID !== undefined)
 			);
-			const allPlayersSubmitted = uniquePlayersPIDs.size === (playerSize - 1);
+			// God is Dead: All players must submit (no judge). Traditional: playerSize - 1 (excluding judge)
+			const requiredPlayers = this.gameConfig.enabledRules.godIsDead ? playerSize : (playerSize - 1);
+			const allPlayersSubmitted = uniquePlayersPIDs.size === requiredPlayers;
 
 			if (allPlayersSubmitted) {
 				latestRound.roundState = JUDGE_SELECTING;
