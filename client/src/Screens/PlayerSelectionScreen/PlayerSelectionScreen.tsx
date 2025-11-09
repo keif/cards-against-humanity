@@ -475,6 +475,8 @@ const PlayerSelectionScreen = () => {
 						playerName={state.currentPlayerName}
 						playerScore={state.playerScores?.find(p => p.name === state.currentPlayerName)?.score}
 						onScoreClick={() => setScoreboardOpen(!scoreboardOpen)}
+						gameConfig={state.gameConfig}
+						onEndGameWithHaiku={handleEndGameWithHaiku}
 					/>
 					<Scoreboard
 						playerScores={state.playerScores || []}
@@ -535,17 +537,6 @@ const PlayerSelectionScreen = () => {
 								}
 							>
 								🔄 Trade Point for New Hand ({state.playerScores?.find(p => p.name === state.currentPlayerName)?.score || 0} pts)
-							</button>
-						</div>
-					)}
-					{state.gameConfig?.enabledRules?.happyEnding && (
-						<div className="text-center p-2.5">
-							<button
-								onClick={handleEndGameWithHaiku}
-								className="px-5 py-2.5 text-base font-bold bg-[#E91E63] text-white border-0 rounded cursor-pointer hover:bg-[#C2185B] transition-colors"
-								title="End the game with a dramatic haiku reading"
-							>
-								🎭 End Game with Haiku
 							</button>
 						</div>
 					)}

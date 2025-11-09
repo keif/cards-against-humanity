@@ -1,4 +1,5 @@
 import React from 'react';
+import { GameConfig } from '@/types';
 
 interface HeaderMenuProps {
 	text: string;
@@ -6,9 +7,11 @@ interface HeaderMenuProps {
 	playerName?: string;
 	playerScore?: number;
 	onScoreClick?: () => void;
+	gameConfig?: GameConfig;
+	onEndGameWithHaiku?: () => void;
 }
 
-const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick}: HeaderMenuProps) => (
+const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick, gameConfig, onEndGameWithHaiku}: HeaderMenuProps) => (
 	<div className="w-full h-[60px] bg-white flex items-center" data-qa="header-menu">
 		<div className="flex flex-nowrap justify-between items-center px-[30px] py-0 leading-[50%] text-[21px] w-full" data-qa="inner-header-menu">
 			<div
@@ -26,7 +29,18 @@ const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick}: Hea
 				)}
 			</div>
 			<p>{text}</p>
-			<p>{timeLeft}</p>
+			<div className="flex items-center gap-4">
+				{gameConfig?.enabledRules?.happyEnding && onEndGameWithHaiku && (
+					<button
+						onClick={onEndGameWithHaiku}
+						className="px-3 py-1.5 text-sm font-bold bg-[#E91E63] text-white border-0 rounded cursor-pointer hover:bg-[#C2185B] transition-colors"
+						title="End the game with a dramatic haiku reading"
+					>
+						🎭 End Game with Haiku
+					</button>
+				)}
+				<p>{timeLeft}</p>
+			</div>
 		</div>
 	</div>
 );
