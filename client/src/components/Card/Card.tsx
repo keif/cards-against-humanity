@@ -138,7 +138,7 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 
 		return (
 			<div
-				className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border p-3 break-words relative z-[1] select-none bg-[#F7F7F7] text-black border-[#979797] ${isSelected ? 'border-[3px] border-[#2196F3] -translate-y-2.5 shadow-[0_8px_16px_rgba(33,150,243,0.4)] transition-[transform_0.2s_ease,box-shadow_0.2s_ease]' : ''} ${className}`}
+				className={`w-44 h-[220px] max-[380px]:w-32 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border p-3 break-words relative z-[1] select-none bg-[#F7F7F7] text-black border-[#979797] ${isSelected ? 'border-[3px] border-[#2196F3] -translate-y-2.5 shadow-[0_8px_16px_rgba(33,150,243,0.4)] transition-[transform_0.2s_ease,box-shadow_0.2s_ease]' : ''} ${className}`}
 				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
 				data-qa="card"
