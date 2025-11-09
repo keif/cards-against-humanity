@@ -498,6 +498,16 @@ const PlayerSelectionScreen = () => {
 
 	return (
 		<Screen>
+			{/* Survival of the Fittest mode banner */}
+			{state.gameConfig?.enabledRules?.survivalOfTheFittest && state.roundState === PLAYER_SELECTING && (
+				<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-amber-300">
+					<div className="text-center">
+						<div className="text-base font-bold">⚡ SURVIVAL OF THE FITTEST ⚡</div>
+						<div className="text-sm mt-1 opacity-90">First submission wins the round!</div>
+					</div>
+				</div>
+			)}
+
 			{/* Never Have I Ever discard notification */}
 			{discardNotification && (
 				<div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#FF5722] text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-white max-w-md">
