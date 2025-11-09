@@ -96,7 +96,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1;
 
 		return (
-			<div className="flex w-full flex-nowrap overflow-hidden pl-[1%] pr-[1%] pt-[5%] gap-4">
+			<div className="flex w-full flex-nowrap overflow-hidden pl-[5%] pr-[5%] pt-[5%] gap-8">
 				<div className="flex-shrink-0">
 					<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
 				</div>
