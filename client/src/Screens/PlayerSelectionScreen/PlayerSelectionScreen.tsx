@@ -18,7 +18,7 @@ import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
 import { useNavigate, useParams } from 'react-router-dom';
-import { DraggedCard, GameConfig, PlayerInfo } from '@/types';
+import { DraggedCard, GameConfig, ItemTypes, PlayerInfo } from '@/types';
 import { loadDndBackend } from '@/utils/dndBackend';
 import type { BackendFactory } from 'dnd-core';
 
@@ -591,6 +591,11 @@ const PlayerSelectionScreen = () => {
 						cardGroups={
 							state.roundState === JUDGE_SELECTING
 								? groupCardsByPlayerStructured(state.otherPlayerCards)
+								: undefined
+						}
+						onCardClick={
+							state.roundState === JUDGE_SELECTING
+								? (id: number) => handleCardDrop({ id, type: ItemTypes.CARD })
 								: undefined
 						}
 						onCardRemove={handleCardRemove}
