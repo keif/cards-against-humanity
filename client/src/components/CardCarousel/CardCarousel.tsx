@@ -87,7 +87,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRem
 	// Render grouped cards for judge selection
 	if (cardGroups) {
 		return (
-			<div className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5" ref={drop}>
+			<div className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5 scroll-smooth -mx-[15px] px-[15px]" ref={drop}>
 				{cardGroups.map((group, groupIndex) => (
 					<DraggableCardGroup
 						key={`group-${group.playerID}`}
@@ -104,7 +104,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRem
 	// Render flat list for regular hand
 	return (
 		<div
-			className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5"
+			className="flex flex-nowrap overflow-x-auto overflow-y-visible pt-5 pb-2.5 scroll-smooth -mx-[15px] px-[15px]"
 			ref={drop}
 		>
 			{cards?.map((card, index) => (
@@ -115,7 +115,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRem
 					onClick={onCardClick}
 					onDiscard={onCardDiscard}
 					isSelected={card.id !== undefined && selectedCards.includes(card.id)}
-					className="mr-[11px]"
+					className="mr-[11px] flex-shrink-0"
 				/>
 			))}
 		</div>
