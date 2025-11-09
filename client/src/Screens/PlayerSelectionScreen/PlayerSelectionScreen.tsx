@@ -55,6 +55,7 @@ const PlayerSelectionScreen = () => {
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [discardNotification, setDiscardNotification] = useState<{ playerName: string; cardText: string } | null>(null);
+	const [selectedVoteCardId, setSelectedVoteCardId] = useState<number | null>(null); // Track voted card in God is Dead mode
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 	const timerRef = useRef<number | null>(null);
 
@@ -174,7 +175,7 @@ const PlayerSelectionScreen = () => {
 			} else if (isGodIsDeadMode && roundState.roundState === JUDGE_SELECTING) {
 				// God is Dead: Everyone votes
 				headerText = 'Everyone Votes!';
-				directions = 'Vote for your favorite card';
+				directions = 'Click the winning card to vote';
 			} else if (roundState.roundRole === 'judge') {
 				headerText = `You are the Judge`;
 				if (roundState.roundState === 'judge-waiting') directions = 'Waiting for players to choose Cards';
@@ -217,6 +218,11 @@ const PlayerSelectionScreen = () => {
 				playerScores: roundState.playerScores,
 				directions
 			});
+
+			// Clear vote selection when round state changes
+			if (roundState.roundState !== JUDGE_SELECTING) {
+				setSelectedVoteCardId(null);
+			}
 
 			// Only clear selected cards when round number or round state actually changes
 			const roundChanged = roundState.roundNum !== previousRoundRef.current.roundNum;
@@ -375,6 +381,7 @@ const PlayerSelectionScreen = () => {
 
 		if ((state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') || isGodIsDeadVoting) {
 			// Judge selecting winner card OR everyone voting (God is Dead)
+			setSelectedVoteCardId(item.id); // Track which card was selected
 			judgeSelectCard(partyCode, item.id);
 		} else if (state.roundState === PLAYER_SELECTING && state.roundRole === 'player') {
 			const numCardsRequired = state.QCard?.numAnswers || 1;
@@ -598,6 +605,7 @@ const PlayerSelectionScreen = () => {
 								? (id: number) => handleCardDrop({ id, type: ItemTypes.CARD })
 								: undefined
 						}
+						selectedCards={selectedVoteCardId !== null ? [selectedVoteCardId] : []}
 						onCardRemove={handleCardRemove}
 						onCardDiscard={
 							state.gameConfig?.enabledRules?.neverHaveIEver &&

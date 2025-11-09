@@ -46,12 +46,21 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 		}
 	};
 
+	// Check if this group is selected (any card in the group is selected)
+	const isGroupSelected = group.cards.some(card =>
+		card.id !== undefined && selectedCards.includes(card.id)
+	);
+
 	return (
 		<div
 			ref={drag}
 			key={`group-${group.playerID}`}
 			onClick={handleGroupClick}
-			className={`flex flex-row gap-2 p-3 mr-5 bg-white/5 border-2 border-white/10 rounded-xl shrink-0 transition-all duration-200 ease-in-out hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)] ${onCardClick ? 'cursor-pointer' : isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+			className={`flex flex-row gap-2 p-3 mr-5 rounded-xl shrink-0 transition-all duration-200 ease-in-out ${
+				isGroupSelected
+					? 'bg-green-500/20 border-4 border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]'
+					: 'bg-white/5 border-2 border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
+			} ${onCardClick ? 'cursor-pointer' : isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
 			style={{
 				opacity: isDragging ? 0.5 : 1
 			}}
