@@ -9,7 +9,7 @@ export interface GameConfig {
 	roundTimer?: number; // seconds, undefined = no timer (default: undefined)
 	enabledRules: {
 		rebootingTheUniverse: boolean; // Discard hand and draw new cards
-		packingHeat: boolean; // Draw extra card before Pick 2s
+		packingHeat: boolean; // Draw extra card before multi-choice cards
 		happyEnding: boolean; // Winner reads extra answer to end
 		neverHaveIEver: boolean; // Discard cards you don't understand
 		godIsDead: boolean; // Play without Card Czar

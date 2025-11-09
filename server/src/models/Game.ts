@@ -129,11 +129,12 @@ class Game implements GameInterface {
 
 			const qCard = (this.QCardDeck.splice(0, 1))[0];
 
-			// Packing Heat: For Pick 2s, all non-judge players draw an extra card before playing
-			if (this.gameConfig.enabledRules.packingHeat && qCard?.numAnswers === 2) {
-				logger.info('Packing Heat: Dealing extra card for Pick 2', {
+			// Packing Heat: For multi-choice cards, all non-judge players draw an extra card before playing
+			if (this.gameConfig.enabledRules.packingHeat && qCard?.numAnswers && qCard.numAnswers > 1) {
+				logger.info('Packing Heat: Dealing extra card for multi-choice round', {
 					partyCode: this.partyCode,
-					roundNum: this.rounds.length + 1
+					roundNum: this.rounds.length + 1,
+					pickCount: qCard.numAnswers
 				});
 
 				// Determine who the judge will be for this round

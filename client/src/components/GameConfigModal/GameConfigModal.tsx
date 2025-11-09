@@ -58,7 +58,7 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 		{
 			name: 'packingHeat' as const,
 			label: 'Packing Heat',
-			description: 'Before playing a Pick 2, all players (except the Card Czar) draw an extra card for more options.'
+			description: 'Before playing a multi-choice card (Pick 2, Pick 3, etc.), all players (except the Card Czar) draw an extra card for more options.'
 		},
 		{
 			name: 'happyEnding' as const,
