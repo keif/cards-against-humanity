@@ -152,15 +152,21 @@ class Game implements GameInterface {
 				});
 			}
 
+			// God is Dead: No judge, all players vote
+			const roundJudge = this.gameConfig.enabledRules.godIsDead
+				? null
+				: find(this.players, player => player.pID === (this.rounds.length % playerSize));
+
 			let round: RoundInterface = {
 				active: true,
 				otherPlayerCards: [],
 				QCard: qCard,
 				roundEndTime: undefined,
-				roundJudge: find(this.players, player => player.pID === (this.rounds.length % playerSize)),
+				roundJudge,
 				roundNum: this.rounds.length + 1,
 				roundState: 'players-selecting',
 				roundStartTime: new Date(),
+				votes: this.gameConfig.enabledRules.godIsDead ? {} : undefined,
 				winner: '',
 				winningCard: null,
 			};
@@ -208,7 +214,8 @@ class Game implements GameInterface {
 		if (player == null) return null;
 
 		let latestRound = this.getLatestRound();
-		let roundRole = this.isRoundJudge(sessionID, latestRound) ? JUDGE : PLAYER;
+		// God is Dead: everyone is a player, no judge
+		let roundRole = (this.gameConfig.enabledRules.godIsDead || !this.isRoundJudge(sessionID, latestRound)) ? PLAYER : JUDGE;
 		let playerChoice = find(latestRound?.otherPlayerCards, card => card?.owner?.pID === player?.pID) || null;
 		let otherPlayerCards = latestRound?.otherPlayerCards;
 		let cards = player.cards;
@@ -218,6 +225,7 @@ class Game implements GameInterface {
 		let winningCard = latestRound?.winningCard;
 		let winningCards = latestRound?.winningCards;
 		let winner = latestRound?.winner;
+		let votes = latestRound?.votes;
 		// timeRemaining in seconds
 		let timeLeft = Math.max(...[0, Math.floor(this.roundLength - ((Number(new Date()) - Number(latestRound?.roundStartTime)) / 1000))]);
 		let roundState;
@@ -264,6 +272,7 @@ class Game implements GameInterface {
 			roundJudge,
 			roundNum,
 			timeLeft,
+			votes,
 			winner,
 			winningCard,
 			winningCards,
@@ -500,6 +509,136 @@ class Game implements GameInterface {
   			return;
   		}
 
+  		// God is Dead: Voting mode (all players vote)
+  		if (this.gameConfig.enabledRules.godIsDead) {
+  			// Validate round state
+  			if (latestRound.roundState !== JUDGE_SELECTING) {
+  				logger.warn('Invalid vote attempt', {
+  					sessionID,
+  					cardID,
+  					playerName: player.name,
+  					reason: 'wrong_round_state',
+  					currentState: latestRound.roundState,
+  					partyCode: this.partyCode
+  				});
+  				cb(false, 'Cannot vote in current game phase');
+  				return;
+  			}
+
+  			// Validate selected card exists in played cards
+  			let votedCard = find(latestRound.otherPlayerCards, card => card.id === cardID);
+  			if (!votedCard) {
+  				logger.warn('Invalid vote attempt', {
+  					sessionID,
+  					cardID,
+  					playerName: player.name,
+  					reason: 'card_not_found',
+  					availableCards: latestRound?.otherPlayerCards?.map(c => c.id),
+  					partyCode: this.partyCode
+  				});
+  				cb(false, 'Selected card was not played this round');
+  				return;
+  			}
+
+  			// Initialize votes object if needed
+  			if (!latestRound.votes) {
+  				latestRound.votes = {};
+  			}
+
+  			// Record the vote
+  			latestRound.votes[sessionID] = cardID;
+
+  			logger.info('Player voted for card', {
+  				sessionID,
+  				cardID,
+  				playerName: player.name,
+  				votedCardText: votedCard.text,
+  				totalVotesCast: Object.keys(latestRound.votes).length,
+  				partyCode: this.partyCode
+  			});
+
+  			// Check if all players have voted
+  			const activePlayers = Object.values(this.players).filter(p => p.roundState !== 'inactive');
+  			const allPlayersVoted = Object.keys(latestRound.votes).length >= activePlayers.length;
+
+  			if (allPlayersVoted) {
+  				// Count votes for each card
+  				const voteCounts: { [cardID: number]: number } = {};
+  				for (const votedCardID of Object.values(latestRound.votes)) {
+  					voteCounts[votedCardID] = (voteCounts[votedCardID] || 0) + 1;
+  				}
+
+  				// Find card(s) with most votes
+  				let maxVotes = 0;
+  				let winningCardID = -1;
+  				for (const [cardIDStr, voteCount] of Object.entries(voteCounts)) {
+  					if (voteCount > maxVotes) {
+  						maxVotes = voteCount;
+  						winningCardID = parseInt(cardIDStr);
+  					}
+  				}
+
+  				// Get the winning card
+  				let winningCard = find(latestRound.otherPlayerCards, card => card.id === winningCardID);
+  				if (!winningCard) {
+  					cb(false, 'Failed to determine winner');
+  					return;
+  				}
+
+  				try {
+  					// Find ALL cards from the winning player (for multi-card submissions)
+  					const winningPlayerPID = winningCard.owner?.pID;
+  					const allWinningCards = latestRound.otherPlayerCards?.filter(
+  						card => card.owner?.pID === winningPlayerPID
+  					) || [];
+
+  					latestRound.roundState = VIEWING_WINNER;
+  					latestRound.winningCard = winningCard;
+  					latestRound.winningCards = allWinningCards;
+  					latestRound.winner = winningCard.owner?.name;
+  					latestRound.roundEndTime = new Date();
+
+  					let winningPlayer = find(this.players, p => p.pID === winningCard?.owner?.pID);
+  					if (winningPlayer) {
+  						winningPlayer.roundsWon.push({
+  							roundNum: latestRound.roundNum,
+  							ACard: winningCard,
+  							QCard: latestRound.QCard
+  						});
+  					}
+
+  					this.roundsIdle = 0;
+
+  					logger.info('Voting complete - winner determined', {
+  						winnerName: latestRound.winner,
+  						winningCardText: winningCard.text,
+  						totalWinningCards: allWinningCards.length,
+  						voteCounts,
+  						maxVotes,
+  						roundNum: latestRound.roundNum,
+  						partyCode: this.partyCode
+  					});
+
+  					cb(true, `${latestRound.winner} won with ${maxVotes} vote${maxVotes !== 1 ? 's' : ''}!`);
+  				} catch (error) {
+  					let errorMessage = 'Unknown error';
+  					if (error instanceof Error) {
+  						errorMessage = error.message;
+  					}
+  					logger.error('Error determining voting winner', {
+  						error: errorMessage,
+  						partyCode: this.partyCode
+  					});
+  					cb(false, 'Failed to determine winner');
+  				}
+  			} else {
+  				// Not all players have voted yet
+  				cb(true, `Vote recorded. ${Object.keys(latestRound.votes).length}/${activePlayers.length} players have voted.`);
+  			}
+  			return;
+  		}
+
+  		// Traditional mode: Judge selects winner
   		// Validate player is the judge
   		if (!this.isRoundJudge(sessionID, latestRound)) {
   			logger.warn('Invalid judgeSelectCard attempt', {

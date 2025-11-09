@@ -166,22 +166,28 @@ const PlayerSelectionScreen = () => {
 			}
 			let headerText;
 			let directions = '';
+			const isGodIsDeadMode = roundState.gameConfig?.enabledRules?.godIsDead;
+
 			if (roundState.roundState === VIEWING_WINNER) {
 				headerText = `${roundState.winner} Won!`;
 				directions = '';
+			} else if (isGodIsDeadMode && roundState.roundState === JUDGE_SELECTING) {
+				// God is Dead: Everyone votes
+				headerText = 'Everyone Votes!';
+				directions = 'Vote for your favorite card';
 			} else if (roundState.roundRole === 'judge') {
 				headerText = `You are the Judge`;
 				if (roundState.roundState === 'judge-waiting') directions = 'Waiting for players to choose Cards';
 				else if (roundState.roundState === JUDGE_SELECTING) directions = 'Choose your favorite card';
 			} else {
-				headerText = `${roundState.roundJudge.name} is the Judge`;
+				headerText = `${roundState.roundJudge?.name || 'Judge'} is the Judge`;
 				if (roundState.roundState === 'player-selecting') {
 					const numCards = roundState.QCard?.numAnswers || 1;
 					directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
 				} else if (roundState.roundState === 'player-waiting') {
 					directions = 'Waiting for other players';
 				} else if (roundState.roundState === JUDGE_SELECTING) {
-					directions = `${roundState.roundJudge.name} is choosing their favorite`;
+					directions = `${roundState.roundJudge?.name || 'Judge'} is choosing their favorite`;
 				}
 			}
 
@@ -364,8 +370,11 @@ const PlayerSelectionScreen = () => {
 			return; // Already selected a card
 		}
 
-		if (state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') {
-			// Judge selecting winner card
+		// God is Dead: All players can vote during judge-selecting phase
+		const isGodIsDeadVoting = state.gameConfig?.enabledRules?.godIsDead && state.roundState === JUDGE_SELECTING;
+
+		if ((state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') || isGodIsDeadVoting) {
+			// Judge selecting winner card OR everyone voting (God is Dead)
 			judgeSelectCard(partyCode, item.id);
 		} else if (state.roundState === PLAYER_SELECTING && state.roundRole === 'player') {
 			const numCardsRequired = state.QCard?.numAnswers || 1;

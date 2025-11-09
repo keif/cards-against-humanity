@@ -88,6 +88,7 @@ export interface RoundInterface {
     roundState?: string;
     roundTimer?: number;
     timeLeft?: number;
+    votes?: { [sessionID: string]: number }; // God is Dead: map of sessionID -> cardID votes
     winner?: string;
     winningCard?: Card | null;
     winningCards?: Card[] | null; // All cards from winning player (for multi-card submissions)
