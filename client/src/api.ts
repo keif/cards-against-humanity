@@ -172,6 +172,14 @@ export function endGameWithHaiku(partyCode: string) {
 	socket.emit('endGameWithHaiku', partyCode);
 }
 
+export function onCardDiscarded(callback: (data: { playerName: string; cardText: string }) => void) {
+	socket.on('cardDiscarded', callback);
+}
+
+export function offCardDiscarded() {
+	socket.off('cardDiscarded');
+}
+
 // Community Voting API
 
 /**

@@ -407,6 +407,17 @@ io.on('connection', (socket) => {
 			sessionID,
 			(success, message) => {
 				if (success) {
+					// Parse the message JSON to get player name and card text
+					try {
+						const discardInfo = JSON.parse(message);
+						// Broadcast discard notification to all players
+						io.to(partyCodeValidation.sanitizedValue!).emit('cardDiscarded', {
+							playerName: discardInfo.playerName,
+							cardText: discardInfo.cardText
+						});
+					} catch (e) {
+						console.error('Failed to parse discard message:', e);
+					}
 					io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
 				} else {
 					socket.emit('error', { message });

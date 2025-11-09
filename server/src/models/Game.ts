@@ -669,7 +669,10 @@ class Game implements GameInterface {
 			cardText: discardedCard.text
 		});
 
-		cb(true, `Discarded "${discardedCard.text}" and drew a new card`);
+		cb(true, JSON.stringify({
+			playerName: player.name,
+			cardText: discardedCard.text
+		}));
 	}
 
 	/**

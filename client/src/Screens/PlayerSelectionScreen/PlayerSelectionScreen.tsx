@@ -13,7 +13,7 @@ import Top from '@/components/Top/Top';
 
 // Import Helper Libraries
 import { ROUTE_PARAM } from '@/App';
-import { discardCard, endGameWithHaiku, endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, rebootHand } from '@/api';
+import { discardCard, endGameWithHaiku, endRound, getPlayerRoundState, judgeSelectCard, newGameState, offCardDiscarded, onCardDiscarded, playCard, rebootHand } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
@@ -54,6 +54,7 @@ const PlayerSelectionScreen = () => {
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
+	const [discardNotification, setDiscardNotification] = useState<{ playerName: string; cardText: string } | null>(null);
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
 	const timerRef = useRef<number | null>(null);
 
@@ -236,6 +237,21 @@ const PlayerSelectionScreen = () => {
 			// subscribe to newGameState events
 			newGameState(partyCode);
 		}
+	}, []);
+
+	// Listen for card discard notifications (Never Have I Ever)
+	useEffect(() => {
+		onCardDiscarded((data) => {
+			setDiscardNotification(data);
+			// Auto-hide after 5 seconds
+			setTimeout(() => {
+				setDiscardNotification(null);
+			}, 5000);
+		});
+
+		return () => {
+			offCardDiscarded();
+		};
 	}, []);
 
 	// Separate useEffect to manage countdown timer
@@ -466,6 +482,21 @@ const PlayerSelectionScreen = () => {
 
 	return (
 		<Screen>
+			{/* Never Have I Ever discard notification */}
+			{discardNotification && (
+				<div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#FF5722] text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-white max-w-md">
+					<div className="text-center">
+						<div className="text-lg font-bold mb-2">😱 NEVER HAVE I EVER!</div>
+						<div className="text-base">
+							<span className="font-bold">{discardNotification.playerName}</span> shamefully admits they don't understand:
+						</div>
+						<div className="text-sm italic mt-2 bg-black bg-opacity-30 px-3 py-2 rounded">
+							"{discardNotification.cardText}"
+						</div>
+						<div className="text-xs mt-2 opacity-90">What a disgrace! 🤦</div>
+					</div>
+				</div>
+			)}
 			{dndBackend && (
 			<DndProvider backend={dndBackend}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
