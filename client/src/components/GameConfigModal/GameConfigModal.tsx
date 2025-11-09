@@ -28,26 +28,11 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 	};
 
 	const toggleRule = (ruleName: keyof GameConfig['enabledRules']) => {
-		const newValue = !config.enabledRules[ruleName];
-
-		// Packing Heat: Automatically adjust hand size
-		let newHandSize = config.handSize;
-		if (ruleName === 'packingHeat') {
-			if (newValue) {
-				// Enabling Packing Heat: set hand size to 11
-				newHandSize = 11;
-			} else if (config.handSize === 11) {
-				// Disabling Packing Heat: reset to 10 if currently 11
-				newHandSize = 10;
-			}
-		}
-
 		setConfig({
 			...config,
-			handSize: newHandSize,
 			enabledRules: {
 				...config.enabledRules,
-				[ruleName]: newValue
+				[ruleName]: !config.enabledRules[ruleName]
 			}
 		});
 	};
@@ -73,7 +58,7 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 		{
 			name: 'packingHeat' as const,
 			label: 'Packing Heat',
-			description: 'For the rest of the game, each player has 11 cards instead of 10.'
+			description: 'Before playing a Pick 2, all players (except the Card Czar) draw an extra card for more options.'
 		},
 		{
 			name: 'happyEnding' as const,
