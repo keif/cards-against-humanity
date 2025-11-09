@@ -437,6 +437,29 @@ io.on('connection', (socket) => {
 		);
 	});
 
+	socket.on('endGameWithHaiku', async (partyCode) => {
+		console.log(`${sessionID} | endGameWithHaiku`);
+		const partyCodeValidation = InputValidator.validatePartyCode(partyCode);
+
+		if (!partyCodeValidation.isValid) {
+			socket.emit('error', { message: 'Invalid party code' });
+			return;
+		}
+
+		await game.endGameWithHaiku(
+			partyCodeValidation.sanitizedValue!,
+			sessionID,
+			(success, message) => {
+				if (success) {
+					io.to(partyCodeValidation.sanitizedValue!).emit('newGameState');
+					io.to(partyCodeValidation.sanitizedValue!).emit('gameEnding', { message });
+				} else {
+					socket.emit('error', { message });
+				}
+			}
+		);
+	});
+
 	socket.on('judgeSelectCard', async (partyCode, cardID) => {
 		console.log(`${sessionID} | judgeSelectCard`);
 		await game.judgeSelectCard(partyCode, cardID, sessionID, (success, message) => {

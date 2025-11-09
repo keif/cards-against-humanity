@@ -168,6 +168,10 @@ export function rebootHand(partyCode: string) {
 	socket.emit('rebootHand', partyCode);
 }
 
+export function endGameWithHaiku(partyCode: string) {
+	socket.emit('endGameWithHaiku', partyCode);
+}
+
 // Community Voting API
 
 /**

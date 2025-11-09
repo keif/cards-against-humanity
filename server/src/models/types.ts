@@ -38,6 +38,7 @@ export interface GameInterface {
     active: boolean;
     addNewPlayer: (name: string, sessionID: string) => void;
     discardCard: (sessionID: string, cardID: number, cb: CallbackType) => void;
+    endGameWithHaiku: (sessionID: string, cb: CallbackType) => void;
     endRound: (cb: CallbackType) => void;
     gameConfig: GameConfig;
     gameStartDate: Date;

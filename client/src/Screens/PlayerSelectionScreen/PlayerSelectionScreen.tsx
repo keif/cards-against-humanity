@@ -13,7 +13,7 @@ import Top from '@/components/Top/Top';
 
 // Import Helper Libraries
 import { ROUTE_PARAM } from '@/App';
-import { discardCard, endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, rebootHand } from '@/api';
+import { discardCard, endGameWithHaiku, endRound, getPlayerRoundState, judgeSelectCard, newGameState, playCard, rebootHand } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
 import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
@@ -435,6 +435,23 @@ const PlayerSelectionScreen = () => {
 		}
 	};
 
+	// Handler for ending game with haiku (Happy Ending rule)
+	const handleEndGameWithHaiku = () => {
+		if (!partyCode) {
+			return;
+		}
+
+		// Check if rule is enabled
+		if (!state.gameConfig?.enabledRules?.happyEnding) {
+			return;
+		}
+
+		// Confirm before ending
+		if (window.confirm('End the game with the "Make a Haiku" card? All players will create a haiku to dramatically conclude the game!')) {
+			endGameWithHaiku(partyCode);
+		}
+	};
+
 	// Filter cards in hand to exclude dropped cards
 	const cardsInHand = useMemo(() => {
 		return state.cards.filter(card =>
@@ -518,6 +535,17 @@ const PlayerSelectionScreen = () => {
 								}
 							>
 								🔄 Trade Point for New Hand ({state.playerScores?.find(p => p.name === state.currentPlayerName)?.score || 0} pts)
+							</button>
+						</div>
+					)}
+					{state.gameConfig?.enabledRules?.happyEnding && (
+						<div className="text-center p-2.5">
+							<button
+								onClick={handleEndGameWithHaiku}
+								className="px-5 py-2.5 text-base font-bold bg-[#E91E63] text-white border-0 rounded cursor-pointer hover:bg-[#C2185B] transition-colors"
+								title="End the game with a dramatic haiku reading"
+							>
+								🎭 End Game with Haiku
 							</button>
 						</div>
 					)}

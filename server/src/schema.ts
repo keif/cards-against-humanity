@@ -124,6 +124,11 @@ export const rebootHand = async (partyCode: string, sessionID: string, cb: Callb
     game.rebootHand(sessionID, cb);
 };
 
+export const endGameWithHaiku = async (partyCode: string, sessionID: string, cb: CallbackType): Promise<void> => {
+    let game = await getGame(partyCode);
+    game.endGameWithHaiku(sessionID, cb);
+};
+
 export const checkAllGamesForAdvancement = async (connectedSessionIDs: Set<string>): Promise<void> => {
     // Iterate through all active games
     for (const partyCode in games) {
@@ -134,4 +139,4 @@ export const checkAllGamesForAdvancement = async (connectedSessionIDs: Set<strin
     }
 };
 
-export default { joinGame, getLobbyState, getPlayerRoundState, playCard, judgeSelectCard, shuffleCards, endRound, discardCard, rebootHand };
+export default { joinGame, getLobbyState, getPlayerRoundState, playCard, judgeSelectCard, shuffleCards, endRound, discardCard, rebootHand, endGameWithHaiku };

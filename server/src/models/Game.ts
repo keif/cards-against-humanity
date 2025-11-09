@@ -602,33 +602,6 @@ class Game implements GameInterface {
 			clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
 			latestRound.active = false;
 
-			// Happy Ending: Rotate cards to the left when round ends
-			if (this.gameConfig.enabledRules.happyEnding) {
-				logger.info('Happy Ending: Rotating cards between players', {
-					partyCode: this.partyCode,
-					roundNum: latestRound.roundNum
-				});
-
-				const playerSessionIDs = Object.keys(this.players);
-				const playerCount = playerSessionIDs.length;
-
-				if (playerCount > 1) {
-					// Save each player's cards
-					const savedCards = playerSessionIDs.map(sessionID => ({
-						sessionID,
-						cards: [...this.players[sessionID].cards]
-					}));
-
-					// Rotate cards: each player gets cards from player on their right
-					playerSessionIDs.forEach((sessionID, index) => {
-						const rightPlayerIndex = (index + 1) % playerCount;
-						const rightPlayerSessionID = playerSessionIDs[rightPlayerIndex];
-						const cardsFromRight = savedCards.find(p => p.sessionID === rightPlayerSessionID)?.cards || [];
-						this.players[sessionID].cards = [...cardsFromRight];
-					});
-				}
-			}
-
 			let cardsPlayed: Card[] = [];
 			latestRound?.otherPlayerCards?.forEach((card) => cardsPlayed.push({ ...card }));
 			cardsPlayed.map(card => delete card.owner);
@@ -748,6 +721,86 @@ class Game implements GameInterface {
 		});
 
 		cb(true, `Traded 1 point for a completely new hand (${player.cards.length} cards)`);
+	}
+
+	endGameWithHaiku(sessionID: string, cb: CallbackType): void {
+		// Check if rule is enabled
+		if (!this.gameConfig.enabledRules.happyEnding) {
+			cb(false, 'Happy Ending rule is not enabled');
+			return;
+		}
+
+		const player = this.getPlayer(sessionID);
+		if (!player) {
+			cb(false, 'Player not found');
+			return;
+		}
+
+		// Check if game is active
+		if (!this.active) {
+			cb(false, 'Game has already ended');
+			return;
+		}
+
+		logger.info('Happy Ending: Ending game with haiku', {
+			partyCode: this.partyCode,
+			initiator: player.name
+		});
+
+		// Mark game as inactive
+		this.active = false;
+
+		// End current round if one is active
+		const latestRound = this.getLatestRound();
+		if (latestRound && latestRound.active) {
+			latestRound.active = false;
+		}
+
+		// Create the special "Make a Haiku" round
+		const haikuCard: Card = {
+			id: -999,
+			cardType: 'Q',
+			text: 'Make a Haiku.',
+			numAnswers: 3,
+			expansion: 'Happy Ending'
+		};
+
+		const playerSize = Object.keys(this.players).length;
+		const judgeForRound = find(this.players, player => player.pID === (this.rounds.length % playerSize));
+
+		const haikuRound: RoundInterface = {
+			active: true,
+			QCard: haikuCard,
+			roundJudge: judgeForRound || null,
+			roundState: 'players-selecting',
+			roundNum: this.rounds.length,
+			otherPlayerCards: [],
+			roundStartTime: new Date()
+		};
+
+		this.rounds.push(haikuRound);
+
+		// Update all player states to reflect the haiku round
+		Object.values(this.players).forEach((p: any) => {
+			if (p.pID === judgeForRound?.pID) {
+				p.roundState = 'judge-waiting';
+			} else {
+				p.roundState = 'player-selecting';
+			}
+		});
+
+		logger.info('Happy Ending: Haiku round created', {
+			partyCode: this.partyCode,
+			roundNum: haikuRound.roundNum,
+			judge: judgeForRound?.name
+		});
+
+		cb(true, 'Game ending with Make a Haiku! Create your haiku dramatically.');
+
+		// Notify all players through the round finished notifier
+		if (this.roundFinishedNotifier) {
+			this.roundFinishedNotifier(true, 'Haiku round started');
+		}
 	}
 
 	/**
