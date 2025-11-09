@@ -96,11 +96,13 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 		const shouldFan = roundState === PLAYER_SELECTING && roundRole === PLAYER && droppedCards.length > 1;
 
 		return (
-			<div className="flex flex-col items-center w-full overflow-hidden pl-[1%] pr-[1%] pt-[5%] gap-6">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
+			<div className="flex w-full flex-nowrap overflow-hidden pl-[1%] pr-[1%] pt-[5%] gap-4">
+				<div className="flex-shrink-0">
+					<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
+				</div>
 				<div
 					ref={drop}
-					className={shouldFan ? `relative flex justify-center items-center ${isMobile ? 'min-h-[200px]' : 'min-h-[280px]'} w-full` : "flex gap-2.5 flex-wrap justify-center"}
+					className={shouldFan ? `relative flex justify-center items-center ${isMobile ? 'min-h-[200px]' : 'min-h-[280px]'} flex-1` : "flex gap-2.5 flex-wrap justify-center flex-1"}
 				>
 					{cardsToDisplay.map((card, index) => {
 						const fanStyle = shouldFan ? getFanStyle(index, cardsToDisplay.length, isMobile) : {};
