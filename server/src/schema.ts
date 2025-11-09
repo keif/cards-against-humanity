@@ -4,6 +4,12 @@ import { CallbackType, GameInterface, LobbyInterface, RoundInterface, GameConfig
 let games: { [index: string]: any } = {};
 
 const createGame = async (partyCode: string, roundLength: number, cb: CallbackType, gameConfig: GameConfig = DEFAULT_GAME_CONFIG): Promise<GameInterface> => {
+    console.log('🎲 Creating game with config:', {
+        partyCode,
+        rebootingEnabled: gameConfig.enabledRules.rebootingTheUniverse,
+        fullConfig: gameConfig
+    });
+
     games[partyCode] = new Game(partyCode, roundLength, cb, gameConfig);
 
     // Initialize game with cards from Redis
@@ -13,6 +19,7 @@ const createGame = async (partyCode: string, roundLength: number, cb: CallbackTy
     console.log('partyCode:', partyCode);
     console.log('cb:', cb);
     console.log('gameConfig:', gameConfig);
+    console.log('games[partyCode].gameConfig:', games[partyCode].gameConfig);
     console.log('games[partyCode].active:', games[partyCode].active);
     console.log('games[partyCode].partyCode:', games[partyCode].partyCode);
     console.log('games[partyCode].players:', games[partyCode].players);
@@ -23,9 +30,14 @@ const createGame = async (partyCode: string, roundLength: number, cb: CallbackTy
 const getGame = async (partyCode: string, cb?: CallbackType, gameConfig?: GameConfig): Promise<GameInterface> => {
     const existingGame = games[partyCode];
     if (existingGame) {
-        console.log('game exists:', !!existingGame);
+        console.log('🔄 Game exists, returning existing (config preserved):', {
+            partyCode,
+            existingConfig: existingGame.gameConfig.enabledRules.rebootingTheUniverse,
+            ignoringNewConfig: gameConfig !== undefined
+        });
         return existingGame;
     } else {
+        console.log('🆕 Game does not exist, creating new game');
         // if game doesn't exist, create a new one
         // Provide a default callback if none was supplied
         const defaultCallback: CallbackType = (success, message) => {
@@ -38,6 +50,11 @@ const getGame = async (partyCode: string, cb?: CallbackType, gameConfig?: GameCo
 
 export const joinGame = async (partyCode: string, sessionID: string, name: string, gameConfig?: GameConfig): Promise<void> => {
     console.log("joinGame", partyCode, sessionID, name, gameConfig);
+    console.log('🎯 joinGame config details:', {
+        hasConfig: !!gameConfig,
+        rebootingEnabled: gameConfig?.enabledRules?.rebootingTheUniverse,
+        fullConfig: gameConfig
+    });
     let game = await getGame(partyCode, undefined, gameConfig);
     game.addNewPlayer(name, sessionID);
 };
@@ -45,11 +62,21 @@ export const joinGame = async (partyCode: string, sessionID: string, name: strin
 // returns the players in the game []
 export const getLobbyState = async (partyCode: string, sessionID: string, cb: CallbackType, gameConfig?: GameConfig): Promise<LobbyInterface> => {
     console.log("getLobbyState", partyCode, sessionID, cb, gameConfig);
-    const game = await getGame(partyCode, cb, gameConfig);
-    const currentPlayer = game.getPlayer(sessionID);
-    let players = [];
-    for (let [key, value] of Object.entries(game.players)) {
-        players.push(value?.name);
+
+    // Check if game exists - don't create one if it doesn't
+    const existingGame = games[partyCode];
+    if (!existingGame) {
+        console.log('📋 No game exists yet for lobby state');
+        return {
+            players: [],
+            currentPlayer: null
+        };
+    }
+
+    const currentPlayer = existingGame.getPlayer(sessionID);
+    let players: string[] = [];
+    for (let [key, value] of Object.entries(existingGame.players)) {
+        players.push((value as any)?.name);
     }
 
     return {
@@ -59,8 +86,12 @@ export const getLobbyState = async (partyCode: string, sessionID: string, cb: Ca
 };
 
 export const getPlayerRoundState = async (partyCode: string, sessionID: string): Promise<RoundInterface | null> => {
-    let game = await getGame(partyCode);
-    return game.getPlayerRoundState(sessionID);
+    // Check if game exists - don't create one if it doesn't
+    const existingGame = games[partyCode];
+    if (!existingGame) {
+        return null;  // Game doesn't exist yet, player needs to join first
+    }
+    return existingGame.getPlayerRoundState(sessionID);
 };
 
 export const playCard = async (partyCode: string, cardIDs: number | number[], sessionID: string, cb: CallbackType): Promise<void> => {

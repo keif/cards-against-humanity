@@ -184,6 +184,14 @@ const PlayerSelectionScreen = () => {
 				}
 			}
 
+			console.log('🎮 Game State Update:', {
+				roundState: roundState.roundState,
+				roundRole: roundState.roundRole,
+				gameConfig: roundState.gameConfig,
+				hasRebootingRule: roundState.gameConfig?.enabledRules?.rebootingTheUniverse,
+				hasNeverHaveIEver: roundState.gameConfig?.enabledRules?.neverHaveIEver
+			});
+
 			setState({
 				...state,
 				currentPlayerName: roundState.currentPlayerName,

@@ -71,7 +71,14 @@ const StartGameScreen = () => {
 			localStorage.setItem('cah_party_code', partyCode);
 			// First player in the party (no existing players) becomes host and sets config
 			const isFirstPlayer = state.players.length === 0;
-			joinParty({ name, partyCode, gameConfig: isFirstPlayer ? gameConfig : undefined });
+			const configToSend = isFirstPlayer ? gameConfig : undefined;
+			console.log('🚀 Joining Party:', {
+				isFirstPlayer,
+				playersCount: state.players.length,
+				configToSend,
+				rebootingEnabled: configToSend?.enabledRules?.rebootingTheUniverse
+			});
+			joinParty({ name, partyCode, gameConfig: configToSend });
 		}
 	}
 
@@ -91,35 +98,49 @@ const StartGameScreen = () => {
 	};
 
 	const handleSaveConfig = (config: GameConfig) => {
+		console.log('⚙️ Config Saved:', config);
 		setGameConfig(config);
 		// TODO: Send config to server when starting the game
 	};
 
 	const renderButton = () => {
 		const isFirstPlayer = state.players.length === 0;
+		const hasConfiguredRules = gameConfig.enabledRules.rebootingTheUniverse ||
+			gameConfig.enabledRules.packingHeat ||
+			gameConfig.enabledRules.happyEnding ||
+			gameConfig.enabledRules.neverHaveIEver ||
+			gameConfig.enabledRules.godIsDead ||
+			gameConfig.enabledRules.survivalOfTheFittest ||
+			gameConfig.enabledRules.seriousBusiness;
+
 		return (
 			<div className="flex flex-col gap-3 w-full">
 				{isFirstPlayer && (
-					<button
-						type="button"
-						onClick={() => setIsConfigModalOpen(true)}
-						className="px-6 py-2 border-2 border-black rounded hover:bg-gray-100 font-bold text-center flex items-center justify-center gap-2"
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							className="w-5 h-5"
+					<>
+						<button
+							type="button"
+							onClick={() => setIsConfigModalOpen(true)}
+							className="px-6 py-2 border-2 border-black rounded hover:bg-gray-100 font-bold text-center flex items-center justify-center gap-2"
 						>
-							<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-							<circle cx="12" cy="12" r="3" />
-						</svg>
-						Game Configuration
-					</button>
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								className="w-5 h-5"
+							>
+								<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+								<circle cx="12" cy="12" r="3" />
+							</svg>
+							Configure Game {hasConfiguredRules ? '✓' : '(Optional)'}
+						</button>
+						<p className="text-sm text-gray-600 -mt-2">
+							⚠️ Configure house rules BEFORE joining
+						</p>
+					</>
 				)}
 				<Button
 					className="center"
