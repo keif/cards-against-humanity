@@ -55,12 +55,12 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 						Pick {numAnswers}
 					</div>
 				)}
-				<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
+				<div className={`w-[200px] h-[275px] max-[380px]:w-[144px] max-[380px]:h-[198px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
 					<p dangerouslySetInnerHTML={{ __html: formattedText }} />
 				</div>
 				{
 					status &&
-					<div className={`bg-white rounded-b-lg -mt-[11px] h-[35px] max-[380px]:w-28 max-[380px]:text-[15px] leading-[45px] text-center border border-[#979797] z-0 relative w-[98%] mx-auto ${className}`}>
+					<div className={`bg-white rounded-b-lg -mt-[11px] h-[35px] max-[380px]:w-[144px] max-[380px]:text-[15px] leading-[45px] text-center border border-[#979797] z-0 relative w-[196px] mx-auto ${className}`}>
 						<span>{status}</span>
 					</div>
 				}
