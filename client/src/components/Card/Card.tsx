@@ -49,13 +49,13 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 	if (cardType === "Q" && text) {
 		const formattedText = text.replaceAll("_", "__________");
 		return (
-			<div data-qa="card">
+			<div data-qa="card" className="relative inline-block">
+				{numAnswers && numAnswers > 1 && (
+					<div className="absolute -top-2 -right-2 max-[380px]:-top-1.5 max-[380px]:-right-1.5 bg-[#FF9800] text-white px-2 py-1 max-[380px]:px-1.5 max-[380px]:py-0.5 rounded text-sm max-[380px]:text-xs font-bold z-[3] shadow-md">
+						Pick {numAnswers}
+					</div>
+				)}
 				<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
-					{numAnswers && numAnswers > 1 && (
-						<div className="absolute top-2.5 right-2.5 max-[380px]:top-2 max-[380px]:right-2 bg-[#FF9800] text-white px-2 py-1 max-[380px]:px-1.5 max-[380px]:py-0.5 rounded text-sm max-[380px]:text-xs font-bold z-[2]">
-							Pick {numAnswers}
-						</div>
-					)}
 					<p dangerouslySetInnerHTML={{ __html: formattedText }} />
 				</div>
 				{
