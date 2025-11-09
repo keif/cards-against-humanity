@@ -94,7 +94,7 @@ export interface GameConfig {
 	enabledRules: {
 		rebootingTheUniverse: boolean; // Discard hand and draw new cards
 		packingHeat: boolean; // Draw extra card before multi-choice cards
-		happyEnding: boolean; // Winner reads extra answer to end
+		happyEnding: boolean; // End game with "Make a Haiku" card
 		neverHaveIEver: boolean; // Discard cards you don't understand
 		godIsDead: boolean; // Play without Card Czar
 		survivalOfTheFittest: boolean; // First player submits wins
