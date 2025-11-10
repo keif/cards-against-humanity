@@ -108,8 +108,8 @@ pnpm start  # Runs compiled JS from dist/
 
 ```bash
 pnpm lint                # Runs ESLint for both workspaces (fails on warnings)
-pnpm --filter cah_frontend lint  # Lint client only
-pnpm --filter cah_backend lint   # Lint server only
+pnpm --filter pc_ui lint  # Lint client only
+pnpm --filter pc_api lint   # Lint server only
 ```
 
 ## Testing

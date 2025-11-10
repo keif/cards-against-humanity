@@ -1,7 +1,8 @@
 {
-  "name": "cah_frontend",
+  "name": "pc_ui",
   "version": "0.1.0",
-  "description": "CAH Frontend",
+  "type": "module",
+  "description": "Phucking Cards UI",
   "private": true,
   "scripts": {
     "dev": "vite",

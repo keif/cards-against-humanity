@@ -69,8 +69,6 @@ docker-compose*.yml
 
 # Kubernetes
 k8s
-*.yaml
-*.yml
 Tiltfile
 
 # Logs

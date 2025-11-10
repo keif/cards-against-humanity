@@ -1,7 +1,7 @@
 {
-  "name": "cah_backend",
+  "name": "pc_api",
   "version": "0.1.0",
-  "description": "CAH Backend",
+  "description": "Phucking Cards API",
   "main": "src/index.ts",
   "engines": {
     "node": ">=18.0.0"

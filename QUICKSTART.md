@@ -13,7 +13,7 @@ Get your Cards Against Humanity game live in ~15 minutes.
 ## 1. Create Droplet
 
 1. Log into Digital Ocean → Create Droplet
-2. Ubuntu 22.04, Basic 2GB ($12/mo)
+2. Ubuntu 24.04 LTS, Basic 2GB ($12/mo)
 3. Add SSH key
 4. Create → Note IP address
 
@@ -30,7 +30,7 @@ curl -fsSL https://get.docker.com | sh
 apt install docker-compose -y
 
 # Clone repo
-git clone https://github.com/yourusername/cards-against-humanity.git
+git clone https://github.com/keif/cards-against-humanity.git
 cd cards-against-humanity
 ```
 

@@ -43,9 +43,10 @@ All services run in Docker containers orchestrated by docker-compose.
 1. Log into [Digital Ocean](https://cloud.digitalocean.com)
 2. Click "Create" → "Droplets"
 3. Choose configuration:
-   - **Image**: Ubuntu 22.04 LTS
+   - **Image**: Ubuntu 24.04 LTS
    - **Plan**: Basic
    - **CPU Options**: Regular (2GB RAM / 1 CPU) - $12/mo recommended
+   - **Disk**: Regular SSD (50GB included)
    - **Datacenter**: Choose closest to your users
    - **Authentication**: SSH keys (recommended) or password
    - **Hostname**: Something like `cah-game-server`
@@ -95,10 +96,10 @@ In your domain registrar or DNS provider:
    - Value: Your droplet's IP address
    - TTL: 3600
 
-2. Add a **CNAME Record** (optional, for www):
-   - Name: `www`
-   - Value: `@` (or your domain)
-   - TTL: 3600
+2. Add a **CNAME Record** OR second **A Record** (optional, for www):
+   - **Option A (CNAME)**: Name: `www`, Value: `yourdomain.com`, TTL: 3600
+   - **Option B (A Record)**: Name: `www`, Value: Your droplet's IP address, TTL: 3600
+   - Note: Some DNS providers don't accept `@` for CNAME - use your full domain or create a second A record
 
 ### Verify DNS Propagation
 
