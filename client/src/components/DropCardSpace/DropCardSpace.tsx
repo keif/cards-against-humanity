@@ -1,4 +1,4 @@
-import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants/constants';
+import { ELIMINATION_VOTING, JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants/constants';
 import { ItemTypes, DraggedCard } from "@/types";
 import { useDrop } from "react-dnd";
 import Card, { CardProps, PLACEHOLDER } from "../Card/Card";
@@ -136,10 +136,11 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 	// not draggable
 	else if ((roundRole === PLAYER && roundState === JUDGE_SELECTING) ||
 		(roundRole === PLAYER && roundState === PLAYER_WAITING) ||
+		(roundRole === PLAYER && roundState === ELIMINATION_VOTING) ||
 		(roundRole === JUDGE && roundState === JUDGE_WAITING)) {
 		return (
 			<div className="flex w-full justify-around flex-nowrap overflow-hidden pl-[1%] pr-[1%] pt-[5%]">
-				<Card {...QCard} status={roundState !== JUDGE_SELECTING ? status : undefined} />
+				<Card {...QCard} status={roundState !== JUDGE_SELECTING && roundState !== ELIMINATION_VOTING ? status : undefined} />
 			</div>
 		);
 	}

@@ -89,6 +89,9 @@ export interface RoundInterface {
     roundTimer?: number;
     timeLeft?: number;
     votes?: { [sessionID: string]: number }; // God is Dead: map of sessionID -> cardID votes
+    eliminationVotes?: { [sessionID: string]: number }; // Survival of the Fittest: votes to eliminate
+    eliminatedCards?: number[]; // Survival of the Fittest: eliminated card IDs
+    eliminationRound?: number; // Survival of the Fittest: current elimination round number
     winner?: string;
     winningCard?: Card | null;
     winningCards?: Card[] | null; // All cards from winning player (for multi-card submissions)

@@ -1,7 +1,7 @@
 import find from 'lodash/find';
 import remove from 'lodash/remove';
 import shuffle from 'lodash/shuffle';
-import { JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants';
+import { ELIMINATION_VOTING, JUDGE, JUDGE_SELECTING, JUDGE_WAITING, PLAYER, PLAYER_SELECTING, PLAYER_WAITING, VIEWING_WINNER } from '@/constants';
 import { Card } from '@/data/types';
 import { getShuffledACard, getShuffledQCard } from '@/models/Card';
 import { CallbackType, GameInterface, PlayerInterface, RoundInterface, GameConfig, DEFAULT_GAME_CONFIG } from '@/models/types';
@@ -152,8 +152,8 @@ class Game implements GameInterface {
 				});
 			}
 
-			// God is Dead: No judge, all players vote
-			const roundJudge = this.gameConfig.enabledRules.godIsDead
+			// God is Dead / Survival of the Fittest: No judge, all players participate
+			const roundJudge = (this.gameConfig.enabledRules.godIsDead || this.gameConfig.enabledRules.survivalOfTheFittest)
 				? null
 				: find(this.players, player => player.pID === (this.rounds.length % playerSize));
 
@@ -167,6 +167,9 @@ class Game implements GameInterface {
 				roundState: 'players-selecting',
 				roundStartTime: new Date(),
 				votes: this.gameConfig.enabledRules.godIsDead ? {} : undefined,
+				eliminationVotes: this.gameConfig.enabledRules.survivalOfTheFittest ? {} : undefined,
+				eliminatedCards: this.gameConfig.enabledRules.survivalOfTheFittest ? [] : undefined,
+				eliminationRound: this.gameConfig.enabledRules.survivalOfTheFittest ? 1 : undefined,
 				winner: '',
 				winningCard: null,
 			};
@@ -214,8 +217,8 @@ class Game implements GameInterface {
 		if (player == null) return null;
 
 		let latestRound = this.getLatestRound();
-		// God is Dead: everyone is a player, no judge
-		let roundRole = (this.gameConfig.enabledRules.godIsDead || !this.isRoundJudge(sessionID, latestRound)) ? PLAYER : JUDGE;
+		// God is Dead / Survival of the Fittest: everyone is a player, no judge
+		let roundRole = (this.gameConfig.enabledRules.godIsDead || this.gameConfig.enabledRules.survivalOfTheFittest || !this.isRoundJudge(sessionID, latestRound)) ? PLAYER : JUDGE;
 		let playerChoice = find(latestRound?.otherPlayerCards, card => card?.owner?.pID === player?.pID) || null;
 		let otherPlayerCards = latestRound?.otherPlayerCards;
 		let cards = player.cards;
@@ -242,7 +245,7 @@ class Game implements GameInterface {
 		console.log(`timeLeft: ${timeLeft}`);
 		console.groupEnd();
 
-		if (latestRound?.roundState === JUDGE_SELECTING || latestRound?.roundState === VIEWING_WINNER) {
+		if (latestRound?.roundState === JUDGE_SELECTING || latestRound?.roundState === VIEWING_WINNER || latestRound?.roundState === ELIMINATION_VOTING) {
 			timeLeft = 0;
 			roundState = latestRound.roundState;
 		} else if (roundRole == JUDGE) {
@@ -273,6 +276,9 @@ class Game implements GameInterface {
 			roundNum,
 			timeLeft,
 			votes,
+			eliminationVotes: latestRound?.eliminationVotes,
+			eliminatedCards: latestRound?.eliminatedCards,
+			eliminationRound: latestRound?.eliminationRound,
 			winner,
 			winningCard,
 			winningCards,
@@ -420,50 +426,30 @@ class Game implements GameInterface {
 				partyCode: this.partyCode
 			});
 
-			// Survival of the Fittest: First player to submit automatically wins
-			if (this.gameConfig.enabledRules.survivalOfTheFittest && latestRound?.otherPlayerCards?.length === cardIDArray.length) {
-				logger.info('Survival of the Fittest: First submission wins', {
-					partyCode: this.partyCode,
-					winner: player.name,
-					roundNum: latestRound.roundNum
-				});
-
-				const winningCards = latestRound.otherPlayerCards.filter(
-					card => card.owner?.pID === player.pID
-				);
-
-				latestRound.roundState = VIEWING_WINNER;
-				latestRound.winningCard = winningCards[0];
-				latestRound.winningCards = winningCards;
-				latestRound.winner = player.name;
-				latestRound.roundEndTime = new Date();
-
-				(player.roundsWon as any[]).push({
-					roundNum: latestRound.roundNum,
-					ACard: winningCards[0],
-					QCard: latestRound.QCard
-				});
-
-				clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
-				this.roundsIdle = 0;
-				this.roundFinishedNotifier(true, `${player.name} won by being first!`);
-				cb(true, 'You won by submitting first!');
-				return;
-			}
-
 			// Check if all players have played (count unique players who submitted)
 			const uniquePlayersPIDs = new Set(
 				latestRound?.otherPlayerCards?.map(card => card.owner?.pID).filter(pID => pID !== undefined)
 			);
-			// God is Dead: All players must submit (no judge). Traditional: playerSize - 1 (excluding judge)
-			const requiredPlayers = this.gameConfig.enabledRules.godIsDead ? playerSize : (playerSize - 1);
+			// God is Dead / Survival of the Fittest: All players must submit (no judge). Traditional: playerSize - 1 (excluding judge)
+			const requiredPlayers = (this.gameConfig.enabledRules.godIsDead || this.gameConfig.enabledRules.survivalOfTheFittest) ? playerSize : (playerSize - 1);
 			const allPlayersSubmitted = uniquePlayersPIDs.size === requiredPlayers;
 
 			if (allPlayersSubmitted) {
-				latestRound.roundState = JUDGE_SELECTING;
-				clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
-				this.roundFinishedNotifier(true, 'All players have played - judge selection phase');
-				cb(true, 'Cards played - all players ready, judge is selecting');
+				// Survival of the Fittest: Start elimination voting instead of judge selection
+				if (this.gameConfig.enabledRules.survivalOfTheFittest) {
+					latestRound.roundState = ELIMINATION_VOTING;
+					latestRound.eliminationVotes = {};
+					latestRound.eliminatedCards = [];
+					latestRound.eliminationRound = 1;
+					clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
+					this.roundFinishedNotifier(true, 'All players have played - elimination voting begins');
+					cb(true, 'Cards played - elimination voting begins!');
+				} else {
+					latestRound.roundState = JUDGE_SELECTING;
+					clearTimeout(this.roundTimer as ReturnType<typeof setTimeout>);
+					this.roundFinishedNotifier(true, 'All players have played - judge selection phase');
+					cb(true, 'Cards played - all players ready, judge is selecting');
+				}
 			} else {
 				cb(true, `${cardIDArray.length} card${cardIDArray.length > 1 ? 's' : ''} played successfully`);
 			}
@@ -639,6 +625,159 @@ class Game implements GameInterface {
   			}
   			return;
   		}
+
+		// Survival of the Fittest: Elimination voting mode
+		if (this.gameConfig.enabledRules.survivalOfTheFittest) {
+			// Validate round state
+			if (latestRound.roundState !== ELIMINATION_VOTING) {
+				logger.warn('Invalid elimination vote attempt', {
+					sessionID,
+					cardID,
+					playerName: player.name,
+					reason: 'wrong_round_state',
+					currentState: latestRound.roundState,
+					partyCode: this.partyCode
+				});
+				cb(false, 'Cannot vote in current game phase');
+				return;
+			}
+
+			// Get remaining cards (exclude eliminated ones)
+			const remainingCards = latestRound.otherPlayerCards?.filter(
+				card => !latestRound.eliminatedCards?.includes(card.id)
+			) || [];
+
+			// Validate selected card exists in remaining cards
+			let votedCard = find(remainingCards, card => card.id === cardID);
+			if (!votedCard) {
+				logger.warn('Invalid elimination vote attempt', {
+					sessionID,
+					cardID,
+					playerName: player.name,
+					reason: 'card_not_found_or_eliminated',
+					availableCards: remainingCards.map(c => c.id),
+					partyCode: this.partyCode
+				});
+				cb(false, 'Selected card was not played or has been eliminated');
+				return;
+			}
+
+			// Initialize elimination votes object if needed
+			if (!latestRound.eliminationVotes) {
+				latestRound.eliminationVotes = {};
+			}
+
+			// Record the elimination vote
+			latestRound.eliminationVotes[sessionID] = cardID;
+
+			logger.info('Player voted to eliminate card', {
+				sessionID,
+				cardID,
+				playerName: player.name,
+				votedCardText: votedCard.text,
+				totalVotesCast: Object.keys(latestRound.eliminationVotes).length,
+				eliminationRound: latestRound.eliminationRound,
+				partyCode: this.partyCode
+			});
+
+			// Check if all players have voted
+			const activePlayers = Object.values(this.players).filter(p => p.roundState !== 'inactive');
+			const allPlayersVoted = Object.keys(latestRound.eliminationVotes).length >= activePlayers.length;
+
+			if (allPlayersVoted) {
+				// Count votes for each card
+				const voteCounts: { [cardID: number]: number } = {};
+				for (const votedCardID of Object.values(latestRound.eliminationVotes)) {
+					voteCounts[votedCardID] = (voteCounts[votedCardID] || 0) + 1;
+				}
+
+				// Find card(s) with most elimination votes
+				let maxVotes = 0;
+				let eliminatedCardID = -1;
+				for (const [cardIDStr, voteCount] of Object.entries(voteCounts)) {
+					if (voteCount > maxVotes) {
+						maxVotes = voteCount;
+						eliminatedCardID = parseInt(cardIDStr);
+					}
+				}
+
+				// Add card to eliminated list
+				if (!latestRound.eliminatedCards) {
+					latestRound.eliminatedCards = [];
+				}
+				latestRound.eliminatedCards.push(eliminatedCardID);
+
+				// Get eliminated card for logging
+				let eliminatedCard = find(latestRound.otherPlayerCards, card => card.id === eliminatedCardID);
+
+				logger.info('Card eliminated', {
+					eliminatedCardID,
+					eliminatedCardText: eliminatedCard?.text,
+					voteCounts,
+					maxVotes,
+					eliminationRound: latestRound.eliminationRound,
+					totalEliminated: latestRound.eliminatedCards.length,
+					partyCode: this.partyCode
+				});
+
+				// Update remaining cards
+				const updatedRemainingCards = latestRound.otherPlayerCards?.filter(
+					card => !latestRound.eliminatedCards?.includes(card.id)
+				) || [];
+
+				// Check if only 1 card remains (winner!)
+				if (updatedRemainingCards.length === 1) {
+					const winningCard = updatedRemainingCards[0];
+					const winningPlayerPID = winningCard.owner?.pID;
+					const allWinningCards = latestRound.otherPlayerCards?.filter(
+						card => card.owner?.pID === winningPlayerPID
+					) || [];
+
+					latestRound.roundState = VIEWING_WINNER;
+					latestRound.winningCard = winningCard;
+					latestRound.winningCards = allWinningCards;
+					latestRound.winner = winningCard.owner?.name;
+					latestRound.roundEndTime = new Date();
+
+					let winningPlayer = find(this.players, p => p.pID === winningPlayerPID);
+					if (winningPlayer) {
+						winningPlayer.roundsWon.push({
+							roundNum: latestRound.roundNum,
+							ACard: winningCard,
+							QCard: latestRound.QCard
+						});
+					}
+
+					this.roundsIdle = 0;
+
+					logger.info('Survival of the Fittest complete - winner determined', {
+						winnerName: latestRound.winner,
+						winningCardText: winningCard.text,
+						totalEliminationRounds: latestRound.eliminationRound,
+						roundNum: latestRound.roundNum,
+						partyCode: this.partyCode
+					});
+
+					cb(true, `${latestRound.winner} won! Last card standing!`);
+				} else {
+					// More cards remain - start next elimination round
+					latestRound.eliminationVotes = {}; // Clear votes for next round
+					latestRound.eliminationRound = (latestRound.eliminationRound || 0) + 1;
+
+					logger.info('Starting next elimination round', {
+						eliminationRound: latestRound.eliminationRound,
+						remainingCards: updatedRemainingCards.length,
+						partyCode: this.partyCode
+					});
+
+					cb(true, `Card eliminated! ${updatedRemainingCards.length} cards remaining. Vote again!`);
+				}
+			} else {
+				// Not all players have voted yet
+				cb(true, `Elimination vote recorded. ${Object.keys(latestRound.eliminationVotes).length}/${activePlayers.length} players have voted.`);
+			}
+			return;
+		}
 
   		// Traditional mode: Judge selects winner
   		// Validate player is the judge

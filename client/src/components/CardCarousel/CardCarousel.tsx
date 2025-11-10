@@ -15,6 +15,7 @@ interface CardCarouselProps {
 	onCardDiscard?: (id: number) => void;
 	onCardRemove?: (item: { id: number }) => void;
 	selectedCards?: number[];
+	eliminatedCards?: number[];
 }
 
 // Draggable wrapper for card groups
@@ -23,11 +24,20 @@ interface DraggableCardGroupProps {
 	groupIndex: number;
 	onCardClick?: (id: number) => void;
 	selectedCards: number[];
+	eliminatedCards?: number[];
 }
 
-const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: DraggableCardGroupProps) => {
-	// Use the first card's ID to represent the group
-	const representativeCardId = group.cards[0]?.id;
+const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards, eliminatedCards = [] }: DraggableCardGroupProps) => {
+	// Use the first non-eliminated card's ID to represent the group
+	const representativeCard = group.cards.find(card =>
+		card.id !== undefined && !eliminatedCards.includes(card.id)
+	);
+	const representativeCardId = representativeCard?.id;
+
+	// Check if ALL cards in the group are eliminated
+	const isGroupEliminated = group.cards.every(card =>
+		card.id !== undefined && eliminatedCards.includes(card.id)
+	);
 
 	const [{ isDragging }, drag] = useDrag(
 		() => ({
@@ -36,17 +46,28 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 			collect: (monitor) => ({
 				isDragging: !!monitor.isDragging(),
 			}),
+			canDrag: !isGroupEliminated && representativeCardId !== undefined, // Can't drag if all cards eliminated
 		}),
-		[representativeCardId]
+		[representativeCardId, isGroupEliminated]
 	);
 
-	const handleGroupClick = () => {
-		if (onCardClick && representativeCardId !== undefined) {
-			onCardClick(representativeCardId);
+	const handleGroupClick = (clickedCardId?: number) => {
+		// If a specific card was clicked, use that ID; otherwise use representative
+		const targetCardId = clickedCardId ?? representativeCardId;
+
+		// Check if the clicked card is eliminated
+		const isCardEliminated = targetCardId !== undefined && eliminatedCards.includes(targetCardId);
+
+		console.log('🖱️ Card clicked in group', { targetCardId, isCardEliminated, hasOnCardClick: !!onCardClick });
+		if (onCardClick && targetCardId !== undefined && !isCardEliminated) {
+			console.log('✅ Calling onCardClick with', targetCardId);
+			onCardClick(targetCardId);
+		} else {
+			console.log('❌ Click blocked', { hasOnCardClick: !!onCardClick, targetCardId, isCardEliminated });
 		}
 	};
 
-	// Check if this group is selected (any card in the group is selected)
+	// Check if this group has any selected cards
 	const isGroupSelected = group.cards.some(card =>
 		card.id !== undefined && selectedCards.includes(card.id)
 	);
@@ -55,32 +76,56 @@ const DraggableCardGroup = ({ group, groupIndex, onCardClick, selectedCards }: D
 		<div
 			ref={drag}
 			key={`group-${group.playerID}`}
-			onClick={handleGroupClick}
-			className={`flex flex-row gap-2 p-3 mr-5 rounded-xl shrink-0 transition-all duration-200 ease-in-out ${
-				isGroupSelected
-					? 'bg-green-500/20 border-4 border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]'
-					: 'bg-white/5 border-2 border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
-			} ${onCardClick ? 'cursor-pointer' : isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+			className={`relative flex flex-row gap-2 p-3 mr-5 rounded-xl shrink-0 transition-all duration-200 ease-in-out ${
+				isGroupEliminated
+					? 'bg-gray-800/40 border-2 border-gray-600 opacity-40 cursor-not-allowed'
+					: isGroupSelected
+						? 'bg-green-500/20 border-4 border-green-400 shadow-[0_0_20px_rgba(34,197,94,0.4)]'
+						: 'bg-white/5 border-2 border-white/10 hover:bg-white/[0.08] hover:border-white/20 hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.3)]'
+			} ${!isGroupEliminated && onCardClick ? 'cursor-pointer' : !isGroupEliminated && isDragging ? 'cursor-grabbing' : !isGroupEliminated ? 'cursor-grab' : ''}`}
 			style={{
-				opacity: isDragging ? 0.5 : 1
+				opacity: isDragging ? 0.5 : isGroupEliminated ? 0.5 : 1
 			}}
 		>
-			{group.cards.map((card, cardIndex) => (
-				<Card
-					{...card}
-					index={groupIndex * 100 + cardIndex}
-					key={card.id}
-					onClick={onCardClick}
-					isSelected={card.id !== undefined && selectedCards.includes(card.id)}
-					disableDrag={true}
-					className="pointer-events-none"
-				/>
-			))}
+			{isGroupEliminated && (
+				<div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+					<span className="text-red-500 text-2xl font-bold bg-black/70 px-4 py-2 rounded">❌ ALL ELIMINATED</span>
+				</div>
+			)}
+			{group.cards.map((card, cardIndex) => {
+				const isCardEliminated = card.id !== undefined && eliminatedCards.includes(card.id);
+				const isCardSelected = card.id !== undefined && selectedCards.includes(card.id);
+
+				return (
+					<div
+						key={card.id}
+						className="relative"
+						onClick={(e) => {
+							e.stopPropagation();
+							handleGroupClick(card.id);
+						}}
+					>
+						{isCardEliminated && (
+							<div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none bg-gray-900/60 rounded-lg">
+								<span className="text-red-500 text-xl font-bold">❌</span>
+							</div>
+						)}
+						<Card
+							{...card}
+							index={groupIndex * 100 + cardIndex}
+							onClick={undefined} // Handle click at div level
+							isSelected={isCardSelected}
+							disableDrag={true}
+							className={`${isCardEliminated ? 'opacity-50 grayscale' : ''} pointer-events-none`}
+						/>
+					</div>
+				);
+			})}
 		</div>
 	);
 };
 
-const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRemove, selectedCards = [] }: CardCarouselProps) => {
+const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRemove, selectedCards = [], eliminatedCards = [] }: CardCarouselProps) => {
 	const [, drop] = useDrop(
 		() => ({
 			accept: ItemTypes.CARD,
@@ -111,6 +156,7 @@ const CardCarousel = ({ cards, cardGroups, onCardClick, onCardDiscard, onCardRem
 						groupIndex={groupIndex}
 						onCardClick={onCardClick}
 						selectedCards={selectedCards}
+						eliminatedCards={eliminatedCards}
 					/>
 				))}
 			</div>

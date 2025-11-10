@@ -15,14 +15,14 @@ import Top from '@/components/Top/Top';
 import { ROUTE_PARAM } from '@/App';
 import { discardCard, endGameWithHaiku, endRound, getPlayerRoundState, judgeSelectCard, newGameState, offCardDiscarded, onCardDiscarded, playCard, rebootHand } from '@/api';
 import { A, CardProps, Q } from '@/components/Card/Card';
-import { JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
+import { ELIMINATION_VOTING, JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants/constants';
 import { DndProvider } from 'react-dnd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DraggedCard, GameConfig, ItemTypes, PlayerInfo } from '@/types';
 import { loadDndBackend } from '@/utils/dndBackend';
 import type { BackendFactory } from 'dnd-core';
 
-type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner';
+type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner' | 'elimination-voting';
 type RoleTypes = 'player' | 'judge';
 
 export interface RoundInterface {
@@ -39,6 +39,9 @@ export interface RoundInterface {
 	roundJudge: PlayerInfo;
 	roundNum: number;
 	timeLeft?: number;
+	eliminationVotes?: { [sessionID: string]: number }; // Survival of the Fittest: votes to eliminate
+	eliminatedCards?: number[]; // Survival of the Fittest: eliminated card IDs
+	eliminationRound?: number; // Survival of the Fittest: current elimination round number
 	winner: string,
 	winningCard: CardProps | null,
 	winningCards?: CardProps[] | null, // All cards from winning player (for multi-card submissions)
@@ -56,7 +59,7 @@ const PlayerSelectionScreen = () => {
 	const [copied, setCopied] = useState(false);
 	const [discardNotification, setDiscardNotification] = useState<{ playerName: string; cardText: string } | null>(null);
 	const [selectedVoteCardId, setSelectedVoteCardId] = useState<number | null>(null); // Track voted card in God is Dead mode
-	const previousRoundRef = useRef<{ roundNum: number; roundState: string }>({ roundNum: 0, roundState: '' });
+	const previousRoundRef = useRef<{ roundNum: number; roundState: string; eliminationRound?: number }>({ roundNum: 0, roundState: '', eliminationRound: undefined });
 	const timerRef = useRef<number | null>(null);
 
 	if (!partyCode) {
@@ -168,14 +171,31 @@ const PlayerSelectionScreen = () => {
 			let headerText;
 			let directions = '';
 			const isGodIsDeadMode = roundState.gameConfig?.enabledRules?.godIsDead;
+			const isSurvivalMode = roundState.gameConfig?.enabledRules?.survivalOfTheFittest;
 
 			if (roundState.roundState === VIEWING_WINNER) {
 				headerText = `${roundState.winner} Won!`;
 				directions = '';
+			} else if (roundState.roundState === ELIMINATION_VOTING) {
+				// Survival of the Fittest: Elimination voting
+				const remainingCards = roundState.otherPlayerCards.filter(
+					card => card.id !== undefined && !roundState.eliminatedCards?.includes(card.id)
+				).length;
+				headerText = `Elimination Round ${roundState.eliminationRound}`;
+				directions = `Vote to eliminate the weakest card (${remainingCards} remaining)`;
 			} else if (isGodIsDeadMode && roundState.roundState === JUDGE_SELECTING) {
 				// God is Dead: Everyone votes
 				headerText = 'Everyone Votes!';
 				directions = 'Click the winning card to vote';
+			} else if (isSurvivalMode && (roundState.roundState === 'player-selecting' || roundState.roundState === 'player-waiting')) {
+				// Survival of the Fittest: All players submit cards
+				const numCards = roundState.QCard?.numAnswers || 1;
+				headerText = 'Survival of the Fittest';
+				if (roundState.roundState === 'player-selecting') {
+					directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
+				} else {
+					directions = 'Waiting for all players to submit cards';
+				}
 			} else if (roundState.roundRole === 'judge') {
 				headerText = `You are the Judge`;
 				if (roundState.roundState === 'judge-waiting') directions = 'Waiting for players to choose Cards';
@@ -216,12 +236,23 @@ const PlayerSelectionScreen = () => {
 				winningCard: roundState.winningCard,
 				winningCards: roundState.winningCards,
 				playerScores: roundState.playerScores,
+				eliminatedCards: roundState.eliminatedCards,
+				eliminationRound: roundState.eliminationRound,
+				eliminationVotes: roundState.eliminationVotes,
 				directions
 			});
 
-			// Clear vote selection when round state changes
-			if (roundState.roundState !== JUDGE_SELECTING) {
+			// Clear vote selection when round state changes or elimination round changes
+			if (roundState.roundState !== JUDGE_SELECTING && roundState.roundState !== ELIMINATION_VOTING) {
 				setSelectedVoteCardId(null);
+			}
+			// Clear vote selection when elimination round number changes (new elimination round started)
+			if (roundState.roundState === ELIMINATION_VOTING) {
+				const eliminationRoundChanged = roundState.eliminationRound !== previousRoundRef.current.eliminationRound;
+				if (eliminationRoundChanged) {
+					setSelectedVoteCardId(null);
+					previousRoundRef.current.eliminationRound = roundState.eliminationRound;
+				}
 			}
 
 			// Only clear selected cards when round number or round state actually changes
@@ -232,7 +263,8 @@ const PlayerSelectionScreen = () => {
 				setDroppedCards([]); // Clear dropped cards on round change
 				previousRoundRef.current = {
 					roundNum: roundState.roundNum ?? 0,
-					roundState: roundState.roundState ?? ''
+					roundState: roundState.roundState ?? '',
+					eliminationRound: roundState.eliminationRound
 				};
 			}
 
@@ -367,19 +399,33 @@ const PlayerSelectionScreen = () => {
 
 	// Drop handler for react-dnd (receives dropped item with id)
 	const handleCardDrop = (item: DraggedCard) => {
-		if (!partyCode || !item || !item.id) {
-			return;
-		}
+		console.log('🎯 handleCardDrop called', { item, partyCode, roundState: state.roundState });
 
-		// Check if player can drop a card
-		if (state.playerChoice != null) {
-			return; // Already selected a card
+		if (!partyCode || !item || !item.id) {
+			console.log('❌ Early return: missing data');
+			return;
 		}
 
 		// God is Dead: All players can vote during judge-selecting phase
 		const isGodIsDeadVoting = state.gameConfig?.enabledRules?.godIsDead && state.roundState === JUDGE_SELECTING;
 
-		if ((state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') || isGodIsDeadVoting) {
+		// Survival of the Fittest: All players can vote during elimination-voting phase
+		const isEliminationVoting = state.roundState === ELIMINATION_VOTING;
+
+		console.log('🔍 Vote check', { isEliminationVoting, isGodIsDeadVoting, playerChoice: state.playerChoice });
+
+		// Check if player can drop a card (skip check for elimination voting and God is Dead voting)
+		if (state.playerChoice != null && !isEliminationVoting && !isGodIsDeadVoting) {
+			console.log('❌ Blocked: already selected a card');
+			return; // Already selected a card
+		}
+
+		if (isEliminationVoting) {
+			console.log('✅ Elimination voting - calling judgeSelectCard', item.id);
+			// Elimination voting: everyone votes to eliminate
+			setSelectedVoteCardId(item.id); // Track which card was selected
+			judgeSelectCard(partyCode, item.id); // Reuse same endpoint
+		} else if ((state.roundState === JUDGE_SELECTING && state.roundRole === 'judge') || isGodIsDeadVoting) {
 			// Judge selecting winner card OR everyone voting (God is Dead)
 			setSelectedVoteCardId(item.id); // Track which card was selected
 			judgeSelectCard(partyCode, item.id);
@@ -499,13 +545,25 @@ const PlayerSelectionScreen = () => {
 	return (
 		<Screen>
 			{/* Survival of the Fittest mode banner */}
-			{state.gameConfig?.enabledRules?.survivalOfTheFittest && state.roundState === PLAYER_SELECTING && (
-				<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-amber-300">
-					<div className="text-center">
-						<div className="text-base font-bold">⚡ SURVIVAL OF THE FITTEST ⚡</div>
-						<div className="text-sm mt-1 opacity-90">First submission wins the round!</div>
-					</div>
-				</div>
+			{state.gameConfig?.enabledRules?.survivalOfTheFittest && (
+				<>
+					{state.roundState === PLAYER_SELECTING && (
+						<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-amber-300">
+							<div className="text-center">
+								<div className="text-base font-bold">⚡ SURVIVAL OF THE FITTEST ⚡</div>
+								<div className="text-sm mt-1 opacity-90">Elimination voting will begin after all players submit!</div>
+							</div>
+						</div>
+					)}
+					{state.roundState === ELIMINATION_VOTING && (
+						<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-red-300 animate-pulse">
+							<div className="text-center">
+								<div className="text-base font-bold">🗳️ ELIMINATION ROUND {state.eliminationRound} 🗳️</div>
+								<div className="text-sm mt-1 opacity-90">Vote to eliminate the weakest card!</div>
+							</div>
+						</div>
+					)}
+				</>
 			)}
 
 			{/* Never Have I Ever discard notification */}
@@ -599,23 +657,24 @@ const PlayerSelectionScreen = () => {
 					)}
 					<CardCarousel
 						cards={
-							state.roundState === JUDGE_SELECTING
+							state.roundState === JUDGE_SELECTING || state.roundState === ELIMINATION_VOTING
 								? undefined
 								: state.roundState === JUDGE_WAITING
 									? []
 									: cardsInHand
 						}
 						cardGroups={
-							state.roundState === JUDGE_SELECTING
+							state.roundState === JUDGE_SELECTING || state.roundState === ELIMINATION_VOTING
 								? groupCardsByPlayerStructured(state.otherPlayerCards)
 								: undefined
 						}
 						onCardClick={
-							state.roundState === JUDGE_SELECTING
+							state.roundState === JUDGE_SELECTING || state.roundState === ELIMINATION_VOTING
 								? (id: number) => handleCardDrop({ id, type: ItemTypes.CARD })
 								: undefined
 						}
 						selectedCards={selectedVoteCardId !== null ? [selectedVoteCardId] : []}
+						eliminatedCards={state.roundState === ELIMINATION_VOTING ? state.eliminatedCards : undefined}
 						onCardRemove={handleCardRemove}
 						onCardDiscard={
 							state.gameConfig?.enabledRules?.neverHaveIEver &&

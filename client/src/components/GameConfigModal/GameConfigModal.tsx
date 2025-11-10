@@ -78,7 +78,7 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 		{
 			name: 'survivalOfTheFittest' as const,
 			label: 'Survival of the Fittest',
-			description: 'After everyone plays, the first player to submit automatically wins.'
+			description: 'Players eliminate one white card at a time. The last card standing wins.'
 		},
 		{
 			name: 'seriousBusiness' as const,
