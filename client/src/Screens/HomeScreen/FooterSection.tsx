@@ -8,10 +8,10 @@ const FooterSection: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-6 md:gap-8 mb-8 md:mb-10">
                     <div className="flex flex-col">
                         <h3 className="text-base md:text-lg font-semibold mb-3 text-white">
-                            🎴 Free Online Cards Against Humanity
+                            🎴 Phucking Cards
                         </h3>
                         <p className="text-sm leading-relaxed text-footer-text m-0">
-                            A free online version based on{' '}
+                            A free online party game inspired by{' '}
                             <a
                                 href="https://www.cardsagainsthumanity.com/"
                                 target="_blank"

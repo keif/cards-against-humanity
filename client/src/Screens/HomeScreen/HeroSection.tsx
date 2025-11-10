@@ -18,10 +18,10 @@ const HeroSection: React.FC = () => {
                     id="hero-heading"
                     className="text-5xl md:text-7xl lg:text-8xl font-extrabold leading-tight mb-4 md:mb-6 text-black"
                 >
-                    Play Cards Against Humanity Online – Free Multiplayer
+                    Phucking Cards
                 </h1>
                 <p className="text-lg md:text-xl leading-relaxed text-brand-gray-dark mb-6 md:mb-8 max-w-content-sm mx-auto">
-                    A free party game where terrible people say terrible things.
+                    A free online party game inspired by Cards Against Humanity.
                     No cards, no login, no limits—just you and your questionable friends.
                 </p>
 

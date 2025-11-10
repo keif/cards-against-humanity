@@ -18,7 +18,7 @@ const LicenseScreen: React.FC = () => {
 
 				<div className="bg-brand-gray-light p-6 rounded-lg mb-6 font-mono text-sm">
 					<p className="mb-4">MIT License</p>
-					<p className="mb-4">Copyright (c) 2025 Cards Against Humanity Online</p>
+					<p className="mb-4">Copyright (c) 2025 Phucking Cards</p>
 					<p className="mb-4">
 						Permission is hereby granted, free of charge, to any person obtaining a copy
 						of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
-# Cards Against Humanity - Online Multiplayer
+# Phucking Cards
 
-A free, real-time multiplayer online version of [Cards Against Humanity](https://www.cardsagainsthumanity.com/), the popular party card game. Play with friends from any device with an internet connection.
+A free, real-time multiplayer online party game inspired by [Cards Against Humanity](https://www.cardsagainsthumanity.com/). Play with friends from any device with an internet connection.
 
 **Based on:** [yusufameri/cards-against-humanity](https://github.com/yusufameri/cards-against-humanity)
 
