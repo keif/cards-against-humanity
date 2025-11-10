@@ -1,7 +1,7 @@
 # Backend Production Dockerfile
 # Builds the backend and includes frontend static files
 
-FROM node:18-alpine AS deps
+FROM node:20-alpine AS deps
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -17,7 +17,7 @@ COPY client/package.json ./client/
 RUN pnpm install --frozen-lockfile
 
 # ===== Frontend Builder =====
-FROM node:18-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -34,7 +34,7 @@ COPY client/ ./
 RUN pnpm build
 
 # ===== Backend Builder =====
-FROM node:18-alpine AS backend-builder
+FROM node:20-alpine AS backend-builder
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
@@ -51,7 +51,7 @@ COPY server/ ./
 RUN pnpm build
 
 # ===== Production Runner =====
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 

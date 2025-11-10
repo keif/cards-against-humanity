@@ -1,7 +1,7 @@
 # Frontend Production Dockerfile
 # Builds the React app and outputs static files
 
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
