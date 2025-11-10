@@ -1,48 +1,89 @@
-# To Create a new image
-# docker build -t cardigame/cah:<version_num> .
+# Backend Production Dockerfile
+# Builds the backend and includes frontend static files
 
-# To Push a new image
-# docker push cardigame/cah:<version num here optional>
-####-------####-------####-------####-------####-------####-------####-------
-FROM node:18-alpine
+FROM node:18-alpine AS deps
 
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add g++ make py3-pip
-RUN apk add --no-cache libc6-compat
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Create app directory for express server
 WORKDIR /app
-# Install dependencies based on the preferred package manager
-COPY package.json yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then yarn global add pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+# Copy root package files for workspace setup
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
+COPY server/package.json ./server/
+COPY client/package.json ./client/
 
-# Step 2. Production image, copy all the files and run next
+# Install all dependencies
+RUN pnpm install --frozen-lockfile
+
+# ===== Frontend Builder =====
+FROM node:18-alpine AS frontend-builder
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app/client
+
+# Copy frontend dependencies from deps stage
+COPY --from=deps /app/node_modules /app/node_modules
+COPY --from=deps /app/client/node_modules ./node_modules
+
+# Copy frontend source
+COPY client/ ./
+
+# Build frontend (creates dist folder)
+RUN pnpm build
+
+# ===== Backend Builder =====
+FROM node:18-alpine AS backend-builder
+
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+WORKDIR /app/server
+
+# Copy backend dependencies from deps stage
+COPY --from=deps /app/node_modules /app/node_modules
+COPY --from=deps /app/server/node_modules ./node_modules
+
+# Copy backend source
+COPY server/ ./
+
+# Build backend TypeScript
+RUN pnpm build
+
+# ===== Production Runner =====
 FROM node:18-alpine AS runner
 
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 WORKDIR /app
 
+# Copy node_modules from deps stage
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/.env ./.env
-COPY . .
+COPY --from=deps /app/server/node_modules ./server/node_modules
 
-ENV NODE_ENV production
+# Copy built backend
+COPY --from=backend-builder /app/server/dist ./server/dist
+COPY --from=backend-builder /app/server/package.json ./server/
 
-# Don't run production as root
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 reactjs
+# Copy frontend built assets to where backend expects them
+COPY --from=frontend-builder /app/client/dist ./client/dist
 
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./package.json
+# Copy data files (card deck)
+COPY server/src/data ./server/dist/data
 
-USER reactjs
+WORKDIR /app/server
 
-ENV PORT 8080
+# Don't run as root
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nodejs && \
+    chown -R nodejs:nodejs /app
+
+USER nodejs
+
+# Expose port
+ENV NODE_ENV=production
+ENV PORT=8080
 EXPOSE 8080
 
-CMD ["yarn", "run", "server"]
+# Start the server
+CMD ["node", "dist/index.js"]

@@ -33,3 +33,7 @@ dump.rdb
 _notes/
 log.txt
 logs.txt
+
+# Deployment artifacts
+certbot/
+.env.production

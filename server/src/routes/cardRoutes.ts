@@ -13,6 +13,11 @@ import { RejectionReason, isValidRejectionReason } from '@/types/moderation';
 export function createCardRouter(io: SocketIOServer): Router {
 	const router = Router();
 
+	// Health check endpoint
+	router.get('/health', (req: Request, res: Response) => {
+		res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+	});
+
 // ========== Community Voting Endpoints ==========
 
 /**
