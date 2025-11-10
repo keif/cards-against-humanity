@@ -256,7 +256,20 @@ docker-compose -f docker-compose.prod.yml logs -f redis
 
 ### Update Application
 
-When you have new code changes:
+#### Automated Deployment (Recommended)
+
+The repository includes a GitHub Actions workflow that automatically deploys when you push to `main`:
+
+1. Push changes to `main` branch
+2. GitHub Actions runs all tests
+3. If tests pass, deploys to production automatically
+4. Zero-downtime deployment
+
+**Setup:** See [CI-CD-SETUP.md](CI-CD-SETUP.md) for configuration instructions.
+
+#### Manual Deployment
+
+When you need to deploy manually:
 
 ```bash
 ./deployment/update.sh

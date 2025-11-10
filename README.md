@@ -235,6 +235,10 @@ User-generated card submission and moderation system:
 
 ## Deployment
 
+### Quick Links
+- **[Full Deployment Guide](DEPLOYMENT.md)** - Complete Docker setup for Digital Ocean
+- **[CI/CD Setup](CI-CD-SETUP.md)** - Automated deployment on push to main
+
 ### Production Checklist
 
 1. **Environment Configuration**
