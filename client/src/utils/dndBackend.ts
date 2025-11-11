@@ -8,9 +8,9 @@ const isTouchDevice = () => !!("ontouchstart" in window);
 // Touch backend options for better mobile support
 export const touchBackendOptions = {
 	enableMouseEvents: true, // Allow mouse events on hybrid devices
-	delayTouchStart: 200, // Delay before drag starts (ms) - allows scrolling
+	delayTouchStart: 0, // No delay - let touchSlop handle tap vs drag distinction
 	ignoreContextMenu: true, // Disable context menu on long press
-	touchSlop: 5, // Pixels to move before registering as drag (allows taps)
+	touchSlop: 10, // Increased pixels to move before registering as drag (allows taps and scrolling)
 };
 
 export const loadDndBackend = async () => {
