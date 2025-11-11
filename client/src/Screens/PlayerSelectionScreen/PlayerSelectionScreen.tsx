@@ -19,7 +19,7 @@ import { ELIMINATION_VOTING, JUDGE_SELECTING, JUDGE_WAITING, PLAYER_SELECTING, V
 import { DndProvider } from 'react-dnd';
 import { useNavigate, useParams } from 'react-router-dom';
 import { DraggedCard, GameConfig, ItemTypes, PlayerInfo } from '@/types';
-import { loadDndBackend } from '@/utils/dndBackend';
+import { loadDndBackend, touchBackendOptions } from '@/utils/dndBackend';
 import type { BackendFactory } from 'dnd-core';
 
 type RoundTypes = 'judge-selecting' | 'judge-waiting' | 'player-selecting' | 'player-waiting' | 'viewing-winner' | 'elimination-voting';
@@ -54,6 +54,7 @@ const PlayerSelectionScreen = () => {
 	const [timeLeft, setTimeLeft] = useState(0);
 	const [serverTimeLeft, setServerTimeLeft] = useState(0); // Track server's timeLeft separately
 	const [dndBackend, setDndBackend] = useState<BackendFactory | null>(null);
+	const [isTouchDevice, setIsTouchDevice] = useState(false);
 	const [droppedCards, setDroppedCards] = useState<CardProps[]>([]); // Cards in drop zone
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
@@ -145,6 +146,9 @@ const PlayerSelectionScreen = () => {
 
 	// Load DnD backend dynamically based on device type
 	useEffect(() => {
+		const isTouch = !!("ontouchstart" in window);
+		setIsTouchDevice(isTouch);
+
 		loadDndBackend().then(backend => {
 			// Wrap in function to prevent React from treating it as a state updater
 			setDndBackend(() => backend);
@@ -582,7 +586,7 @@ const PlayerSelectionScreen = () => {
 				</div>
 			)}
 			{dndBackend && (
-			<DndProvider backend={dndBackend}>
+			<DndProvider backend={dndBackend} options={isTouchDevice ? touchBackendOptions : undefined}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
 					<HeaderMenu
 						text={state.headerText}
