@@ -47,8 +47,9 @@ const App = () => {
 				v7_relativeSplatPath: true,
 			}}
 		>
-			<Suspense fallback={<div>Loading...</div>}>
-				<Routes>
+			<div className="flex flex-col flex-1">
+				<Suspense fallback={<div>Loading...</div>}>
+					<Routes>
 					<Route
 						path={`${ROUTE_PATH.HOME}`}
 						element={<HomeScreen/>}
@@ -103,6 +104,7 @@ const App = () => {
 					/>
 				</Routes>
 			</Suspense>
+			</div>
 		</BrowserRouter>
 	);
 }

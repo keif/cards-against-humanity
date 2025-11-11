@@ -26,35 +26,37 @@ const JoinPartyScreen = () => {
 	const appDomain = import.meta.env.VITE_APP_DOMAIN || window.location.host;
 
 	return (
-		<>
-			<Screen>
-				<Top>
-					<Banner title="Ask your friend for the party code or create a game if you are the first player in the party!" />
-					<Card cardType={TITLE} />
-				</Top>
-				<Bottom>
-					<Title text={`Join an existing party`} />
-					<div className="text-center">
-						<p className="mb-0">Enter the Party Code</p>
-						<input
-							className="w-full border border-solid border-black rounded-sm px-2 py-1"
-							type="text"
-							name="partyCode"
-							placeholder={`${appDomain}/<party_code>`}
-							onChange={updatePartyCode}
+		<div className="flex flex-col flex-1">
+			<div className="flex-1">
+				<Screen>
+					<Top>
+						<Banner title="Ask your friend for the party code or create a game if you are the first player in the party!" />
+						<Card cardType={TITLE} />
+					</Top>
+					<Bottom>
+						<Title text={`Join an existing party`} />
+						<div className="text-center">
+							<p className="mb-0">Enter the Party Code</p>
+							<input
+								className="w-full border border-solid border-black rounded-sm px-2 py-1"
+								type="text"
+								name="partyCode"
+								placeholder={`${appDomain}/<party_code>`}
+								onChange={updatePartyCode}
+							/>
+						</div>
+						<Button
+							asLink
+							className="center"
+							disabled={state.partyCode.length === 0}
+							link={`/join/${state.partyCode}`}
+							text="Join Party"
 						/>
-					</div>
-					<Button
-						asLink
-						className="center"
-						disabled={state.partyCode.length === 0}
-						link={`/join/${state.partyCode}`}
-						text="Join Party"
-					/>
-				</Bottom>
-			</Screen>
+					</Bottom>
+				</Screen>
+			</div>
 			<FooterSection />
-		</>
+		</div>
 	);
 }
 

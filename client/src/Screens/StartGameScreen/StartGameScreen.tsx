@@ -186,25 +186,27 @@ const StartGameScreen = () => {
 	)
 
 	return (
-		<>
-			<Screen>
-				<Top>
-					<Banner
-						title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
-					<Card cardType={LINK} link={partyCode} />
-				</Top>
-				<Bottom>
-					<Title text="Players Joined" />
-					<form className="mx-auto text-center max-w-[20rem]" onSubmit={handleFormSubmit}>
-						<PlayerList players={state.players} joined={state.joined} className="center"
-							onChange={updatePlayerName} />
-						{state.joined ? renderStartButton() : renderButton()}
-					</form>
-					<Footer>
-						{state.players.length < 3 ? 'Need at least 3 players to start game' : 'Ready to start Game!'}
-					</Footer>
-				</Bottom>
-			</Screen>
+		<div className="flex flex-col flex-1">
+			<div className="flex-1">
+				<Screen>
+					<Top>
+						<Banner
+							title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
+						<Card cardType={LINK} link={partyCode} />
+					</Top>
+					<Bottom>
+						<Title text="Players Joined" />
+						<form className="mx-auto text-center max-w-[20rem]" onSubmit={handleFormSubmit}>
+							<PlayerList players={state.players} joined={state.joined} className="center"
+								onChange={updatePlayerName} />
+							{state.joined ? renderStartButton() : renderButton()}
+						</form>
+						<Footer>
+							{state.players.length < 3 ? 'Need at least 3 players to start game' : 'Ready to start Game!'}
+						</Footer>
+					</Bottom>
+				</Screen>
+			</div>
 			<FooterSection />
 			<GameConfigModal
 				isOpen={isConfigModalOpen}
@@ -212,7 +214,7 @@ const StartGameScreen = () => {
 				onSave={handleSaveConfig}
 				initialConfig={gameConfig}
 			/>
-		</>
+		</div>
 	);
 };
 
