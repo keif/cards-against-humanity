@@ -13,14 +13,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-# Pull latest code
-if [ -d ".git" ]; then
-    echo "Pulling latest code..."
-    git pull
-    echo -e "${GREEN}✓ Code updated${NC}"
-    echo
-fi
-
 # Rebuild app image
 echo "Rebuilding application..."
 docker-compose -f docker-compose.prod.yml build app

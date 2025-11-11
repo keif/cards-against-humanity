@@ -69,6 +69,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ~/cards-against-humanity
+            git pull
             ./deployment/update.sh
 
       - name: Deployment Status
