@@ -156,6 +156,18 @@ cd ~/cards-against-humanity
 docker-compose -f docker-compose.prod.yml logs app
 ```
 
+### Docker Compose ContainerConfig Error
+- **Symptom:** Error message: `KeyError: 'ContainerConfig'`
+- **Cause:** Bug in docker-compose v1.29.2 when recreating containers
+- **Solution:** Already fixed in `deployment/update.sh` - script now stops old container before starting new one
+- **Optional improvement:** Upgrade to docker-compose v2 on server:
+```bash
+ssh root@174.138.68.25
+sudo apt-get update
+sudo apt-get install docker-compose-plugin
+# Now use 'docker compose' (v2) instead of 'docker-compose' (v1)
+```
+
 ### Health Check Fails
 - **Symptom:** Deployment completes but health check warning appears
 - **Check app status:**

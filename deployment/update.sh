@@ -27,7 +27,10 @@ docker-compose -f docker-compose.prod.yml build app
 
 echo
 echo "Restarting application with zero downtime..."
-docker-compose -f docker-compose.prod.yml up -d --no-deps app
+# Stop old container first to avoid docker-compose v1 ContainerConfig bug
+docker-compose -f docker-compose.prod.yml stop app
+docker-compose -f docker-compose.prod.yml rm -f app
+docker-compose -f docker-compose.prod.yml up -d app
 
 echo
 echo "Waiting for new container to be healthy..."
