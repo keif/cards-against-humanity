@@ -13,7 +13,11 @@ import {
 	RejectionReason
 } from "@/types";
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080';
+// In production, use same origin (nginx proxies to backend)
+// In development, use VITE_SERVER_URL or localhost
+const SERVER_URL = import.meta.env.PROD
+	? window.location.origin
+	: (import.meta.env.VITE_SERVER_URL ?? 'http://localhost:8080');
 
 // Initialize session via HTTP request before connecting socket
 // This ensures the session cookie is set before Socket.IO connects
