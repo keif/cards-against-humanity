@@ -205,12 +205,18 @@ const PlayerSelectionScreen = () => {
 			} else if (roundState.roundRole === 'judge') {
 				headerText = `You are the Judge`;
 				if (roundState.roundState === 'judge-waiting') directions = 'Waiting for players to choose Cards';
-				else if (roundState.roundState === JUDGE_SELECTING) directions = 'Choose your favorite card';
+				else if (roundState.roundState === JUDGE_SELECTING) {
+					directions = isTouchDevice ? 'Tap your favorite card' : 'Choose your favorite card';
+				}
 			} else {
 				headerText = `${roundState.roundJudge?.name || 'Judge'} is the Judge`;
 				if (roundState.roundState === 'player-selecting') {
 					const numCards = roundState.QCard?.numAnswers || 1;
-					directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
+					if (isTouchDevice) {
+						directions = numCards > 1 ? `Tap ${numCards} Cards` : 'Tap a Card';
+					} else {
+						directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
+					}
 				} else if (roundState.roundState === 'player-waiting') {
 					directions = 'Waiting for other players';
 				} else if (roundState.roundState === JUDGE_SELECTING) {
@@ -724,9 +730,15 @@ const PlayerSelectionScreen = () => {
 						onCardClick={
 							state.roundState === JUDGE_SELECTING || state.roundState === ELIMINATION_VOTING
 								? (id: number) => handleCardDrop({ id, type: ItemTypes.CARD })
-								: undefined
+								: (state.roundState === PLAYER_SELECTING && isTouchDevice)
+									? (id: number) => handleCardDrop({ id, type: ItemTypes.CARD })
+									: undefined
 						}
-						selectedCards={selectedVoteCardId !== null ? [selectedVoteCardId] : []}
+						selectedCards={
+							selectedVoteCardId !== null
+								? [selectedVoteCardId]
+								: droppedCards.map(c => c.id).filter((id): id is number => id !== undefined)
+						}
 						eliminatedCards={state.roundState === ELIMINATION_VOTING ? state.eliminatedCards : undefined}
 						onCardRemove={handleCardRemove}
 						onCardDiscard={
