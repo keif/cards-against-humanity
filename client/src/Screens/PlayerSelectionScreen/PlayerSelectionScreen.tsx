@@ -59,9 +59,11 @@ const PlayerSelectionScreen = () => {
 	const [scoreboardOpen, setScoreboardOpen] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const [discardNotification, setDiscardNotification] = useState<{ playerName: string; cardText: string } | null>(null);
+	const [timeoutNotification, setTimeoutNotification] = useState<{ message: string; submittedCount: number; totalCount: number } | null>(null);
 	const [selectedVoteCardId, setSelectedVoteCardId] = useState<number | null>(null); // Track voted card in God is Dead mode
 	const previousRoundRef = useRef<{ roundNum: number; roundState: string; eliminationRound?: number }>({ roundNum: 0, roundState: '', eliminationRound: undefined });
 	const timerRef = useRef<number | null>(null);
+	const timeoutDetectedRef = useRef(false);
 
 	if (!partyCode) {
 		navigate(`/join`);
@@ -265,6 +267,7 @@ const PlayerSelectionScreen = () => {
 
 			if (roundChanged || stateChanged) {
 				setDroppedCards([]); // Clear dropped cards on round change
+				setTimeoutNotification(null); // Clear timeout notification on state change
 				previousRoundRef.current = {
 					roundNum: roundState.roundNum ?? 0,
 					roundState: roundState.roundState ?? '',
@@ -302,12 +305,37 @@ const PlayerSelectionScreen = () => {
 		};
 	}, []);
 
+	// Handle timeout event - show notification about which players didn't submit
+	const handleTimeout = useMemo(() => () => {
+		// Only show timeout notification if we're in a submitting state
+		if (state.roundState === PLAYER_SELECTING || state.roundState === 'player-waiting') {
+			const totalPlayers = (state.playerScores?.length || 0) - 1; // Subtract judge
+			const submittedCards = state.otherPlayerCards?.length || 0;
+
+			if (submittedCards < totalPlayers) {
+				setTimeoutNotification({
+					message: "Time's Up!",
+					submittedCount: submittedCards,
+					totalCount: totalPlayers
+				});
+
+				// Auto-hide notification after 5 seconds
+				setTimeout(() => setTimeoutNotification(null), 5000);
+			}
+		}
+	}, [state.roundState, state.playerScores, state.otherPlayerCards]);
+
 	// Separate useEffect to manage countdown timer
 	useEffect(() => {
 		// Clear any existing timer
 		if (timerRef.current) {
 			clearInterval(timerRef.current);
 			timerRef.current = null;
+		}
+
+		// Reset timeout detection when server time changes
+		if (serverTimeLeft > 0) {
+			timeoutDetectedRef.current = false;
 		}
 
 		// Initialize timeLeft from server
@@ -321,6 +349,11 @@ const PlayerSelectionScreen = () => {
 						if (timerRef.current) {
 							clearInterval(timerRef.current);
 							timerRef.current = null;
+						}
+						// Trigger timeout notification only once
+						if (!timeoutDetectedRef.current) {
+							timeoutDetectedRef.current = true;
+							handleTimeout();
 						}
 						return 0;
 					}
@@ -336,7 +369,7 @@ const PlayerSelectionScreen = () => {
 				timerRef.current = null;
 			}
 		};
-	}, [serverTimeLeft]);
+	}, [serverTimeLeft, handleTimeout]);
 
 	// called after viewing-winner, resets state and gets new state from server. Begins new round
 	const restoreScreen = () => {
@@ -585,6 +618,22 @@ const PlayerSelectionScreen = () => {
 					</div>
 				</div>
 			)}
+
+			{/* Timeout notification */}
+			{timeoutNotification && (
+				<div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-yellow-300 max-w-md animate-pulse">
+					<div className="text-center">
+						<div className="text-2xl font-bold mb-2">⏰ {timeoutNotification.message}</div>
+						<div className="text-base mb-1">
+							Only {timeoutNotification.submittedCount} of {timeoutNotification.totalCount} players submitted cards
+						</div>
+						<div className="text-sm opacity-90">
+							Proceeding with partial submissions...
+						</div>
+					</div>
+				</div>
+			)}
+
 			{dndBackend && (
 			<DndProvider backend={dndBackend} options={isTouchDevice ? touchBackendOptions : undefined}>
 				<Top className={state.roundState === VIEWING_WINNER ? 'winner' : ''}>
