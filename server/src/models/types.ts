@@ -56,6 +56,7 @@ export interface GameInterface {
     rounds: RoundInterface[];
     roundsIdle: number; // if at least |this.players.length.length| roundsIdle, then game state is inactive
     roundTimer: null | ReturnType<typeof setTimeout>;
+    setRoundFinishedNotifier: (cb: CallbackType) => void;
     shuffleCard: (sessionID: string, sourceIdx: number, destIdx: number, cb: CallbackType) => void;
 }
 

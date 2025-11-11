@@ -57,6 +57,15 @@ class Game implements GameInterface {
 		this.getPlayer = this.getPlayer.bind(this);
 		this.getPlayerRoundState = this.getPlayerRoundState.bind(this);
 		this.playCard = this.playCard.bind(this);
+		this.setRoundFinishedNotifier = this.setRoundFinishedNotifier.bind(this);
+	}
+
+	/**
+	 * Update the round finished notifier callback
+	 * This is needed when Socket.IO clients reconnect or when the callback context changes
+	 */
+	setRoundFinishedNotifier(cb: CallbackType): void {
+		this.roundFinishedNotifier = cb;
 	}
 
 	/**

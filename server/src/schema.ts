@@ -73,6 +73,11 @@ export const getLobbyState = async (partyCode: string, sessionID: string, cb: Ca
         };
     }
 
+    // Update the round finished notifier to ensure Socket.IO events are emitted correctly
+    // This is critical for timeout handling - when multiple clients connect, we need the
+    // latest callback that has access to the Socket.IO server instance
+    existingGame.setRoundFinishedNotifier(cb);
+
     const currentPlayer = existingGame.getPlayer(sessionID);
     let players: string[] = [];
     for (let [key, value] of Object.entries(existingGame.players)) {
