@@ -5,7 +5,7 @@ const FooterSection: React.FC = () => {
     return (
         <footer className="py-12 px-6 md:py-12 md:px-6 bg-brand-gray-dark text-white">
             <div className="max-w-content-lg mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] gap-6 md:gap-8 mb-8 md:mb-10">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-6 md:gap-8 mb-8 md:mb-10">
                     <div className="flex flex-col">
                         <h3 className="text-base md:text-lg font-semibold mb-3 text-white">
                             🎴 Phucking Cards
@@ -55,6 +55,50 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
+                        <h4 className="text-base font-semibold mb-3 text-white">Shop</h4>
+                        <ul className="list-none p-0 m-0 space-y-2">
+                            <li>
+                                <Link
+                                    to="/products"
+                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                >
+                                    All Products →
+                                </Link>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://amzn.to/47T7TiE"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                >
+                                    Base Game
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://amzn.to/4hYAacn"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                >
+                                    Hot Box (New!)
+                                </a>
+                            </li>
+                            <li>
+                                <a
+                                    href="https://amzn.to/47PbcaG"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                >
+                                    Storage Case
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div className="flex flex-col">
                         <h4 className="text-base font-semibold mb-3 text-white">Community</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
@@ -89,8 +133,18 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <h4 className="text-base font-semibold mb-3 text-white">Legal</h4>
+                        <h4 className="text-base font-semibold mb-3 text-white">Support</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
+                            <li>
+                                <a
+                                    href="https://buymeacoffee.com/keif"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline inline-flex items-center gap-1"
+                                >
+                                    ☕ Buy Me a Coffee
+                                </a>
+                            </li>
                             <li>
                                 <Link
                                     to="/privacy"
@@ -122,6 +176,7 @@ const FooterSection: React.FC = () => {
                 <div className="border-t border-brand-gray pt-6 text-center">
                     <p className="text-xs md:text-xs leading-relaxed text-footer-text-muted m-0 mb-3 md:text-left">
                         <strong>Disclaimer:</strong> Not affiliated with, endorsed by, or sponsored by Cards Against Humanity LLC.
+                        As an Amazon Associate, this project earns from qualifying purchases.
                     </p>
                     <p className="text-xs md:text-xs leading-relaxed text-footer-text-muted m-0 md:text-left">
                         Cards Against Humanity game content is licensed under{' '}

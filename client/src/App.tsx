@@ -17,6 +17,7 @@ const PrivacyScreen = lazy(() => import('./Screens/PrivacyScreen/PrivacyScreen')
 const ContentPolicyScreen = lazy(() => import('./Screens/ContentPolicyScreen/ContentPolicyScreen'));
 const ModerationGuidelinesScreen = lazy(() => import('./Screens/ModerationGuidelinesScreen/ModerationGuidelinesScreen'));
 const LicenseScreen = lazy(() => import('./Screens/LicenseScreen/LicenseScreen'));
+const ProductsScreen = lazy(() => import('./Screens/ProductsScreen/ProductsScreen'));
 
 // Routing
 export const enum ROUTE_PARAM {
@@ -37,6 +38,7 @@ export const enum ROUTE_PATH {
 	CONTENT_POLICY = '/content-policy',
 	MODERATION_GUIDELINES = '/moderation-guidelines',
 	LICENSE = '/license',
+	PRODUCTS = '/products',
 }
 
 const App = () => {
@@ -97,6 +99,10 @@ const App = () => {
 					<Route
 						path={`${ROUTE_PATH.LICENSE}`}
 						element={<LicenseScreen/>}
+					/>
+					<Route
+						path={`${ROUTE_PATH.PRODUCTS}`}
+						element={<ProductsScreen/>}
 					/>
 					<Route
 						path={`${ROUTE_PATH.PLAYER_SELECTION}`}
