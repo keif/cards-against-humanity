@@ -2,6 +2,12 @@
 
 This directory contains affiliate product links for Cards Against Humanity products.
 
+## Product Images
+
+Product images are stored in `/public/images/products/`. See `/public/images/products/README.md` for detailed guidelines on adding product images.
+
+The `ProductImage` component automatically displays a Cards Against Humanity themed placeholder for products without images, so the site works perfectly even before adding images.
+
 ## Adding New Products
 
 To add new products manually, edit `products.ts` and add a new entry to the `products` array:

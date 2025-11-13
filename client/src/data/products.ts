@@ -5,6 +5,7 @@ export interface Product {
   category: 'base' | 'expansion' | 'bundle' | 'mini' | 'special' | 'storage';
   featured?: boolean;
   description?: string;
+  image?: string; // Path to product image in /public/images/products/
 }
 
 export const products: Product[] = [

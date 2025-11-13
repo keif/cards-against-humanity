@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import DocumentationLayout from '../../components/DocumentationLayout/DocumentationLayout';
 import { AffiliateDisclosure } from '../../components/AffiliateDisclosure/AffiliateDisclosure';
+import { ProductImage } from '../../components/ProductImage/ProductImage';
 import { products, getCategoryName, Product } from '../../data/products';
 
 const ProductsScreen: React.FC = () => {
@@ -64,42 +65,53 @@ const ProductsScreen: React.FC = () => {
               href={product.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group bg-white border border-gray-200 rounded-lg p-6 hover:shadow-lg hover:border-gray-300 transition-all"
+              className="group bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all"
             >
-              <div className="mb-4">
-                <span className="inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded">
-                  {getCategoryName(product.category)}
-                </span>
-                {product.featured && (
-                  <span className="inline-block ml-2 px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded">
-                    Featured
-                  </span>
-                )}
+              {/* Product Image */}
+              <div className="aspect-square w-full overflow-hidden bg-gray-50">
+                <ProductImage
+                  product={product}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
               </div>
 
-              <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                {product.title}
-              </h3>
+              {/* Product Info */}
+              <div className="p-6">
+                <div className="mb-3">
+                  <span className="inline-block px-2 py-1 text-xs font-semibold text-gray-600 bg-gray-100 rounded">
+                    {getCategoryName(product.category)}
+                  </span>
+                  {product.featured && (
+                    <span className="inline-block ml-2 px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded">
+                      Featured
+                    </span>
+                  )}
+                </div>
 
-              {product.description && (
-                <p className="text-sm text-gray-600 mb-4">
-                  {product.description}
-                </p>
-              )}
+                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {product.title}
+                </h3>
 
-              <div className="flex items-center text-blue-600 font-medium text-sm group-hover:underline">
-                View on Amazon
-                <svg
-                  className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M9 5l7 7-7 7" />
-                </svg>
+                {product.description && (
+                  <p className="text-sm text-gray-600 mb-4">
+                    {product.description}
+                  </p>
+                )}
+
+                <div className="flex items-center text-blue-600 font-medium text-sm group-hover:underline">
+                  View on Amazon
+                  <svg
+                    className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
               </div>
             </a>
           ))}
