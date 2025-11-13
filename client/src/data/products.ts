@@ -191,7 +191,7 @@ export const products: Product[] = [
   {
     id: 'period-pack',
     title: 'Period Pack',
-    url: 'https://amzn.to/47PbcaG',
+    url: 'https://amzn.to/4i1QxF2',
     image: '/images/products/period-pack.jpg',
     category: 'mini',
     description: 'Mini expansion'
