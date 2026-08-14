@@ -4,7 +4,7 @@
 FROM node:20-alpine AS deps
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ RUN pnpm install --frozen-lockfile
 # ===== Frontend Builder =====
 FROM node:20-alpine AS frontend-builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
 
 WORKDIR /app/client
 
@@ -36,7 +36,7 @@ RUN pnpm build
 # ===== Backend Builder =====
 FROM node:20-alpine AS backend-builder
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
 
 WORKDIR /app/server
 
@@ -53,7 +53,7 @@ RUN pnpm build
 # ===== Production Runner =====
 FROM node:20-alpine AS runner
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.21.0 --activate
 
 WORKDIR /app
 
