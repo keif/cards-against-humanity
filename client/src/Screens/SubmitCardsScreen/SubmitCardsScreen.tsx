@@ -320,7 +320,7 @@ const SubmitCardsScreen: React.FC = () => {
 				<p className="mb-4">Scroll up and fill out the form, or check out existing community submissions!</p>
 				<a
 					href="/community/cards"
-					className="inline-block bg-black text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-brand-gray transition-colors no-underline"
+					className="inline-flex items-center min-h-[52px] bg-pink text-ink px-8 rounded-lg shadow-press font-bold text-lg hover:bg-pink-hover active:translate-y-0.5 active:shadow-none transition-transform no-underline"
 				>
 					View Community Cards
 				</a>

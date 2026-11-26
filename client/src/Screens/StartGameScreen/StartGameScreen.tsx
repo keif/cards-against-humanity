@@ -8,7 +8,6 @@ import PlayerList from '@/components/PlayerList/PlayerList';
 import Screen from '@/components/Screen/Screen';
 import Title from '@/components/Title/Title';
 import Top from '@/components/Top/Top';
-import Banner from 'react-js-banner';
 import FooterSection from '../HomeScreen/FooterSection';
 import GameConfigModal from '@/components/GameConfigModal/GameConfigModal';
 
@@ -120,7 +119,7 @@ const StartGameScreen = () => {
 						<button
 							type="button"
 							onClick={() => setIsConfigModalOpen(true)}
-							className="px-6 py-2 border-2 border-black rounded hover:bg-gray-100 font-bold text-center flex items-center justify-center gap-2"
+							className="min-h-[48px] px-6 border-2 border-table-line rounded-lg text-paper hover:border-muted font-bold text-center flex items-center justify-center gap-2"
 						>
 							<svg
 								xmlns="http://www.w3.org/2000/svg"
@@ -135,10 +134,10 @@ const StartGameScreen = () => {
 								<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
 								<circle cx="12" cy="12" r="3" />
 							</svg>
-							Configure Game {hasConfiguredRules ? '✓' : '(Optional)'}
+							{hasConfiguredRules ? 'House rules set' : 'Set house rules (optional)'}
 						</button>
-						<p className="text-sm text-gray-600 -mt-2">
-							⚠️ Configure house rules BEFORE joining
+						<p className="text-sm text-muted -mt-1">
+							House rules lock once you join.
 						</p>
 					</>
 				)}
@@ -147,7 +146,7 @@ const StartGameScreen = () => {
 					disabled={state.currentPlayerName?.length === 0}
 					onClick={(event: React.FormEvent<HTMLFormElement | HTMLButtonElement>) => handleFormSubmit(event)}
 					type="submit"
-					text={'Join Party'}
+					text={'Join party'}
 				/>
 			</div>
 		);
@@ -158,7 +157,7 @@ const StartGameScreen = () => {
 			{isHost && (
 				<button
 					onClick={() => setIsConfigModalOpen(true)}
-					className="px-6 py-2 border-2 border-black rounded hover:bg-gray-100 font-bold text-center flex items-center justify-center gap-2"
+					className="min-h-[48px] px-6 border-2 border-table-line rounded-lg text-paper hover:border-muted font-bold text-center flex items-center justify-center gap-2"
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -173,14 +172,14 @@ const StartGameScreen = () => {
 						<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
 						<circle cx="12" cy="12" r="3" />
 					</svg>
-					Game Configuration
+					House rules
 				</button>
 			)}
 			<Button
 				className="center"
 				disabled={state.players?.length < 3}
 				onClick={handleStartGame}
-				text={'Start Game'}
+				text={'Start the game'}
 			/>
 		</div>
 	)
@@ -190,8 +189,9 @@ const StartGameScreen = () => {
 			<div className="flex-1">
 				<Screen>
 					<Top>
-						<Banner
-							title="Share the current url / link with your friends to get started! You need at least 3 people to play this game!" />
+						<p className="m-0 px-4 pt-4 text-center text-sm font-bold text-muted">
+							Send the code or this page's link to your friends. You need at least 3 people to play.
+						</p>
 						<Card cardType={LINK} link={partyCode} />
 					</Top>
 					<Bottom>

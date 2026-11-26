@@ -12,6 +12,28 @@ export const TITLE: CardType = "Title";
 export const PLACEHOLDER: CardType = "placeholder";
 export const LINK: CardType = "Link";
 
+// Card print number shown in the footer ("Nº 0412"), per DESIGN.md.
+const printNumber = (id?: number) => (id === undefined ? '' : `Nº ${String(id).padStart(4, '0')}`);
+
+/**
+ * Tailwind text-size classes for an answer card, based on how long its text is.
+ * DESIGN.md: card copy never truncates. Base size is 20px (17px under 380px wide),
+ * stepping down for long answers so they fit a 128x154 card.
+ * Deck lengths: median 21 chars, p90 54, p95 69, p99 94, max 129.
+ */
+export const answerTextSize = (text?: string): string => {
+	// TODO: step down the size for long answers (e.g. past ~55 and ~90 chars).
+	void text;
+	return 'text-[20px] leading-[1.18] max-[380px]:text-[17px] max-[380px]:leading-[1.15]';
+};
+
+const CardFoot =({ id, label = 'PC' }: { id?: number; label?: string }) => (
+	<span className="flex justify-between items-baseline font-mono font-bold text-[11px] max-[380px]:text-[10px] tracking-[0.06em] opacity-70" aria-hidden="true">
+		<span>{label}</span>
+		<span>{printNumber(id)}</span>
+	</span>
+);
+
 export interface CardProps {
 	cardType: CardType;
 	className?: string;
@@ -51,16 +73,17 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 		return (
 			<div data-qa="card" className="relative inline-block">
 				{numAnswers && numAnswers > 1 && (
-					<div className="absolute -top-2 -right-2 max-[380px]:-top-1.5 max-[380px]:-right-1.5 bg-[#FF9800] text-white px-2 py-1 max-[380px]:px-1.5 max-[380px]:py-0.5 rounded text-sm max-[380px]:text-xs font-bold z-[3] shadow-md">
-						Pick {numAnswers}
+					<div className="absolute -top-2.5 -right-2 bg-ink text-riso-yellow px-2 py-1 rounded-sm font-mono text-xs font-bold z-[3]">
+						PICK {numAnswers}
 					</div>
 				)}
-				<div className={`w-[200px] h-[275px] max-[380px]:w-[144px] max-[380px]:h-[198px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border border-[#979797] p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] ${className}`}>
-					<p dangerouslySetInnerHTML={{ __html: formattedText }} />
+				<div className={`w-[200px] h-[275px] max-[380px]:w-[144px] max-[380px]:h-[198px] card-text text-[20px] leading-[1.18] max-[380px]:text-[17px] max-[380px]:leading-[1.15] rounded-lg p-4 max-[380px]:p-[11px] break-words relative z-[1] select-none bg-pink text-ink shadow-card flex flex-col justify-between ${className}`}>
+					<p className="m-0" dangerouslySetInnerHTML={{ __html: formattedText }} />
+					<CardFoot id={id} label="PHUCKING CARDS" />
 				</div>
 				{
 					status &&
-					<div className={`bg-white rounded-b-lg -mt-[11px] h-[35px] max-[380px]:w-[144px] max-[380px]:text-[15px] leading-[45px] text-center border border-[#979797] z-0 relative w-[196px] mx-auto ${className}`}>
+					<div className={`bg-paper text-ink rounded-b-lg -mt-2 pt-2 h-[38px] max-[380px]:w-[136px] w-[188px] mx-auto text-center font-mono font-bold text-sm max-[380px]:text-xs leading-[30px] z-0 relative ${className}`}>
 						<span>{status}</span>
 					</div>
 				}
@@ -68,13 +91,14 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 		);
 	} else if (cardType === TITLE) {
 		return (
-			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
-				<h3 className="mt-0 leading-tight">{SITE_NAME}</h3>
+			<div className={`w-60 h-[330px] max-[380px]:w-48 max-[380px]:h-[264px] rounded-lg p-5 relative z-[1] select-none bg-pink text-ink flex flex-col justify-between mx-auto mt-6 -rotate-3 shadow-[-6px_5px_0_rgba(0,120,191,0.55)] ${className}`}>
+				<h3 className="m-0 font-display-tight text-[44px] max-[380px]:text-[36px] leading-[0.95]">{SITE_NAME}</h3>
+				<CardFoot label="PHUCKING CARDS" />
 			</div>
 		);
 	} else if (cardType === PLACEHOLDER) {
 		return (
-			<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg p-3 cursor-pointer break-words relative z-[1] select-none bg-transparent border-[3px] border-dashed border-[#6F6F6F] text-[#6F6F6F] flex items-center text-center leading-none ${className}`}>
+			<div className={`w-40 h-[220px] max-[380px]:w-28 max-[380px]:h-[154px] card-text text-[20px] max-[380px]:text-[15px] rounded-lg p-3 break-words relative z-[1] select-none bg-transparent border-[3px] border-dashed border-muted text-muted flex items-center justify-center text-center leading-none ${className}`}>
 				Drop Card Here
 			</div>
 		);
@@ -83,31 +107,30 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 		const partyCode = window.location.pathname.split('/').filter(Boolean).pop() || '';
 
 		return (
-			<div className={`w-60 h-[330px] font-['Helvetica_Neue'] text-[26px] font-bold rounded-lg border-0 p-3 cursor-pointer break-words relative z-[1] select-none bg-black text-[#F7F7F7] flex flex-col mx-auto mt-5 leading-[0.2] opacity-50 pl-[25px] pt-10 shadow-[-20px_8px_2px_0px_rgba(0,0,0,0.5)] ${className}`}>
-				<h3 className="mt-0 leading-tight">Invite friends</h3>
-				<h3 className="mt-0 leading-tight">with party code:</h3>
-				<h6
-					className="leading-none mt-[40%] flex items-center gap-2 justify-center cursor-pointer"
+			<div className={`w-60 h-[330px] max-[380px]:w-48 max-[380px]:h-[264px] rounded-lg p-5 relative z-[1] select-none bg-paper text-ink flex flex-col mx-auto mt-6 -rotate-2 shadow-card ${className}`}>
+				<h3 className="m-0 card-text text-[26px] max-[380px]:text-[21px] leading-[1.1]">Invite friends with this party code:</h3>
+				<button
+					type="button"
+					className="mt-auto mb-2 min-h-[48px] flex items-center gap-2 justify-center font-mono font-bold text-[28px] max-[380px]:text-[22px] tracking-[0.14em] bg-table text-paper rounded-lg px-3 py-2 border-0 cursor-pointer"
 					onClick={handleCopyLink}
 					title="Click to copy invite link"
+					aria-label={`Copy invite link for party ${partyCode}`}
 				>
 					{partyCode}
 					{copied ? (
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC84" strokeWidth="3" aria-hidden="true" strokeLinecap="round" strokeLinejoin="round">
 							<polyline points="20 6 9 17 4 12"></polyline>
 						</svg>
 					) : (
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
 							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
 							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
 						</svg>
 					)}
-				</h6>
-				{copied && (
-					<p className="text-[#4CAF50] text-sm font-bold text-center mt-2.5">
-						Link copied!
-					</p>
-				)}
+				</button>
+				<p className="m-0 text-sm font-bold text-center text-ink-muted min-h-[20px]" aria-live="polite">
+					{copied ? 'Link copied. Paste it in the group chat.' : 'Tap the code to copy the invite link.'}
+				</p>
 			</div>
 		)
 	} else {
@@ -138,7 +161,7 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 
 		return (
 			<div
-				className={`w-44 h-[220px] max-[380px]:w-32 max-[380px]:h-[154px] font-['Helvetica_Neue'] text-[22px] max-[380px]:text-[17px] font-bold rounded-lg border p-3 break-words relative z-[1] select-none bg-[#F7F7F7] text-black border-[#979797] ${isSelected ? 'border-[3px] border-[#2196F3] -translate-y-2.5 shadow-[0_8px_16px_rgba(33,150,243,0.4)] transition-[transform_0.2s_ease,box-shadow_0.2s_ease]' : ''} ${className}`}
+				className={`w-44 h-[220px] max-[380px]:w-32 max-[380px]:h-[154px] card-text ${answerTextSize(text)} rounded-lg p-3 max-[380px]:p-2.5 break-words relative z-[1] select-none bg-paper text-ink shadow-card flex flex-col justify-between transition-transform duration-[180ms] ease-out-expo ${isSelected ? 'outline outline-[3px] outline-pink outline-offset-[3px] -translate-y-3.5' : ''} ${className}`}
 				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
 				data-qa="card"
@@ -151,14 +174,15 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 				{onDiscard && (
 					<button
 						onClick={handleDiscard}
-						className="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold cursor-pointer border-0 transition-colors z-10"
+						className="absolute top-1 right-1 w-8 h-8 bg-error text-ink rounded-full flex items-center justify-center text-base font-bold cursor-pointer border-0 z-10"
 						title="Discard this card (Never Have I Ever)"
 						aria-label="Discard card"
 					>
 						×
 					</button>
 				)}
-				<p dangerouslySetInnerHTML={{ __html: text || '' }} />
+				<p className="m-0" dangerouslySetInnerHTML={{ __html: text || '' }} />
+				<CardFoot id={id} />
 			</div>
 		);
 	}

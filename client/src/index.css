@@ -3,14 +3,24 @@
 @tailwind utilities;
 
 @layer base {
+  /* Paper is the safe default surface; game and home screens paint the table themselves. */
   body {
     padding: 0;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-      "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-      sans-serif;
-    font-weight: bold;
+    @apply bg-paper text-ink font-sans;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible {
+    @apply outline outline-[3px] outline-offset-2 outline-focus;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 
   html, body {
@@ -42,6 +52,28 @@
 
   .skip-link:focus {
     @apply top-0;
+  }
+
+  /* Riso paper grain. Marketing hero only (DESIGN.md: no texture on game screens). */
+  .grain {
+    @apply relative overflow-hidden;
+  }
+  .grain::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none opacity-[.14] mix-blend-overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Display voice: condensed Bricolage for headlines. */
+  .font-display-tight {
+    @apply font-display font-extrabold tracking-[-0.02em];
+    font-stretch: 75%;
+  }
+
+  /* Card text: Bricolage at its small optical size. */
+  .card-text {
+    @apply font-display font-bold;
+    font-variation-settings: 'opsz' 18;
   }
 
   /* Legacy center utility for horizontal centering */

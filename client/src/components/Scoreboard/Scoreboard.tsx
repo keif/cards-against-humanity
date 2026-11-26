@@ -24,8 +24,8 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 		return null;
 	}
 
-	const baseClasses = "bg-black/70 rounded-lg p-[15px] min-w-[200px] max-w-[300px] md:min-w-[150px] md:max-w-[250px] md:p-2.5";
-	const dropdownClasses = onClose ? "fixed top-[70px] left-5 z-[1000] m-0 shadow-[0_8px_16px_rgba(0,0,0,0.4)] animate-slideDown md:m-0" : "m-2.5 md:m-[5px]";
+	const baseClasses = "bg-table-raised border border-table-line text-paper rounded-lg p-[15px] min-w-[200px] max-w-[300px] md:min-w-[150px] md:max-w-[250px] md:p-2.5";
+	const dropdownClasses = onClose ? "fixed top-[70px] left-5 z-[1000] m-0 shadow-card animate-slideDown md:m-0" : "m-2.5 md:m-[5px]";
 
 	if (!playerScores || playerScores.length === 0) {
 		// Show scoreboard with placeholder when no scores yet
@@ -40,11 +40,11 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 						✕
 					</button>
 				)}
-				<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-[#4CAF50] pb-2">
+				<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
 					Scores
 				</h3>
 				<div className="flex flex-col gap-1.5">
-					<div className="flex justify-between items-center px-3 py-2 md:px-2.5 md:py-1.5 bg-white/10 rounded-[5px]">
+					<div className="flex justify-between items-center px-3 py-2 md:px-2.5 md:py-1.5 bg-table rounded-sm">
 						<span className="text-white flex-1 mx-2.5 text-sm md:text-[13px] opacity-50">
 							Waiting for players...
 						</span>
@@ -68,24 +68,24 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 					✕
 				</button>
 			)}
-			<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-[#4CAF50] pb-2">
+			<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
 				Scores
 			</h3>
 			<div className="flex flex-col gap-1.5">
 				{sortedPlayers.map((player, index) => (
 					<div
 						key={player.pID}
-						className={`flex justify-between items-center px-3 py-2 md:px-2.5 md:py-1.5 bg-white/10 rounded-[5px] transition-colors hover:bg-white/15 ${
-							player.name === currentPlayerName ? 'bg-[#4CAF50]/30 border border-[#4CAF50] hover:bg-[#4CAF50]/40' : ''
+						className={`flex justify-between items-center px-3 py-2 md:px-2.5 md:py-1.5 bg-table rounded-sm transition-colors hover:bg-table-line ${
+							player.name === currentPlayerName ? 'bg-table-line border border-riso-yellow' : ''
 						}`}
 					>
-						<span className="text-[#FFD700] font-bold text-base md:text-sm min-w-[25px]">
+						<span className="text-riso-yellow font-mono font-bold text-base md:text-sm min-w-[25px]">
 							{index + 1}
 						</span>
 						<span className="text-white flex-1 mx-2.5 text-sm md:text-[13px]">
 							{player.name}
 						</span>
-						<span className="text-[#4CAF50] font-bold text-base md:text-sm min-w-[30px] text-right">
+						<span className="text-paper font-mono font-bold text-base md:text-sm min-w-[30px] text-right">
 							{player.score}
 						</span>
 					</div>

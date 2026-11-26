@@ -7,6 +7,7 @@ import DropCardSpace from '@/components/DropCardSpace/DropCardSpace';
 import Footer from '@/components/Footer/Footer';
 import HeaderMenu from '@/components/HeaderMenu/HeaderMenu';
 import Scoreboard from '@/components/Scoreboard/Scoreboard';
+import Button from '@/components/Button/Button';
 import Screen from '@/components/Screen/Screen';
 import Status from '@/components/Status/Status';
 import Top from '@/components/Top/Top';
@@ -591,18 +592,18 @@ const PlayerSelectionScreen = () => {
 			{state.gameConfig?.enabledRules?.survivalOfTheFittest && (
 				<>
 					{state.roundState === PLAYER_SELECTING && (
-						<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-amber-300">
-							<div className="text-center">
-								<div className="text-base font-bold">⚡ SURVIVAL OF THE FITTEST ⚡</div>
-								<div className="text-sm mt-1 opacity-90">Elimination voting will begin after all players submit!</div>
+						<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4 z-40" role="status">
+							<div>
+								<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-riso-yellow">SURVIVAL OF THE FITTEST</span>
+								<div className="text-sm">Elimination voting starts once everyone has played a card.</div>
 							</div>
 						</div>
 					)}
 					{state.roundState === ELIMINATION_VOTING && (
-						<div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-40 bg-gradient-to-r from-red-500 to-rose-500 text-white px-6 py-3 rounded-lg shadow-xl border-2 border-red-300 animate-pulse">
-							<div className="text-center">
-								<div className="text-base font-bold">🗳️ ELIMINATION ROUND {state.eliminationRound} 🗳️</div>
-								<div className="text-sm mt-1 opacity-90">Vote to eliminate the weakest card!</div>
+						<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4 z-40" role="status">
+							<div>
+								<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-error">ELIMINATION ROUND {state.eliminationRound}</span>
+								<div className="text-sm">Vote to eliminate the weakest card.</div>
 							</div>
 						</div>
 					)}
@@ -611,30 +612,31 @@ const PlayerSelectionScreen = () => {
 
 			{/* Never Have I Ever discard notification */}
 			{discardNotification && (
-				<div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-[#FF5722] text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-white max-w-md">
-					<div className="text-center">
-						<div className="text-lg font-bold mb-2">😱 NEVER HAVE I EVER!</div>
+				<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-20" role="status">
+					<div>
+						<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-pink">NEVER HAVE I EVER</span>
 						<div className="text-base">
 							<span className="font-bold">{discardNotification.playerName}</span> shamefully admits they don't understand:
 						</div>
-						<div className="text-sm italic mt-2 bg-black bg-opacity-30 px-3 py-2 rounded">
+						<div className="card-text text-base mt-2 bg-paper-shade px-3 py-2 rounded-sm">
 							"{discardNotification.cardText}"
 						</div>
-						<div className="text-xs mt-2 opacity-90">What a disgrace! 🤦</div>
+						<div className="text-xs mt-2 text-ink-muted">What a disgrace.</div>
 					</div>
 				</div>
 			)}
 
 			{/* Timeout notification */}
 			{timeoutNotification && (
-				<div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-gradient-to-r from-orange-500 to-red-500 text-white px-6 py-4 rounded-lg shadow-2xl border-2 border-yellow-300 max-w-md animate-pulse">
-					<div className="text-center">
-						<div className="text-2xl font-bold mb-2">⏰ {timeoutNotification.message}</div>
+				<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-20" role="status">
+					<div>
+						<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-riso-yellow">TIME'S UP</span>
+						<div className="text-lg font-bold mb-1">{timeoutNotification.message}</div>
 						<div className="text-base mb-1">
 							Only {timeoutNotification.submittedCount} of {timeoutNotification.totalCount} players submitted cards
 						</div>
-						<div className="text-sm opacity-90">
-							Proceeding with partial submissions...
+						<div className="text-sm text-ink-muted">
+							Playing on with the cards that made it in.
 						</div>
 					</div>
 				</div>
@@ -670,12 +672,7 @@ const PlayerSelectionScreen = () => {
 					/>
 					{state.roundState === VIEWING_WINNER && (
 						<div className="text-center mt-5">
-							<button
-								onClick={restoreScreen}
-								className="px-8 py-3 text-lg font-bold bg-[#4CAF50] text-white border-0 rounded cursor-pointer shadow-lg hover:bg-[#45a049] transition-colors"
-							>
-								Next Round
-							</button>
+							<Button className="mx-auto" onClick={restoreScreen} text="Next round" />
 						</div>
 					)}
 				</Top>
@@ -684,17 +681,12 @@ const PlayerSelectionScreen = () => {
 					{state.roundState === PLAYER_SELECTING && state.roundRole === 'player' && (state.QCard?.numAnswers || 1) > 1 && (
 						<div className="text-center p-2.5">
 							{droppedCards.length > 0 && (
-								<span className="mr-2.5 text-white">
+								<span className="mr-2.5 text-paper font-mono font-bold">
 									Cards Played: {droppedCards.length} / {state.QCard?.numAnswers || 1}
 								</span>
 							)}
 							{droppedCards.length === (state.QCard?.numAnswers || 1) && (
-								<button
-									onClick={handleSubmitCards}
-									className="px-5 py-2.5 text-base font-bold bg-[#2196F3] text-white border-0 rounded cursor-pointer hover:bg-[#1976D2] transition-colors"
-								>
-									Submit Cards
-								</button>
+								<Button className="mx-auto mt-2" onClick={handleSubmitCards} text="Play these cards" />
 							)}
 						</div>
 					)}
@@ -702,7 +694,7 @@ const PlayerSelectionScreen = () => {
 						<div className="text-center p-2.5">
 							<button
 								onClick={handleRebootHand}
-								className="px-5 py-2.5 text-base font-bold bg-[#FF9800] text-white border-0 rounded cursor-pointer hover:bg-[#F57C00] transition-colors"
+								className="px-5 min-h-[48px] text-base font-bold bg-transparent text-paper border-2 border-table-line rounded-lg cursor-pointer hover:border-muted transition-colors disabled:opacity-45 disabled:cursor-not-allowed"
 								disabled={!state.playerScores?.find(p => p.name === state.currentPlayerName)?.score}
 								title={
 									state.playerScores?.find(p => p.name === state.currentPlayerName)?.score
@@ -710,7 +702,7 @@ const PlayerSelectionScreen = () => {
 										: 'You need at least 1 point to use this'
 								}
 							>
-								🔄 Trade Point for New Hand ({state.playerScores?.find(p => p.name === state.currentPlayerName)?.score || 0} pts)
+								Trade a point for a new hand ({state.playerScores?.find(p => p.name === state.currentPlayerName)?.score || 0} pts)
 							</button>
 						</div>
 					)}
@@ -751,14 +743,15 @@ const PlayerSelectionScreen = () => {
 					/>
 					<Footer>
 						<div className="flex items-center justify-center gap-2.5">
-							<span>Share Link or Party Code: {partyCode}</span>
+							<span>Party code <span className="font-mono tracking-[0.14em] text-riso-yellow">{partyCode}</span></span>
 							<button
 								onClick={handleCopyLink}
-								className="bg-transparent border-0 cursor-pointer p-1.5 flex items-center transition-transform hover:scale-110"
+								className="bg-transparent border-0 cursor-pointer p-2.5 flex items-center text-paper transition-transform hover:scale-110"
 								title="Copy link to clipboard"
+								aria-label="Copy invite link"
 							>
 								{copied ? (
-									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+									<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC84" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
 										<polyline points="20 6 9 17 4 12"></polyline>
 									</svg>
 								) : (
@@ -769,7 +762,7 @@ const PlayerSelectionScreen = () => {
 								)}
 							</button>
 							{copied && (
-								<span className="text-[#4CAF50] text-sm font-bold">
+								<span className="text-success text-sm font-bold" aria-live="polite">
 									Copied!
 								</span>
 							)}

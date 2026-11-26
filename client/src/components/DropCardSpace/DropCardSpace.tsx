@@ -124,7 +124,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 								key={card.id ?? `card-${index}`}
 								{...card}
 								index={index}
-								className={shouldFan ? "absolute transition-all duration-300 ease-in-out cursor-grab hover:!translate-y-[-20px] hover:!scale-105 hover:!z-10 hover:shadow-[0_10px_25px_rgba(0,0,0,0.5)]" : ""}
+								className={shouldFan ? "absolute transition-all duration-300 ease-in-out cursor-grab hover:!translate-y-[-20px] hover:!scale-105 hover:!z-10" : roundState === VIEWING_WINNER ? "animate-register" : ""}
 								style={fanStyle}
 							/>
 						);

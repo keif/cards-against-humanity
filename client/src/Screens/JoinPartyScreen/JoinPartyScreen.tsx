@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 
-import Banner from 'react-js-banner';
 import Bottom from "../../components/Bottom/Bottom";
 import Button from "../../components/Button/Button";
 import Card, { TITLE } from "../../components/Card/Card";
@@ -30,15 +29,17 @@ const JoinPartyScreen = () => {
 			<div className="flex-1">
 				<Screen>
 					<Top>
-						<Banner title="Ask your friend for the party code or create a game if you are the first player in the party!" />
+						<p className="m-0 px-4 pt-4 text-center text-sm font-bold text-muted">Ask a friend for the party code, or start a party if you're first.</p>
 						<Card cardType={TITLE} />
 					</Top>
 					<Bottom>
 						<Title text={`Join an existing party`} />
 						<div className="text-center">
-							<p className="mb-0">Enter the Party Code</p>
+							<label htmlFor="partyCode" className="block mb-2 font-bold">Party code</label>
 							<input
-								className="w-full border border-solid border-black rounded-sm px-2 py-1"
+								id="partyCode"
+								autoComplete="off"
+								className="w-full max-w-[20rem] mb-4 min-h-[52px] font-mono font-bold text-xl tracking-[0.14em] bg-table text-paper border-2 border-table-line rounded-lg px-4 placeholder:text-muted placeholder:tracking-normal placeholder:font-normal placeholder:text-base"
 								type="text"
 								name="partyCode"
 								placeholder={`${appDomain}/<party_code>`}

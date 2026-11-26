@@ -7,7 +7,7 @@ import FooterSection from './FooterSection';
 
 const HomeScreen: React.FC = () => {
     return (
-        <main id="main-content" className="w-full min-h-screen m-0 p-0">
+        <main id="main-content" className="w-full min-h-screen m-0 p-0 bg-table text-paper">
             <HeroSection />
             <HowItWorksSection />
             <FeaturesSection />

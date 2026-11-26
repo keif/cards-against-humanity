@@ -21,3 +21,6 @@ Commits follow Conventional Commit prefixes (`feat:`, `fix:`, `refactor:`) plus 
 
 ## Security & Environment
 Copy `.env.example` files into `server/.env` and `client/.env`, set `SESSION_SECRET`, `ALLOWED_ORIGINS`, Redis coordinates, and moderator/admin keys before running services or tests. Never commit secrets. Redis must be reachable for local dev, socket tests, and card seeding, and rate-limiter settings in `server/src/middleware/rateLimiter.ts` should be reviewed before exposing new endpoints.
+
+## Design System
+Read `DESIGN.md` before visual or UI work: it defines the fonts, colors, spacing, and aesthetic direction. Ask before departing from it. When reviewing or QA-ing UI, flag code that doesn't match `DESIGN.md`.

@@ -88,13 +88,13 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 	];
 
 	return (
-		<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-			<div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-				<div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-					<h2 className="text-2xl font-bold m-0">Game Configuration</h2>
+		<div className="fixed inset-0 bg-ink/70 flex items-center justify-center z-50 p-4">
+			<div className="bg-paper text-ink rounded-lg shadow-card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+				<div className="sticky top-0 bg-paper border-b-2 border-paper-shade px-6 py-4 flex items-center justify-between">
+					<h2 className="font-display-tight text-[32px] leading-none m-0">Game Configuration</h2>
 					<button
 						onClick={onClose}
-						className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+						className="text-ink-muted hover:text-ink text-2xl leading-none w-11 h-11"
 						aria-label="Close"
 					>
 						×
@@ -104,11 +104,11 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 				<div className="px-6 py-4">
 					{/* Basic Settings */}
 					<section className="mb-6">
-						<h3 className="text-xl font-semibold mb-4">Basic Settings</h3>
+						<h3 className="font-display font-bold text-[22px] mb-4">Basic Settings</h3>
 
 						<div className="space-y-4">
 							<div>
-								<label className="block text-sm font-medium mb-2">
+								<label className="block text-sm font-bold mb-2">
 									Winning Score (points needed to win)
 								</label>
 								<div className="flex items-center gap-4">
@@ -118,14 +118,14 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 										max="50"
 										value={config.winningScore}
 										onChange={(e) => updateWinningScore(parseInt(e.target.value))}
-										className="flex-1"
+										className="flex-1 accent-pink"
 									/>
-									<span className="font-bold text-lg w-12 text-center">{config.winningScore}</span>
+									<span className="font-mono font-bold text-lg w-12 text-center">{config.winningScore}</span>
 								</div>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium mb-2">
+								<label className="block text-sm font-bold mb-2">
 									Hand Size (cards per player)
 								</label>
 								<div className="flex items-center gap-4">
@@ -135,21 +135,21 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 										max="20"
 										value={config.handSize}
 										onChange={(e) => updateHandSize(parseInt(e.target.value))}
-										className="flex-1"
+										className="flex-1 accent-pink"
 									/>
-									<span className="font-bold text-lg w-12 text-center">{config.handSize}</span>
+									<span className="font-mono font-bold text-lg w-12 text-center">{config.handSize}</span>
 								</div>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium mb-2">
+								<label className="block text-sm font-bold mb-2">
 									Round Timer (optional)
 								</label>
 								<div className="flex items-center gap-4">
 									<select
 										value={config.roundTimer ?? 'none'}
 										onChange={(e) => updateRoundTimer(e.target.value === 'none' ? undefined : parseInt(e.target.value))}
-										className="flex-1 border border-gray-300 rounded px-3 py-2"
+										className="flex-1 border-2 border-paper-shade bg-white rounded-lg px-3 min-h-[44px]"
 									>
 										<option value="none">No Timer</option>
 										<option value="30">30 seconds</option>
@@ -164,8 +164,8 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 
 					{/* House Rules */}
 					<section className="mb-6">
-						<h3 className="text-xl font-semibold mb-4">House Rules</h3>
-						<p className="text-sm text-gray-600 mb-4">
+						<h3 className="font-display font-bold text-[22px] mb-4">House Rules</h3>
+						<p className="text-sm text-ink-muted mb-4">
 							Enable optional rules to customize your game experience. These are based on the official Cards Against Humanity house rules.
 						</p>
 
@@ -173,18 +173,18 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 							{houseRules.map((rule) => (
 								<div
 									key={rule.name}
-									className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+									className="border-2 border-paper-shade rounded-lg p-4 hover:border-ink-muted transition-colors"
 								>
 									<label className="flex items-start gap-3 cursor-pointer">
 										<input
 											type="checkbox"
 											checked={config.enabledRules[rule.name]}
 											onChange={() => toggleRule(rule.name)}
-											className="mt-1 w-5 h-5 cursor-pointer"
+											className="mt-1 w-5 h-5 cursor-pointer accent-pink"
 										/>
 										<div className="flex-1">
-											<div className="font-semibold">{rule.label}</div>
-											<div className="text-sm text-gray-600 mt-1">{rule.description}</div>
+											<div className="font-bold">{rule.label}</div>
+											<div className="text-sm text-ink-muted mt-1">{rule.description}</div>
 										</div>
 									</label>
 								</div>
@@ -194,23 +194,23 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 				</div>
 
 				{/* Footer */}
-				<div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
+				<div className="sticky bottom-0 bg-paper border-t-2 border-paper-shade px-6 py-4 flex items-center justify-between">
 					<button
 						onClick={handleReset}
-						className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
+						className="px-4 min-h-[44px] text-ink-muted hover:text-ink font-bold underline underline-offset-4"
 					>
 						Reset to Defaults
 					</button>
 					<div className="flex gap-3">
 						<button
 							onClick={onClose}
-							className="px-6 py-2 border border-gray-300 rounded hover:bg-gray-100 font-medium"
+							className="px-6 min-h-[48px] border-2 border-ink rounded-lg hover:bg-paper-shade font-bold"
 						>
 							Cancel
 						</button>
 						<button
 							onClick={handleSave}
-							className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800 font-medium"
+							className="px-6 min-h-[48px] bg-pink text-ink rounded-lg shadow-press hover:bg-pink-hover active:translate-y-0.5 active:shadow-none font-bold"
 						>
 							Save Configuration
 						</button>
