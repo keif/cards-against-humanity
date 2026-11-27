@@ -592,7 +592,7 @@ const PlayerSelectionScreen = () => {
 			{state.gameConfig?.enabledRules?.survivalOfTheFittest && (
 				<>
 					{state.roundState === PLAYER_SELECTING && (
-						<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4 z-40" role="status">
+						<div className="fixed left-1/2 -translate-x-1/2 z-40 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4" role="status">
 							<div>
 								<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-riso-yellow">SURVIVAL OF THE FITTEST</span>
 								<div className="text-sm">Elimination voting starts once everyone has played a card.</div>
@@ -600,7 +600,7 @@ const PlayerSelectionScreen = () => {
 						</div>
 					)}
 					{state.roundState === ELIMINATION_VOTING && (
-						<div className="fixed left-1/2 -translate-x-1/2 z-50 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4 z-40" role="status">
+						<div className="fixed left-1/2 -translate-x-1/2 z-40 bg-paper text-ink px-5 py-4 rounded-lg shadow-card w-[calc(100%-32px)] max-w-md top-4" role="status">
 							<div>
 								<span className="inline-block font-mono font-bold text-xs tracking-[0.06em] px-2 py-0.5 rounded-sm text-ink mb-2 bg-error">ELIMINATION ROUND {state.eliminationRound}</span>
 								<div className="text-sm">Vote to eliminate the weakest card.</div>

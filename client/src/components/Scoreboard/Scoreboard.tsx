@@ -33,19 +33,19 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 			<div className={`${baseClasses} ${dropdownClasses}`}>
 				{onClose && (
 					<button
-						className="absolute top-2 right-2 bg-transparent border-0 text-white text-xl cursor-pointer w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-white/20 p-0"
+						className="absolute top-2 right-2 bg-transparent border-0 text-paper text-xl cursor-pointer w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-table-line p-0"
 						onClick={onClose}
 						aria-label="Close scoreboard"
 					>
 						✕
 					</button>
 				)}
-				<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
+				<h3 className="text-paper text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
 					Scores
 				</h3>
 				<div className="flex flex-col gap-1.5">
 					<div className="flex justify-between items-center px-3 py-2 md:px-2.5 md:py-1.5 bg-table rounded-sm">
-						<span className="text-white flex-1 mx-2.5 text-sm md:text-[13px] opacity-50">
+						<span className="text-paper flex-1 mx-2.5 text-sm md:text-[13px] opacity-50">
 							Waiting for players...
 						</span>
 					</div>
@@ -61,14 +61,14 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 		<div className={`${baseClasses} ${dropdownClasses}`}>
 			{onClose && (
 				<button
-					className="absolute top-2 right-2 bg-transparent border-0 text-white text-xl cursor-pointer w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-white/20 p-0"
+					className="absolute top-2 right-2 bg-transparent border-0 text-paper text-xl cursor-pointer w-7 h-7 flex items-center justify-center rounded transition-colors hover:bg-table-line p-0"
 					onClick={onClose}
 					aria-label="Close scoreboard"
 				>
 					✕
 				</button>
 			)}
-			<h3 className="text-white text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
+			<h3 className="text-paper text-lg md:text-base font-bold m-0 mb-2.5 text-center border-b-2 border-table-line pb-2 font-display">
 				Scores
 			</h3>
 			<div className="flex flex-col gap-1.5">
@@ -82,7 +82,7 @@ const Scoreboard = ({ playerScores, currentPlayerName, isOpen = true, onClose }:
 						<span className="text-riso-yellow font-mono font-bold text-base md:text-sm min-w-[25px]">
 							{index + 1}
 						</span>
-						<span className="text-white flex-1 mx-2.5 text-sm md:text-[13px]">
+						<span className="text-paper flex-1 mx-2.5 text-sm md:text-[13px]">
 							{player.name}
 						</span>
 						<span className="text-paper font-mono font-bold text-base md:text-sm min-w-[30px] text-right">

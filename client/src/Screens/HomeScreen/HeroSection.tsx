@@ -23,6 +23,8 @@ const HeroCard = ({ kind, text, number, className }: { kind: 'prompt' | 'answer'
 
 const HeroSection: React.FC = () => {
     const navigate = useNavigate();
+    // Generated once: the join field re-renders this component on every keystroke.
+    const [newPartyCode] = useState(CreateGame);
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
 
@@ -59,7 +61,7 @@ const HeroSection: React.FC = () => {
 
                         <div className="flex flex-wrap gap-3 max-w-[520px]">
                             <Link
-                                to={`/join/${CreateGame()}`}
+                                to={`/join/${newPartyCode}`}
                                 className="inline-flex items-center justify-center min-h-[52px] px-6 bg-pink text-ink rounded-lg shadow-press font-bold text-[17px] no-underline hover:bg-pink-hover active:translate-y-0.5 active:shadow-none transition-transform"
                             >
                                 Start a party

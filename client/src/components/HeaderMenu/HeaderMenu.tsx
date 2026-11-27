@@ -39,7 +39,13 @@ const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick, game
 						End game with a haiku
 					</button>
 				)}
-				<p className="font-mono text-riso-yellow tabular-nums" aria-label={`${timeLeft} seconds left`}>{timeLeft}</p>
+				<p
+					className="font-mono text-riso-yellow tabular-nums"
+					role="timer"
+					aria-label={gameConfig?.roundTimer ? `${timeLeft} seconds left` : undefined}
+				>
+					{timeLeft}
+				</p>
 			</div>
 		</div>
 	</div>
