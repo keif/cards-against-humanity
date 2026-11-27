@@ -22,8 +22,12 @@ const printNumber = (id?: number) => (id === undefined ? '' : `Nº ${String(id).
  * Deck lengths: median 21 chars, p90 54, p95 69, p99 94, max 129.
  */
 export const answerTextSize = (text?: string): string => {
-	// TODO: step down the size for long answers (e.g. past ~55 and ~90 chars).
-	void text;
+	// Thresholds measured against every answer card in the deck at Bricolage opsz 18:
+	// on phones 17px overflows from 58 chars, 14px fits everything up to 105, 12px fits the rest.
+	// Raw length (markup included) errs toward the smaller size.
+	const length = text?.length ?? 0;
+	if (length > 105) return 'text-[17px] leading-[1.15] max-[380px]:text-[12px]';
+	if (length > 57) return 'text-[20px] leading-[1.15] max-[380px]:text-[14px]';
 	return 'text-[20px] leading-[1.18] max-[380px]:text-[17px] max-[380px]:leading-[1.15]';
 };
 
@@ -162,7 +166,7 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 
 		return (
 			<div
-				className={`w-44 h-[220px] max-[380px]:w-32 max-[380px]:h-[154px] card-text ${answerTextSize(text)} rounded-lg p-3 max-[380px]:p-2.5 break-words relative z-[1] select-none bg-paper text-ink shadow-card flex flex-col justify-between transition-transform duration-[180ms] ease-out-expo ${onDiscard ? '[&>p]:pr-7' : ''} ${isSelected ? 'outline outline-[3px] outline-pink outline-offset-[3px] -translate-y-3.5' : ''} ${className}`}
+				className={`w-44 h-[220px] max-[380px]:w-32 max-[380px]:h-[154px] card-text ${answerTextSize(text)} rounded-lg p-3 max-[380px]:p-2.5 break-words relative z-[1] select-none bg-paper text-ink shadow-card flex flex-col justify-between transition-transform duration-[180ms] ease-out-expo ${isSelected ? 'outline outline-[3px] outline-pink outline-offset-[3px] -translate-y-3.5' : ''} ${className}`}
 				ref={disableDrag ? undefined : drag}
 				onClick={handleClick}
 				data-qa="card"
@@ -175,7 +179,8 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 				{onDiscard && (
 					<button
 						onClick={handleDiscard}
-						className="absolute top-1 right-1 w-8 h-8 bg-error text-ink rounded-full flex items-center justify-center text-base font-bold cursor-pointer border-0 z-10"
+						// Hangs off the corner so it never covers answer text; the hand's 20px top padding fits it.
+						className="absolute -top-1.5 -right-1.5 w-8 h-8 bg-error text-ink rounded-full shadow-card flex items-center justify-center text-base font-bold cursor-pointer border-0 z-10"
 						title="Discard this card (Never Have I Ever)"
 						aria-label="Discard card"
 					>

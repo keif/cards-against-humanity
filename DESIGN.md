@@ -197,9 +197,9 @@ components:
 
 - **Prompt card:** `primary` fill, `ink` text, a `PHUCKING CARDS` wordmark and a mono `Nº` card number in the footer at 70% opacity. Multi-answer prompts show an `ink` badge with "PICK 2" in `accent`.
 - **Answer card:** `paper` fill, the same footer. Selected state: `primary` outline, a 3px offset, a 14px lift and a numbered pink counter, so selection reads without color. Hover lifts 4px (pointer devices only). Disabled cards drop to 45% opacity with `cursor: not-allowed`.
-- **Long text:** card copy never truncates. If text overflows at 144px, step down to 15px; if it still overflows, open an expanded reading view on tap.
+- **Long text:** card copy never truncates. Answer size steps down by length (`answerTextSize` in `Card.tsx`), with thresholds measured against the whole deck: on phones 17px up to 57 characters, 14px up to 105, 12px beyond. Every current card fits, so no expanded reading view is needed; remeasure when the deck changes.
 - **Buttons:** primary / secondary (paper) / ghost (bordered). Every button has a `focus-visible` 3px `focus` ring at a 2px offset, a 2px press translate, and a 45% disabled state. Labels name the outcome: "Start a party", "Play this card", "Copy invite link". Never "Submit" or "Get started".
-- **Party-code field:** mono, uppercase, 0.18em tracking, four characters, with an attached "Join" button. The error state shows a "NOPE" tag with a plain sentence.
+- **Party-code field:** mono, 0.14em tracking, with an attached "Join" button. Never change the case: codes are case-sensitive and up to 20 characters (`parsePartyCode`). Accept a pasted invite link too. The error state shows a "NOPE" tag with a plain sentence.
 - **Player list:** a status dot (`success` = connected, `text-muted` = away) plus the word "(away)", a yellow "JUDGE" badge, and the mono score right-aligned.
 - **Status line:** always says whose move it is, in words, with the mono countdown in `accent`.
 - **Content warning:** a full "Warnings & side effects" insert in the game's voice, with a 2px `ink` border on paper. Never a yellow alert box.
