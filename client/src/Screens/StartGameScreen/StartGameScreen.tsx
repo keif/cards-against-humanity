@@ -39,12 +39,14 @@ const StartGameScreen = () => {
 				const currentPlayerIndex = response?.players?.indexOf(response?.currentPlayer?.name || '') ?? -1;
 				const isFirstPlayer = currentPlayerIndex === 0;
 
-				setState({
-					...state,
-					currentPlayerName: response?.currentPlayer?.name || '',
+				// This fires on every lobby broadcast (e.g. another player joining), so read the
+				// latest state and keep a name the player is still typing until they've joined.
+				setState((prev) => ({
+					...prev,
+					currentPlayerName: response?.currentPlayer?.name || prev.currentPlayerName,
 					joined: !!response?.currentPlayer,
 					players: response?.players || []
-				});
+				}));
 				setIsHost(isFirstPlayer);
 			});
 			newLobbyState(partyCode);
@@ -84,10 +86,10 @@ const StartGameScreen = () => {
 	// TODO: REFACTOR: need to pass this to the PlayerList Component
 	// to retrieve the user input (nested)
 	const updatePlayerName = (playerName: string) => {
-		setState({
-			...state,
+		setState((prev) => ({
+			...prev,
 			currentPlayerName: playerName
-		});
+		}));
 	};
 
 	const handleStartGame = () => {
