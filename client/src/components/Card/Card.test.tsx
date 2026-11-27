@@ -72,4 +72,18 @@ describe('Card Component', () => {
 			expect(screen.getByText('late-night_crew_2026')).toHaveClass('break-all');
 		});
 	});
+
+	describe('answer card discard button', () => {
+		// The 32px corner button must not cover the first line of the answer.
+		it('reserves room for the discard button when one is shown', () => {
+			const { container } = renderWithDnd(<Card cardType={A} text="An answer" id={7} onDiscard={() => {}} />);
+			expect(screen.getByRole('button', { name: 'Discard card' })).toBeInTheDocument();
+			expect(container.querySelector('[data-qa="card"]')?.className).toContain('[&>p]:pr-7');
+		});
+
+		it('keeps the full text width without a discard button', () => {
+			const { container } = renderWithDnd(<Card cardType={A} text="An answer" id={8} />);
+			expect(container.querySelector('[data-qa="card"]')?.className).not.toContain('[&>p]:pr-7');
+		});
+	});
 });
