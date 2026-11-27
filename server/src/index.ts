@@ -20,7 +20,7 @@ import game, { checkAllGamesForAdvancement } from '@/schema';
 import { InputValidator } from '@/utils/validation';
 import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
-import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter';
+import { API_PATHS, checkSocketRateLimit, getSocketClientIP, mountHttpRateLimiter } from '@/middleware/rateLimiter';
 import { CardService } from '@/services/cardService';
 import { initializeCardService } from '@/models/Card';
 import { VoteService } from '@/services/voteService';
@@ -123,12 +123,21 @@ cardService.seedOfficialCards(cards).catch((err) => {
 // Middleware to parse JSON bodies
 app.use(morgan('combined', { stream: loggerStream }));
 
-// Apply HTTP rate limiting
-app.use(httpRateLimiter);
+// Production runs behind exactly one nginx reverse proxy (docker-compose.prod.yml,
+// nginx/conf.d), which appends the client address to X-Forwarded-For. Trusting
+// one hop makes req.ip the real client instead of nginx, so each visitor gets
+// their own rate-limit bucket. Outside production there is no proxy, and
+// trusting the header would let clients spoof their IP past the limiter.
+// The Socket.IO limiter below uses the same hop count.
+const TRUSTED_PROXY_HOPS = process.env.NODE_ENV === 'production' ? 1 : 0;
+app.set('trust proxy', TRUSTED_PROXY_HOPS);
+
+// Apply HTTP rate limiting to API routes only (static assets are not counted)
+mountHttpRateLimiter(app);
 
 // Socket.IO rate limiting middleware
 io.use((socket, next) => {
-	const clientIP = socket.handshake.address;
+	const clientIP = getSocketClientIP(socket.handshake, TRUSTED_PROXY_HOPS);
 
 	if (!checkSocketRateLimit(clientIP)) {
 		return next(new Error('Rate limit exceeded'));
@@ -184,7 +193,10 @@ app.use((req, res, next) => {
 	next();
 });
 
-app.use(sessionMiddleware);
+// Sessions only on API paths: static assets and the SPA fallback must not
+// create Redis sessions (they are not rate limited). The client establishes
+// its session via GET /session before opening the socket.
+app.use(API_PATHS, sessionMiddleware);
 
 // API routes - Create router with Socket.IO instance for real-time updates
 app.use('/api/cards', createCardRouter(io));

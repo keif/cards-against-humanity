@@ -1,8 +1,41 @@
 import rateLimit from 'express-rate-limit';
+import type { Express, RequestHandler } from 'express';
+import type { IncomingHttpHeaders } from 'http';
 import logger from '@/utils/logger';
 
 // Rate limiter for Socket.IO connections
 export const socketRateLimiter = new Map<string, { count: number; resetTime: number }>();
+
+// Entries are keyed per client IP, so drop expired windows or the map grows
+// with every visitor. unref() keeps the timer from holding the process open.
+export const pruneSocketRateLimiter = (now = Date.now()): void => {
+	for (const [ip, limit] of socketRateLimiter) {
+		if (now > limit.resetTime) {
+			socketRateLimiter.delete(ip);
+		}
+	}
+};
+setInterval(pruneSocketRateLimiter, 60000).unref();
+
+/**
+ * Client IP for a Socket.IO handshake, matching what Express's req.ip returns
+ * when `trust proxy` is a hop count. The handshake is a raw http request, so
+ * Express's proxy handling never runs on it. Each trusted proxy appends its
+ * peer address to X-Forwarded-For, so we walk back from the socket address one
+ * entry per trusted hop. With 0 hops the header is ignored (no spoofing).
+ */
+export const getSocketClientIP = (
+	handshake: { address: string; headers: IncomingHttpHeaders },
+	trustedProxyHops: number
+): string => {
+	const forwarded = String(handshake.headers['x-forwarded-for'] ?? '')
+		.split(',')
+		.map((ip) => ip.trim())
+		.filter(Boolean)
+		.reverse();
+	const chain = [handshake.address, ...forwarded];
+	return chain[Math.min(trustedProxyHops, chain.length - 1)];
+};
 
 export const checkSocketRateLimit = (clientIP: string): boolean => {
     const now = Date.now();
@@ -33,25 +66,39 @@ export const checkSocketRateLimit = (clientIP: string): boolean => {
     return true;
 };
 
+// Express paths that serve the API. The general HTTP limiter and the session
+// middleware are mounted on these only. Static assets (JS chunks, CSS, fonts)
+// and the SPA fallback are deliberately left out: a single page load pulls in
+// dozens of files, and a party on shared wifi shares one IP, so counting them
+// locked players out. Keeping sessions off those paths too means unthrottled
+// requests can't create Redis sessions. Socket.IO traffic is handled by the
+// http server before Express and has its own limiter above.
+export const API_PATHS = ['/api', '/session'];
+
 // HTTP rate limiter - general API protection
-// DISABLED in test environment (NODE_ENV=test)
-export const httpRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: { error: 'Too many requests, please try again later' },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => {
-        return process.env.NODE_ENV === 'test';
-    },
-    handler: (req, res) => {
-        logger.warn('HTTP rate limit exceeded', {
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
-        });
-        res.status(429).json({ error: 'Too many requests, please try again later' });
-    }
+// DISABLED in test environment (NODE_ENV=test) unless skipInTest is false
+export const createHttpRateLimiter = ({ max = 100, skipInTest = true } = {}) => rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max, // Limit each IP to `max` requests per windowMs
+	message: { error: 'Too many requests, please try again later' },
+	standardHeaders: true,
+	legacyHeaders: false,
+	skip: () => skipInTest && process.env.NODE_ENV === 'test',
+	handler: (req, res) => {
+		logger.warn('HTTP rate limit exceeded', {
+			ip: req.ip,
+			userAgent: req.get('User-Agent')
+		});
+		res.status(429).json({ error: 'Too many requests, please try again later' });
+	}
 });
+
+export const httpRateLimiter = createHttpRateLimiter();
+
+// Mount the general limiter on API paths only (see API_PATHS)
+export const mountHttpRateLimiter = (app: Express, limiter: RequestHandler = httpRateLimiter): void => {
+	app.use(API_PATHS, limiter);
+};
 
 /**
  * Strict rate limiter for admin promotion endpoint
