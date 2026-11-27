@@ -34,12 +34,14 @@ export const checkSocketRateLimit = (clientIP: string): boolean => {
     return true;
 };
 
-// Paths the general HTTP limiter applies to. Static assets (JS chunks, CSS,
-// fonts) and the SPA fallback are deliberately left out: a single page load
-// pulls in dozens of files, and a party on shared wifi shares one IP, so
-// counting them locked players out. Socket.IO traffic is handled by the
+// Express paths that serve the API. The general HTTP limiter and the session
+// middleware are mounted on these only. Static assets (JS chunks, CSS, fonts)
+// and the SPA fallback are deliberately left out: a single page load pulls in
+// dozens of files, and a party on shared wifi shares one IP, so counting them
+// locked players out. Keeping sessions off those paths too means unthrottled
+// requests can't create Redis sessions. Socket.IO traffic is handled by the
 // http server before Express and has its own limiter above.
-export const HTTP_RATE_LIMITED_PATHS = ['/api', '/session'];
+export const API_PATHS = ['/api', '/session'];
 
 // HTTP rate limiter - general API protection
 // DISABLED in test environment (NODE_ENV=test) unless skipInTest is false
@@ -61,9 +63,9 @@ export const createHttpRateLimiter = ({ max = 100, skipInTest = true } = {}) => 
 
 export const httpRateLimiter = createHttpRateLimiter();
 
-// Mount the general limiter on API paths only (see HTTP_RATE_LIMITED_PATHS)
+// Mount the general limiter on API paths only (see API_PATHS)
 export const mountHttpRateLimiter = (app: Express, limiter: RequestHandler = httpRateLimiter): void => {
-	app.use(HTTP_RATE_LIMITED_PATHS, limiter);
+	app.use(API_PATHS, limiter);
 };
 
 /**

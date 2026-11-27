@@ -1,18 +1,20 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import express, { Express } from 'express';
+import session from 'express-session';
 import request from 'supertest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { createHttpRateLimiter, mountHttpRateLimiter } from './rateLimiter';
+import { API_PATHS, createHttpRateLimiter, mountHttpRateLimiter } from './rateLimiter';
 
 const LIMIT = 3;
 
-// Mirrors the order in index.ts: limiter mount, API routes, static build, SPA fallback
+// Mirrors the order in index.ts: limiter, session on API paths, API routes, static build, SPA fallback
 const buildApp = (distDir: string, trustProxy: number | false = false): Express => {
 	const app = express();
 	app.set('trust proxy', trustProxy);
 	mountHttpRateLimiter(app, createHttpRateLimiter({ max: LIMIT, skipInTest: false }));
+	app.use(API_PATHS, session({ secret: 'test-only', resave: false, saveUninitialized: true }));
 	app.get('/api/cards/health', (req, res) => res.json({ ok: true }));
 	app.get('/session', (req, res) => res.json({ sessionID: 'x' }));
 	app.use(express.static(distDir));
@@ -78,6 +80,20 @@ describe('HTTP rate limiter', () => {
 		expect((await request(app).get('/api/cards/health')).status).toBe(429);
 		expect((await request(app).get('/assets/index.js')).status).toBe(200);
 		expect((await request(app).get('/')).status).toBe(200);
+	});
+
+	it('does not create sessions for static assets or the SPA fallback', async () => {
+		const app = buildApp(distDir);
+
+		for (const p of ['/', '/assets/index.js', '/join/ABCD']) {
+			const res = await request(app).get(p);
+			expect(res.status).toBe(200);
+			expect(res.headers['set-cookie']).toBeUndefined();
+		}
+
+		// API paths still establish a session
+		const res = await request(app).get('/session');
+		expect(res.headers['set-cookie']?.[0]).toMatch(/^connect\.sid=/);
 	});
 
 	it('gives each client behind one trusted proxy hop its own bucket', async () => {

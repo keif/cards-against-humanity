@@ -20,7 +20,7 @@ import game, { checkAllGamesForAdvancement } from '@/schema';
 import { InputValidator } from '@/utils/validation';
 import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
-import { checkSocketRateLimit, mountHttpRateLimiter } from '@/middleware/rateLimiter';
+import { API_PATHS, checkSocketRateLimit, mountHttpRateLimiter } from '@/middleware/rateLimiter';
 import { CardService } from '@/services/cardService';
 import { initializeCardService } from '@/models/Card';
 import { VoteService } from '@/services/voteService';
@@ -191,7 +191,10 @@ app.use((req, res, next) => {
 	next();
 });
 
-app.use(sessionMiddleware);
+// Sessions only on API paths: static assets and the SPA fallback must not
+// create Redis sessions (they are not rate limited). The client establishes
+// its session via GET /session before opening the socket.
+app.use(API_PATHS, sessionMiddleware);
 
 // API routes - Create router with Socket.IO instance for real-time updates
 app.use('/api/cards', createCardRouter(io));
