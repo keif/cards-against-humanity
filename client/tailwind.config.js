@@ -46,9 +46,9 @@ export default {
         'footer-text-muted': '#999999',
       },
       fontFamily: {
-        display: ['"Bricolage Grotesque"', '"Atkinson Hyperlegible Next"', 'sans-serif'],
-        sans: ['"Atkinson Hyperlegible Next"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        mono: ['"Atkinson Hyperlegible Mono"', 'ui-monospace', 'monospace'],
+        display: ['"Bricolage Grotesque Variable"', '"Atkinson Hyperlegible Next Variable"', 'sans-serif'],
+        sans: ['"Atkinson Hyperlegible Next Variable"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        mono: ['"Atkinson Hyperlegible Mono Variable"', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         'xs': '13px',

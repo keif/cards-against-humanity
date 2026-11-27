@@ -23,6 +23,9 @@
   "author": "Keith Baker",
   "license": "MIT",
   "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-mono": "5.3.0",
+    "@fontsource-variable/atkinson-hyperlegible-next": "5.3.0",
+    "@fontsource-variable/bricolage-grotesque": "5.3.0",
     "path-to-regexp": "^6.2.1",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",

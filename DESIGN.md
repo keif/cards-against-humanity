@@ -168,9 +168,7 @@ components:
 - **Bricolage Grotesque** (Google Fonts, OFL, variable `opsz` 12-96, `wdth` 75-100, `wght` 200-800): the voice. Display and headings at 800 with `font-stretch: 75-80%` for the condensed poster feel. Card text at 700 with `opsz` 18, the small-size optical cut that keeps it legible at 17px on a 144px card.
 - **Atkinson Hyperlegible Next** (Google Fonts, OFL, `wght` 200-800): body, UI, buttons, status lines, docs. Chosen for people reading half-distracted in low light. All three independent design proposals converged on this family.
 - **Atkinson Hyperlegible Mono** (Google Fonts, OFL): party codes, scores, timers, card numbers. It separates `I/1/l` and `O/0`, which matters when someone reads a code out loud.
-- **Loading:** one request, `display=swap`:
-  `https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Atkinson+Hyperlegible+Next:wght@200..800&family=Atkinson+Hyperlegible+Mono:wght@400..800&display=swap`
-  Add `preconnect` to fonts.googleapis.com and fonts.gstatic.com. Self-host later if load time or privacy requires it.
+- **Loading:** self-hosted through Fontsource (`@fontsource-variable/bricolage-grotesque/standard.css` for all three axes, plus `@fontsource-variable/atkinson-hyperlegible-next` and `-mono`), imported in `client/src/index.tsx`. Family names carry a ` Variable` suffix. Never load fonts from a third-party CDN: the privacy policy promises no sharing with third parties.
 - **Scale:** display 48-92px, h2 32-48px, h3 22px, card 20px (17px small), body 16-19px, label 14px, fine print 13px. Each level is at least one clear step apart. Display never goes past 92px.
 - Inter is removed. It was declared but never loaded, so production has been rendering system fallbacks.
 
