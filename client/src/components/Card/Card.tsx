@@ -111,18 +111,19 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 				<h3 className="m-0 card-text text-[26px] max-[380px]:text-[21px] leading-[1.1]">Invite friends with this party code:</h3>
 				<button
 					type="button"
-					className="mt-auto mb-2 min-h-[48px] flex items-center gap-2 justify-center font-mono font-bold text-[28px] max-[380px]:text-[22px] tracking-[0.14em] bg-table text-paper rounded-lg px-3 py-2 border-0 cursor-pointer"
+					className={`mt-auto mb-2 min-h-[48px] flex items-center gap-2 justify-center font-mono font-bold ${partyCode.length > 8 ? 'text-[18px] max-[380px]:text-[15px] tracking-[0.06em]' : 'text-[28px] max-[380px]:text-[22px] tracking-[0.14em]'} bg-table text-paper rounded-lg px-3 py-2 border-0 cursor-pointer`}
 					onClick={handleCopyLink}
 					title="Click to copy invite link"
 					aria-label={`Copy invite link for party ${partyCode}`}
 				>
-					{partyCode}
+					{/* Codes can be up to 20 chars (server limit): long ones shrink and wrap instead of overflowing. */}
+					<span className="min-w-0 break-all">{partyCode}</span>
 					{copied ? (
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC84" strokeWidth="3" aria-hidden="true" strokeLinecap="round" strokeLinejoin="round">
+						<svg className="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3DDC84" strokeWidth="3" aria-hidden="true" strokeLinecap="round" strokeLinejoin="round">
 							<polyline points="20 6 9 17 4 12"></polyline>
 						</svg>
 					) : (
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+						<svg className="shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
 							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
 							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
 						</svg>
