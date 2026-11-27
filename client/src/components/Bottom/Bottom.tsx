@@ -6,7 +6,7 @@ interface BottomProps {
 
 const Bottom = ({children}: BottomProps) => {
 	return (
-		<div className="h-[45%] z-[1] bg-white relative px-[15px] py-0 flex flex-col justify-between transition-all duration-1000" id="bottom">
+		<div className="h-[45%] z-[1] bg-table-raised text-paper border-t-2 border-table-line relative px-[15px] py-0 flex flex-col justify-between transition-all duration-1000" id="bottom">
 			{children}
 		</div>
 	);

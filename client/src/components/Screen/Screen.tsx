@@ -6,7 +6,7 @@ interface ScreenProps {
 
 const Screen = ({children}: ScreenProps) => {
 	return (
-		<div className="h-full">
+		<div className="h-full min-h-screen bg-table text-paper">
 			{children}
 		</div>
 	);

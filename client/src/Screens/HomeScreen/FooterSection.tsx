@@ -3,20 +3,20 @@ import { Link } from 'react-router-dom';
 
 const FooterSection: React.FC = () => {
     return (
-        <footer className="py-12 px-6 md:py-12 md:px-6 bg-brand-gray-dark text-white">
+        <footer className="py-12 px-6 md:py-12 md:px-6 bg-ink text-paper">
             <div className="max-w-content-lg mx-auto">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-6 md:gap-8 mb-8 md:mb-10">
                     <div className="flex flex-col">
-                        <h3 className="text-base md:text-lg font-semibold mb-3 text-white">
-                            🎴 Phucking Cards
+                        <h3 className="text-base md:text-lg font-display font-bold mb-3 text-paper">
+                            Phucking <span className="text-pink">Cards</span>
                         </h3>
-                        <p className="text-sm leading-relaxed text-footer-text m-0">
+                        <p className="text-sm leading-relaxed text-muted m-0">
                             A free online party game inspired by{' '}
                             <a
                                 href="https://www.cardsagainsthumanity.com/"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-white underline hover:text-brand-yellow"
+                                className="text-paper underline hover:text-riso-yellow"
                             >
                                 Cards Against Humanity
                             </a>{' '}
@@ -25,12 +25,12 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <h4 className="text-base font-semibold mb-3 text-white">Play</h4>
+                        <h4 className="text-base font-display font-bold mb-3 text-paper">Play</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
                                 <Link
                                     to="/how-to-play"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     How to Play
                                 </Link>
@@ -38,7 +38,7 @@ const FooterSection: React.FC = () => {
                             <li>
                                 <Link
                                     to="/game-rules"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Game Rules
                                 </Link>
@@ -46,7 +46,7 @@ const FooterSection: React.FC = () => {
                             <li>
                                 <Link
                                     to="/submit-cards"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Submit Cards
                                 </Link>
@@ -55,12 +55,12 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <h4 className="text-base font-semibold mb-3 text-white">Shop</h4>
+                        <h4 className="text-base font-display font-bold mb-3 text-paper">Shop</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
                                 <Link
                                     to="/products"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     All Products →
                                 </Link>
@@ -70,7 +70,7 @@ const FooterSection: React.FC = () => {
                                     href="https://amzn.to/47T7TiE"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Base Game
                                 </a>
@@ -80,7 +80,7 @@ const FooterSection: React.FC = () => {
                                     href="https://amzn.to/4hYAacn"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Hot Box (New!)
                                 </a>
@@ -90,7 +90,7 @@ const FooterSection: React.FC = () => {
                                     href="https://amzn.to/47PbcaG"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Storage Case
                                 </a>
@@ -99,14 +99,14 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <h4 className="text-base font-semibold mb-3 text-white">Community</h4>
+                        <h4 className="text-base font-display font-bold mb-3 text-paper">Community</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
                                 <a
                                     href="https://github.com/keif/cards-against-humanity"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     GitHub
                                 </a>
@@ -116,7 +116,7 @@ const FooterSection: React.FC = () => {
                                     href="https://github.com/keif/cards-against-humanity/issues"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Report Bugs
                                 </a>
@@ -124,7 +124,7 @@ const FooterSection: React.FC = () => {
                             <li>
                                 <Link
                                     to="/moderation-guidelines"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Moderation Guidelines
                                 </Link>
@@ -133,22 +133,22 @@ const FooterSection: React.FC = () => {
                     </div>
 
                     <div className="flex flex-col">
-                        <h4 className="text-base font-semibold mb-3 text-white">Support</h4>
+                        <h4 className="text-base font-display font-bold mb-3 text-paper">Support</h4>
                         <ul className="list-none p-0 m-0 space-y-2">
                             <li>
                                 <a
                                     href="https://buymeacoffee.com/keif"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline inline-flex items-center gap-1"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline inline-flex items-center gap-1"
                                 >
-                                    ☕ Buy Me a Coffee
+                                    Buy me a coffee
                                 </a>
                             </li>
                             <li>
                                 <Link
                                     to="/privacy"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Privacy
                                 </Link>
@@ -156,7 +156,7 @@ const FooterSection: React.FC = () => {
                             <li>
                                 <Link
                                     to="/content-policy"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Content Policy
                                 </Link>
@@ -164,7 +164,7 @@ const FooterSection: React.FC = () => {
                             <li>
                                 <Link
                                     to="/license"
-                                    className="text-sm text-footer-text no-underline transition-colors hover:text-white hover:underline"
+                                    className="text-sm text-muted no-underline transition-colors hover:text-paper hover:underline"
                                 >
                                     Open Source License
                                 </Link>
@@ -173,18 +173,18 @@ const FooterSection: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="border-t border-brand-gray pt-6 text-center">
-                    <p className="text-xs md:text-xs leading-relaxed text-footer-text-muted m-0 mb-3 md:text-left">
+                <div className="border-t border-table-line pt-6 text-center">
+                    <p className="text-xs md:text-xs leading-relaxed text-muted m-0 mb-3 md:text-left">
                         <strong>Disclaimer:</strong> Not affiliated with, endorsed by, or sponsored by Cards Against Humanity LLC.
                         As an Amazon Associate, this project earns from qualifying purchases.
                     </p>
-                    <p className="text-xs md:text-xs leading-relaxed text-footer-text-muted m-0 md:text-left">
+                    <p className="text-xs md:text-xs leading-relaxed text-muted m-0 md:text-left">
                         Cards Against Humanity game content is licensed under{' '}
                         <a
                             href="https://creativecommons.org/licenses/by-nc-sa/2.0/"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-footer-text underline hover:text-white"
+                            className="text-muted underline hover:text-paper"
                         >
                             CC BY-NC-SA 2.0
                         </a>.

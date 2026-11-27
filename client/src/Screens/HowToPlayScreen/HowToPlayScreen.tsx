@@ -29,7 +29,7 @@ const HowToPlayScreen: React.FC = () => {
 						<div>
 							<h3 className="text-2xl font-semibold mb-2">1. Start a Party</h3>
 							<p className="text-lg leading-relaxed">
-								Click "Create a Game" on the home page. You'll get a unique party code instantly. Share this code with your friends so they can join your game.
+								Click "Start a party" on the home page. You'll get a unique party code instantly. Share this code with your friends so they can join your game.
 							</p>
 						</div>
 					</div>
@@ -102,9 +102,9 @@ const HowToPlayScreen: React.FC = () => {
 				<p className="text-xl font-semibold mb-4">Ready to start?</p>
 				<Link
 					to="/"
-					className="inline-block bg-black text-white px-8 py-3 rounded-lg font-bold text-lg hover:bg-brand-gray transition-colors no-underline"
+					className="inline-flex items-center min-h-[52px] bg-pink text-ink px-8 rounded-lg shadow-press font-bold text-lg hover:bg-pink-hover active:translate-y-0.5 active:shadow-none transition-transform no-underline"
 				>
-					Create a Game Now
+					Start a party now
 				</Link>
 			</div>
 		</DocumentationLayout>

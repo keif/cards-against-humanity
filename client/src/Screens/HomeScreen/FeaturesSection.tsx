@@ -1,58 +1,30 @@
 import React from 'react';
 
+const facts = [
+    { term: 'Play anywhere', detail: 'Friends across the country? Send them the link and get on a call.' },
+    { term: 'Free forever', detail: 'No ads, no paywalls, no "premium" nonsense. Just play.' },
+    { term: '1,300+ cards', detail: 'The base game, expansions, and player submissions that survived moderation.' },
+    { term: 'Any device', detail: 'Phone, tablet, laptop. If it has a browser, you\'re in.' },
+];
+
 const FeaturesSection: React.FC = () => {
     return (
-        <section
-            className="py-18 px-6 md:py-12 bg-white"
-            aria-labelledby="features-heading"
-        >
-            <h2
-                id="features-heading"
-                className="text-4xl md:text-6xl font-bold text-center mb-8 md:mb-12 text-black"
-            >
-                All the Chaos, Zero Setup
-            </h2>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-10 max-w-content-lg mx-auto">
-                <div className="text-center p-4 md:p-6">
-                    <div className="text-5xl md:text-6xl mb-4">🌍</div>
-                    <h3 className="text-xl md:text-2xl font-semibold mb-3 text-black">
-                        Play Anywhere
-                    </h3>
-                    <p className="text-base leading-relaxed text-brand-gray">
-                        Friends across the country? Just send them the link.
-                    </p>
-                </div>
-
-                <div className="text-center p-4 md:p-6">
-                    <div className="text-5xl md:text-6xl mb-4">💸</div>
-                    <h3 className="text-xl md:text-2xl font-semibold mb-3 text-black">
-                        Free Forever
-                    </h3>
-                    <p className="text-base leading-relaxed text-brand-gray">
-                        No ads, no paywalls, no "premium" nonsense. Just play.
-                    </p>
-                </div>
-
-                <div className="text-center p-4 md:p-6">
-                    <div className="text-5xl md:text-6xl mb-4">🎲</div>
-                    <h3 className="text-xl md:text-2xl font-semibold mb-3 text-black">
-                        Always Fresh
-                    </h3>
-                    <p className="text-base leading-relaxed text-brand-gray">
-                        1,300+ cards from base game, expansions, and user submissions.
-                    </p>
-                </div>
-
-                <div className="text-center p-4 md:p-6">
-                    <div className="text-5xl md:text-6xl mb-4">📱</div>
-                    <h3 className="text-xl md:text-2xl font-semibold mb-3 text-black">
-                        Works Everywhere
-                    </h3>
-                    <p className="text-base leading-relaxed text-brand-gray">
-                        Phone, tablet, laptop—if it has a browser, you're in.
-                    </p>
-                </div>
+        <section className="px-4 md:px-8 py-16 border-t-2 border-table-line" aria-labelledby="features-heading">
+            <div className="max-w-content-lg mx-auto grid gap-10 lg:grid-cols-[1fr_1.4fr] items-start">
+                <h2
+                    id="features-heading"
+                    className="font-display font-extrabold [font-stretch:80%] text-[clamp(2rem,5vw,3rem)] leading-none tracking-[-0.015em] m-0"
+                >
+                    All the chaos, zero setup
+                </h2>
+                <dl className="m-0 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+                    {facts.map((fact) => (
+                        <div key={fact.term}>
+                            <dt className="font-display font-bold text-[22px] leading-tight mb-1">{fact.term}</dt>
+                            <dd className="m-0 text-muted leading-normal">{fact.detail}</dd>
+                        </div>
+                    ))}
+                </dl>
             </div>
         </section>
     );

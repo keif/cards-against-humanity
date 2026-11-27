@@ -11,11 +11,12 @@ interface ButtonProps {
 	type?: 'button' | 'submit' | 'reset' | undefined;
 }
 
-const baseButtonClasses = 'bg-[#979797] rounded-lg border-0 w-[182px] h-[50px] leading-[50px] text-center font-bold text-[23px] cursor-pointer text-black no-underline hover:text-black hover:no-underline';
+// DESIGN.md button-primary: pink with ink text, 3px press offset that collapses on press.
+const baseButtonClasses = 'flex w-fit items-center justify-center min-w-[182px] h-[52px] px-6 bg-pink text-ink rounded-lg border-0 shadow-press font-sans font-bold text-[17px] cursor-pointer no-underline transition-transform duration-100 hover:bg-pink-hover hover:text-ink hover:no-underline active:translate-y-0.5 active:shadow-none';
 
 const Button = ({asLink = false, disabled = false, className = '', link, onClick, text, type = 'button'}: ButtonProps) => {
 	const buttonClasses = `${baseButtonClasses} ${className}`;
-	const disabledClasses = `${baseButtonClasses} opacity-50 ${className}`;
+	const disabledClasses = `${baseButtonClasses} opacity-45 cursor-not-allowed active:translate-y-0 ${className}`;
 
 	// disabled btn
 	if (disabled) {
