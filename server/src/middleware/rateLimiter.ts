@@ -1,9 +1,41 @@
 import rateLimit from 'express-rate-limit';
 import type { Express, RequestHandler } from 'express';
+import type { IncomingHttpHeaders } from 'http';
 import logger from '@/utils/logger';
 
 // Rate limiter for Socket.IO connections
 export const socketRateLimiter = new Map<string, { count: number; resetTime: number }>();
+
+// Entries are keyed per client IP, so drop expired windows or the map grows
+// with every visitor. unref() keeps the timer from holding the process open.
+export const pruneSocketRateLimiter = (now = Date.now()): void => {
+	for (const [ip, limit] of socketRateLimiter) {
+		if (now > limit.resetTime) {
+			socketRateLimiter.delete(ip);
+		}
+	}
+};
+setInterval(pruneSocketRateLimiter, 60000).unref();
+
+/**
+ * Client IP for a Socket.IO handshake, matching what Express's req.ip returns
+ * when `trust proxy` is a hop count. The handshake is a raw http request, so
+ * Express's proxy handling never runs on it. Each trusted proxy appends its
+ * peer address to X-Forwarded-For, so we walk back from the socket address one
+ * entry per trusted hop. With 0 hops the header is ignored (no spoofing).
+ */
+export const getSocketClientIP = (
+	handshake: { address: string; headers: IncomingHttpHeaders },
+	trustedProxyHops: number
+): string => {
+	const forwarded = String(handshake.headers['x-forwarded-for'] ?? '')
+		.split(',')
+		.map((ip) => ip.trim())
+		.filter(Boolean)
+		.reverse();
+	const chain = [handshake.address, ...forwarded];
+	return chain[Math.min(trustedProxyHops, chain.length - 1)];
+};
 
 export const checkSocketRateLimit = (clientIP: string): boolean => {
     const now = Date.now();

@@ -1,11 +1,19 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import express, { Express } from 'express';
 import session from 'express-session';
 import request from 'supertest';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { API_PATHS, createHttpRateLimiter, mountHttpRateLimiter } from './rateLimiter';
+import {
+	API_PATHS,
+	checkSocketRateLimit,
+	createHttpRateLimiter,
+	getSocketClientIP,
+	mountHttpRateLimiter,
+	pruneSocketRateLimiter,
+	socketRateLimiter,
+} from './rateLimiter';
 
 const LIMIT = 3;
 
@@ -118,5 +126,59 @@ describe('HTTP rate limiter', () => {
 		// Rotating the header does not reset the budget
 		const spoofed = await request(app).get('/api/cards/health').set('X-Forwarded-For', '198.51.100.99');
 		expect(spoofed.status).toBe(429);
+	});
+});
+
+describe('Socket.IO client IP', () => {
+	const NGINX = '172.18.0.3';
+	const handshake = (xff?: string) => ({
+		address: NGINX,
+		headers: xff === undefined ? {} : { 'x-forwarded-for': xff },
+	});
+
+	it('uses the X-Forwarded-For entry nginx appended when one hop is trusted', () => {
+		expect(getSocketClientIP(handshake('203.0.113.7'), 1)).toBe('203.0.113.7');
+	});
+
+	it('ignores client-supplied entries ahead of the one nginx appended', () => {
+		// A client sends its own header; nginx appends the real peer address last
+		expect(getSocketClientIP(handshake('1.2.3.4, 203.0.113.7'), 1)).toBe('203.0.113.7');
+	});
+
+	it('ignores X-Forwarded-For when no proxy is trusted', () => {
+		expect(getSocketClientIP(handshake('203.0.113.7'), 0)).toBe(NGINX);
+	});
+
+	it('falls back to the socket address when the header is missing or empty', () => {
+		expect(getSocketClientIP(handshake(), 1)).toBe(NGINX);
+		expect(getSocketClientIP(handshake(''), 1)).toBe(NGINX);
+		expect(getSocketClientIP(handshake(' , '), 1)).toBe(NGINX);
+	});
+
+	it('gives players behind the same proxy separate connection budgets', () => {
+		socketRateLimiter.clear();
+		const alice = getSocketClientIP(handshake('203.0.113.1'), 1);
+		const bob = getSocketClientIP(handshake('203.0.113.2'), 1);
+
+		for (let i = 0; i < 100; i++) {
+			expect(checkSocketRateLimit(alice)).toBe(true);
+		}
+		expect(checkSocketRateLimit(alice)).toBe(false);
+		expect(checkSocketRateLimit(bob)).toBe(true);
+	});
+});
+
+describe('Socket.IO limiter pruning', () => {
+	beforeEach(() => socketRateLimiter.clear());
+
+	it('drops expired windows and keeps active ones', () => {
+		const now = Date.now();
+		socketRateLimiter.set('expired', { count: 5, resetTime: now - 1 });
+		socketRateLimiter.set('active', { count: 5, resetTime: now + 60000 });
+
+		pruneSocketRateLimiter(now);
+
+		expect(socketRateLimiter.has('expired')).toBe(false);
+		expect(socketRateLimiter.get('active')?.count).toBe(5);
 	});
 });
