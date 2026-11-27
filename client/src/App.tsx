@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import RouteErrorBoundary from "./components/RouteErrorBoundary/RouteErrorBoundary";
 
 // Lazy load screens for code splitting
 const HomeScreen = lazy(() => import("./Screens/HomeScreen/HomeScreen"));
@@ -50,6 +51,7 @@ const App = () => {
 			}}
 		>
 			<div className="flex flex-col flex-1">
+				<RouteErrorBoundary>
 				<Suspense fallback={<div>Loading...</div>}>
 					<Routes>
 					<Route
@@ -110,6 +112,7 @@ const App = () => {
 					/>
 				</Routes>
 			</Suspense>
+				</RouteErrorBoundary>
 			</div>
 		</BrowserRouter>
 	);
