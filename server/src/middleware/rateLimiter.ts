@@ -1,4 +1,5 @@
 import rateLimit from 'express-rate-limit';
+import type { Express, RequestHandler } from 'express';
 import logger from '@/utils/logger';
 
 // Rate limiter for Socket.IO connections
@@ -33,25 +34,37 @@ export const checkSocketRateLimit = (clientIP: string): boolean => {
     return true;
 };
 
+// Paths the general HTTP limiter applies to. Static assets (JS chunks, CSS,
+// fonts) and the SPA fallback are deliberately left out: a single page load
+// pulls in dozens of files, and a party on shared wifi shares one IP, so
+// counting them locked players out. Socket.IO traffic is handled by the
+// http server before Express and has its own limiter above.
+export const HTTP_RATE_LIMITED_PATHS = ['/api', '/session'];
+
 // HTTP rate limiter - general API protection
-// DISABLED in test environment (NODE_ENV=test)
-export const httpRateLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: { error: 'Too many requests, please try again later' },
-    standardHeaders: true,
-    legacyHeaders: false,
-    skip: (req) => {
-        return process.env.NODE_ENV === 'test';
-    },
-    handler: (req, res) => {
-        logger.warn('HTTP rate limit exceeded', {
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
-        });
-        res.status(429).json({ error: 'Too many requests, please try again later' });
-    }
+// DISABLED in test environment (NODE_ENV=test) unless skipInTest is false
+export const createHttpRateLimiter = ({ max = 100, skipInTest = true } = {}) => rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max, // Limit each IP to `max` requests per windowMs
+	message: { error: 'Too many requests, please try again later' },
+	standardHeaders: true,
+	legacyHeaders: false,
+	skip: () => skipInTest && process.env.NODE_ENV === 'test',
+	handler: (req, res) => {
+		logger.warn('HTTP rate limit exceeded', {
+			ip: req.ip,
+			userAgent: req.get('User-Agent')
+		});
+		res.status(429).json({ error: 'Too many requests, please try again later' });
+	}
 });
+
+export const httpRateLimiter = createHttpRateLimiter();
+
+// Mount the general limiter on API paths only (see HTTP_RATE_LIMITED_PATHS)
+export const mountHttpRateLimiter = (app: Express, limiter: RequestHandler = httpRateLimiter): void => {
+	app.use(HTTP_RATE_LIMITED_PATHS, limiter);
+};
 
 /**
  * Strict rate limiter for admin promotion endpoint

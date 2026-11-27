@@ -20,7 +20,7 @@ import game, { checkAllGamesForAdvancement } from '@/schema';
 import { InputValidator } from '@/utils/validation';
 import logger, { loggerStream } from '@/utils/logger';
 import morgan from 'morgan';
-import { checkSocketRateLimit, httpRateLimiter } from '@/middleware/rateLimiter';
+import { checkSocketRateLimit, mountHttpRateLimiter } from '@/middleware/rateLimiter';
 import { CardService } from '@/services/cardService';
 import { initializeCardService } from '@/models/Card';
 import { VoteService } from '@/services/voteService';
@@ -123,8 +123,15 @@ cardService.seedOfficialCards(cards).catch((err) => {
 // Middleware to parse JSON bodies
 app.use(morgan('combined', { stream: loggerStream }));
 
-// Apply HTTP rate limiting
-app.use(httpRateLimiter);
+// Production runs behind exactly one nginx reverse proxy (docker-compose.prod.yml,
+// nginx/conf.d), which appends the client address to X-Forwarded-For. Trusting
+// one hop makes req.ip the real client instead of nginx, so each visitor gets
+// their own rate-limit bucket. Outside production there is no proxy, and
+// trusting the header would let clients spoof their IP past the limiter.
+app.set('trust proxy', process.env.NODE_ENV === 'production' ? 1 : false);
+
+// Apply HTTP rate limiting to API routes only (static assets are not counted)
+mountHttpRateLimiter(app);
 
 // Socket.IO rate limiting middleware
 io.use((socket, next) => {
