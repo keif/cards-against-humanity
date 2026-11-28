@@ -39,13 +39,12 @@ const HeaderMenu = ({text, timeLeft, playerName, playerScore, onScoreClick, game
 						End game with a haiku
 					</button>
 				)}
-				<p
-					className="font-mono text-riso-yellow tabular-nums"
-					role="timer"
-					aria-label={gameConfig?.roundTimer ? `${timeLeft} seconds left` : undefined}
-				>
-					{timeLeft}
-				</p>
+				{/* The server sends 0 when no countdown is running (e.g. while the judge picks); a bare "0" reads as "time's up". */}
+				{timeLeft > 0 && (
+					<p className="font-mono text-riso-yellow tabular-nums" role="timer" aria-label={`${timeLeft} seconds left`}>
+						{timeLeft}
+					</p>
+				)}
 			</div>
 		</div>
 	</div>

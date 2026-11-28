@@ -31,12 +31,31 @@ export const answerTextSize = (text?: string): string => {
 	return 'text-[20px] leading-[1.18] max-[380px]:text-[17px] max-[380px]:leading-[1.15]';
 };
 
-const CardFoot =({ id, label = 'PC' }: { id?: number; label?: string }) => (
+// shortLabel replaces label below 380px, where the 144px prompt card can't fit "PHUCKING CARDS" and a number on one line.
+const CardFoot = ({ id, label = 'PC', shortLabel }: { id?: number; label?: string; shortLabel?: string }) => (
 	<span className="flex justify-between items-baseline font-mono font-bold text-[11px] max-[380px]:text-[10px] tracking-[0.06em] opacity-70" aria-hidden="true">
-		<span>{label}</span>
+		{shortLabel ? (
+			<>
+				<span className="max-[380px]:hidden">{label}</span>
+				<span className="hidden max-[380px]:inline">{shortLabel}</span>
+			</>
+		) : (
+			<span>{label}</span>
+		)}
 		<span>{printNumber(id)}</span>
 	</span>
 );
+
+/**
+ * Invite-code size by length, so codes stay on one line where possible.
+ * Atkinson Hyperlegible Mono is 0.63em per character; the code has 148px on desktop and 100px below 380px.
+ * Codes over 8 characters (up to the server's 20) drop to the small size and wrap.
+ */
+export const inviteCodeSize = (code: string): string => {
+	if (code.length <= 5) return 'text-[28px] max-[380px]:text-[22px] tracking-[0.14em]';
+	if (code.length <= 8) return 'text-[24px] max-[380px]:text-[16px] tracking-[0.1em]';
+	return 'text-[18px] max-[380px]:text-[15px] tracking-[0.06em]';
+};
 
 export interface CardProps {
 	cardType: CardType;
@@ -83,7 +102,7 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 				)}
 				<div className={`w-[200px] h-[275px] max-[380px]:w-[144px] max-[380px]:h-[198px] card-text text-[20px] leading-[1.18] max-[380px]:text-[17px] max-[380px]:leading-[1.15] rounded-lg p-4 max-[380px]:p-[11px] break-words relative z-[1] select-none bg-pink text-ink shadow-card flex flex-col justify-between ${className}`}>
 					<p className="m-0" dangerouslySetInnerHTML={{ __html: formattedText }} />
-					<CardFoot id={id} label="PHUCKING CARDS" />
+					<CardFoot id={id} label="PHUCKING CARDS" shortLabel="PC" />
 				</div>
 				{
 					status &&
@@ -115,7 +134,7 @@ const Card = ({ cardType, className, disableDrag, id, isSelected, link, numAnswe
 				<h3 className="m-0 card-text text-[26px] max-[380px]:text-[21px] leading-[1.1]">Invite friends with this party code:</h3>
 				<button
 					type="button"
-					className={`mt-auto mb-2 min-h-[48px] flex items-center gap-2 justify-center font-mono font-bold ${partyCode.length > 8 ? 'text-[18px] max-[380px]:text-[15px] tracking-[0.06em]' : 'text-[28px] max-[380px]:text-[22px] tracking-[0.14em]'} bg-table text-paper rounded-lg px-3 py-2 border-0 cursor-pointer`}
+					className={`mt-auto mb-2 min-h-[48px] flex items-center gap-2 justify-center font-mono font-bold ${inviteCodeSize(partyCode)} bg-table text-paper rounded-lg px-3 py-2 border-0 cursor-pointer`}
 					onClick={handleCopyLink}
 					title="Click to copy invite link"
 					aria-label={`Copy invite link for party ${partyCode}`}

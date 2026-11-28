@@ -55,6 +55,20 @@ describe('DropCardSpace Component', () => {
 			expect(screen.queryByText(/Drop Card Here/i)).not.toBeInTheDocument();
 		});
 
+		it('uses the singular for one card', () => {
+			renderWithDnd(
+				<DropCardSpace
+					cardsIn={1}
+					roundRole={PLAYER}
+					roundState={PLAYER_SELECTING}
+					QCard={mockQCard}
+					playerChoice={null}
+					dropHandler={vi.fn()}
+				/>
+			);
+			expect(screen.getByText('1 Card In')).toBeInTheDocument();
+		});
+
 		it('shows status with cards in count', () => {
 			renderWithDnd(
 				<DropCardSpace
