@@ -194,10 +194,10 @@ const PlayerSelectionScreen = () => {
 				// God is Dead: Everyone votes
 				headerText = 'Everyone Votes!';
 				directions = 'Click the winning card to vote';
-			} else if (isSurvivalMode && (roundState.roundState === 'player-selecting' || roundState.roundState === 'player-waiting')) {
-				// Survival of the Fittest: All players submit cards
+			} else if ((isSurvivalMode || isGodIsDeadMode) && (roundState.roundState === 'player-selecting' || roundState.roundState === 'player-waiting')) {
+				// No Card Czar in either mode: everyone submits (the judge branch below would say "Judge is the Judge")
 				const numCards = roundState.QCard?.numAnswers || 1;
-				headerText = 'Survival of the Fittest';
+				headerText = isGodIsDeadMode ? 'God is Dead' : 'Survival of the Fittest';
 				if (roundState.roundState === 'player-selecting') {
 					directions = numCards > 1 ? `Pick ${numCards} Cards` : 'Choose one Card';
 				} else {

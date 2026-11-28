@@ -6,6 +6,7 @@ import { Card } from '@/data/types';
 import { getShuffledACard, getShuffledQCard } from '@/models/Card';
 import { CallbackType, GameInterface, PlayerInterface, RoundInterface, GameConfig, DEFAULT_GAME_CONFIG } from '@/models/types';
 import logger from '@/utils/logger';
+import { normalizeGameConfig } from '@/utils/gameConfig';
 
 class Game implements GameInterface {
 	ACardDeck: Card[];
@@ -36,7 +37,7 @@ class Game implements GameInterface {
 		this.active = true;
 		this.roundsIdle = 0; // if at least |this.players.length.length| roundsIdle, then game state is inactive
 		this.partyCode = partyCode;
-		this.gameConfig = gameConfig;
+		this.gameConfig = normalizeGameConfig(gameConfig, partyCode);
 		this.gameStartDate = new Date();
 		// Initialize decks as empty - will be populated in initialize()
 		this.QCardDeck = [];

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import Game from './Game';
 import { CallbackType, DEFAULT_GAME_CONFIG } from './types';
-import { JUDGE_SELECTING, PLAYER_SELECTING } from '@/constants';
+import { ELIMINATION_VOTING, JUDGE_SELECTING, PLAYER_SELECTING, VIEWING_WINNER } from '@/constants';
 import { initializeCardService } from './Card';
 import Redis from 'ioredis';
 import cards from '@/data/cards';
@@ -307,5 +307,65 @@ describe('Game - Round Timer and Timeout Handling', () => {
 			expect(player2State?.timeLeft).toBe(0);
 			expect(player2State?.roundState).toBe(JUDGE_SELECTING);
 		});
+	});
+});
+
+describe('Game - exclusive winner-mode house rules', () => {
+	const withRules = (rules: Partial<typeof DEFAULT_GAME_CONFIG.enabledRules>) => ({
+		...DEFAULT_GAME_CONFIG,
+		enabledRules: { ...DEFAULT_GAME_CONFIG.enabledRules, ...rules },
+	});
+
+	// Every player plays as many cards as the prompt asks for.
+	const everyonePlays = (game: Game) => {
+		const needed = game.getLatestRound().QCard?.numAnswers || 1;
+		for (const sessionID of Object.keys(game.players)) {
+			const ids = game.players[sessionID].cards.slice(0, needed).map((c: { id: number }) => c.id);
+			game.playCard(needed > 1 ? ids : ids[0], sessionID, vi.fn());
+		}
+	};
+
+	const startGame = async (rules: Partial<typeof DEFAULT_GAME_CONFIG.enabledRules>) => {
+		const game = new Game('RULES1', 60, vi.fn<CallbackType>(), withRules(rules));
+		await game.initialize();
+		game.addNewPlayer('Alice', 's1');
+		game.addNewPlayer('Bob', 's2');
+		game.addNewPlayer('Cath', 's3');
+		game.getLatestRound();
+		return game;
+	};
+
+	afterEach(() => vi.restoreAllMocks());
+
+	it('finishes a round with God is Dead and Survival both requested (previously softlocked)', async () => {
+		const game = await startGame({ godIsDead: true, survivalOfTheFittest: true });
+		expect(game.gameConfig.enabledRules.survivalOfTheFittest).toBe(false);
+
+		everyonePlays(game);
+		const round = game.getLatestRound();
+		expect(round.roundState).toBe(JUDGE_SELECTING);
+
+		const results: boolean[] = [];
+		const target = round.otherPlayerCards![0].id;
+		for (const sessionID of ['s1', 's2', 's3']) {
+			game.judgeSelectCard(sessionID, target, (ok) => results.push(ok));
+		}
+		expect(results).toEqual([true, true, true]);
+		expect(game.getLatestRound().roundState).toBe(VIEWING_WINNER);
+	});
+
+	it('still runs elimination voting when Survival of the Fittest is the only winner mode', async () => {
+		const game = await startGame({ survivalOfTheFittest: true });
+		everyonePlays(game);
+		const round = game.getLatestRound();
+		expect(round.roundState).toBe(ELIMINATION_VOTING);
+
+		const results: boolean[] = [];
+		const target = round.otherPlayerCards![0].id;
+		for (const sessionID of ['s1', 's2', 's3']) {
+			game.judgeSelectCard(sessionID, target, (ok) => results.push(ok));
+		}
+		expect(results).toEqual([true, true, true]);
+		expect(game.getLatestRound().eliminatedCards).toContain(target);
 	});
 });
