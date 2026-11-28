@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { GameConfig, DEFAULT_GAME_CONFIG } from '../../types';
+import { getWinnerMode, setWinnerMode, WinnerMode } from '@/utils/gameConfig';
 
 interface GameConfigModalProps {
 	isOpen: boolean;
@@ -14,7 +15,7 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 	onSave,
 	initialConfig = DEFAULT_GAME_CONFIG
 }) => {
-	const [config, setConfig] = useState<GameConfig>(initialConfig);
+	const [config, setConfig] = useState<GameConfig>(() => setWinnerMode(initialConfig, getWinnerMode(initialConfig.enabledRules)));
 
 	if (!isOpen) return null;
 
@@ -49,6 +50,26 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 		setConfig({ ...config, roundTimer: value });
 	};
 
+	// Only one of these can decide a round, so they're a single choice rather than checkboxes.
+	const winnerModes: { mode: WinnerMode; label: string; description: string }[] = [
+		{
+			mode: 'czar',
+			label: 'Card Czar picks',
+			description: 'Standard play. The judge role rotates, and the judge picks the winning card.'
+		},
+		{
+			mode: 'godIsDead',
+			label: 'God is Dead',
+			description: 'Play with no Card Czar. Each player picks their favorite card. Most votes wins.'
+		},
+		{
+			mode: 'survivalOfTheFittest',
+			label: 'Survival of the Fittest',
+			description: 'Players eliminate one white card at a time. The last card standing wins.'
+		}
+	];
+	const winnerMode = getWinnerMode(config.enabledRules);
+
 	const houseRules = [
 		{
 			name: 'rebootingTheUniverse' as const,
@@ -69,16 +90,6 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 			name: 'neverHaveIEver' as const,
 			label: 'Never Have I Ever',
 			description: 'At any time, players may discard cards they don\'t understand, but must confess their ignorance.'
-		},
-		{
-			name: 'godIsDead' as const,
-			label: 'God is Dead',
-			description: 'Play with no Card Czar. Each player picks their favorite card. Most votes wins.'
-		},
-		{
-			name: 'survivalOfTheFittest' as const,
-			label: 'Survival of the Fittest',
-			description: 'Players eliminate one white card at a time. The last card standing wins.'
 		},
 		{
 			name: 'seriousBusiness' as const,
@@ -169,26 +180,60 @@ const GameConfigModal: React.FC<GameConfigModalProps> = ({
 							Enable optional rules to customize your game experience. These are based on the official Cards Against Humanity house rules.
 						</p>
 
-						<div className="space-y-3">
-							{houseRules.map((rule) => (
-								<div
-									key={rule.name}
-									className="border-2 border-paper-shade rounded-lg p-4 hover:border-ink-muted transition-colors"
-								>
-									<label className="flex items-start gap-3 cursor-pointer">
+						<fieldset className="mb-6 border-0 p-0 m-0">
+							<legend className="font-bold mb-3">How the winner is picked</legend>
+							<div className="space-y-3">
+								{winnerModes.map((option) => (
+									<label
+										key={option.mode}
+										className={`flex items-start gap-3 cursor-pointer border-2 rounded-lg p-4 transition-colors ${winnerMode === option.mode ? 'border-pink' : 'border-paper-shade hover:border-ink-muted'}`}
+									>
 										<input
-											type="checkbox"
-											checked={config.enabledRules[rule.name]}
-											onChange={() => toggleRule(rule.name)}
+											type="radio"
+											name="winnerMode"
+											value={option.mode}
+											checked={winnerMode === option.mode}
+											onChange={() => setConfig(setWinnerMode(config, option.mode))}
 											className="mt-1 w-5 h-5 cursor-pointer accent-pink"
 										/>
 										<div className="flex-1">
-											<div className="font-bold">{rule.label}</div>
-											<div className="text-sm text-ink-muted mt-1">{rule.description}</div>
+											<div className="font-bold">{option.label}</div>
+											<div className="text-sm text-ink-muted mt-1">{option.description}</div>
 										</div>
 									</label>
-								</div>
-							))}
+								))}
+							</div>
+						</fieldset>
+
+						<div className="space-y-3">
+							{houseRules.map((rule) => {
+								// Serious Business changes what the Card Czar does, so it needs one.
+								const needsCzar = rule.name === 'seriousBusiness' && winnerMode !== 'czar';
+								return (
+									<div
+										key={rule.name}
+										className={`border-2 border-paper-shade rounded-lg p-4 transition-colors ${needsCzar ? 'opacity-45' : 'hover:border-ink-muted'}`}
+									>
+										<label className={`flex items-start gap-3 ${needsCzar ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+											<input
+												type="checkbox"
+												checked={config.enabledRules[rule.name]}
+												disabled={needsCzar}
+												aria-describedby={needsCzar ? `${rule.name}-needs-czar` : undefined}
+												onChange={() => toggleRule(rule.name)}
+												className="mt-1 w-5 h-5 cursor-pointer accent-pink disabled:cursor-not-allowed"
+											/>
+											<div className="flex-1">
+												<div className="font-bold">{rule.label}</div>
+												<div className="text-sm text-ink-muted mt-1">{rule.description}</div>
+												{needsCzar && (
+													<div id={`${rule.name}-needs-czar`} className="text-sm font-bold mt-1">Needs a Card Czar.</div>
+												)}
+											</div>
+										</label>
+									</div>
+								);
+							})}
 						</div>
 					</section>
 				</div>
