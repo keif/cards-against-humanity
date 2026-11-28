@@ -47,6 +47,23 @@ describe('normalizeGameConfig', () => {
 		expect(enabledRules.neverHaveIEver).toBe(false);
 	});
 
+	it('treats anything but true as off, and drops unknown keys', () => {
+		const tampered = {
+			...DEFAULT_GAME_CONFIG,
+			enabledRules: { godIsDead: 'false', survivalOfTheFittest: 1, neverHaveIEver: true, injected: true },
+		} as unknown as GameConfig;
+		const { enabledRules } = normalizeGameConfig(tampered);
+		expect(enabledRules.godIsDead).toBe(false);
+		expect(enabledRules.survivalOfTheFittest).toBe(false);
+		expect(enabledRules.neverHaveIEver).toBe(true);
+		expect(enabledRules).not.toHaveProperty('injected');
+	});
+
+	it('handles a config with no enabledRules at all', () => {
+		const bare = { winningScore: 10, handSize: 10 } as unknown as GameConfig;
+		expect(normalizeGameConfig(bare).enabledRules).toEqual(DEFAULT_GAME_CONFIG.enabledRules);
+	});
+
 	it('logs which rules it turned off, and stays quiet when nothing conflicts', () => {
 		const warn = vi.spyOn(logger, 'warn').mockImplementation(() => logger);
 		normalizeGameConfig(withRules({ godIsDead: true, survivalOfTheFittest: true, seriousBusiness: true }), 'p1');

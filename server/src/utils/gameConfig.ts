@@ -16,8 +16,13 @@ export const normalizeGameConfig = (config: GameConfig | undefined, partyCode?: 
 		return DEFAULT_GAME_CONFIG;
 	}
 
-	// Fill rules a client left out so every flag is a real boolean.
-	const rules = { ...DEFAULT_GAME_CONFIG.enabledRules, ...config.enabledRules };
+	// enabledRules comes straight from the joinParty payload: fill in missing rules and
+	// treat anything but `true` as off, so a value like "false" can't switch a mode on.
+	const sent = (config.enabledRules ?? {}) as Partial<Record<keyof GameConfig['enabledRules'], unknown>>;
+	const rules = { ...DEFAULT_GAME_CONFIG.enabledRules };
+	for (const rule of Object.keys(rules) as (keyof typeof rules)[]) {
+		rules[rule] = sent[rule] === true;
+	}
 	const requested = { ...rules };
 
 	if (rules.godIsDead) {
