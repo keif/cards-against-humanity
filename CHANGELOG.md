@@ -1,5 +1,36 @@
 # Changelog
 
+## [1.1.0](https://github.com/keif/cards-against-humanity/compare/v1.0.0...v1.1.0) (2026-11-28)
+
+
+### Features
+
+* **client:** apply Riso Zine design system ([bb86932](https://github.com/keif/cards-against-humanity/commit/bb86932676d17607438cd577b42af05fcee44604))
+* **client:** apply Riso Zine design system ([8d132a0](https://github.com/keif/cards-against-humanity/commit/8d132a0a37e4acc58fa81fb39c6c9569368dd1d1))
+* **client:** show a readable error when a route chunk fails to load ([#7](https://github.com/keif/cards-against-humanity/issues/7)) ([d6fbab8](https://github.com/keif/cards-against-humanity/commit/d6fbab8fc83dd98145916556d72bea24601f4db8))
+
+
+### Bug Fixes
+
+* **client:** address review nits on the design system PR ([41efd6b](https://github.com/keif/cards-against-humanity/commit/41efd6b890e868d5f56c075660541e5f76fa084d))
+* **client:** fit long party codes inside the invite card ([9574598](https://github.com/keif/cards-against-humanity/commit/95745986692b4b8aa2deacaa2b069ee0c8b6e17a))
+* **client:** keep a typed name when another player joins the lobby ([3b54928](https://github.com/keif/cards-against-humanity/commit/3b5492843500ba432e500938fbda55260b101394))
+* **client:** keep a typed name when another player joins the lobby ([e833518](https://github.com/keif/cards-against-humanity/commit/e8335187882bcde0f6e150458b3c164aff637294))
+* **client:** keep answer text clear of the discard button ([025a607](https://github.com/keif/cards-against-humanity/commit/025a60739c00e1091d9cfd067b7746a0d982ad68))
+* **client:** keep party code case and accept invite links on /join ([59ea794](https://github.com/keif/cards-against-humanity/commit/59ea7941ff3f4020650b5fd3d3e0f6b21d0eeea5))
+* **client:** keep party code case and accept invite links on /join ([074f5df](https://github.com/keif/cards-against-humanity/commit/074f5dfd1d1b36c1cd322441502cf848a27bcf55))
+* **client:** keep the header timer's slot so the title doesn't shift ([bee765e](https://github.com/keif/cards-against-humanity/commit/bee765eee89016bf8a34e2b4ca2b31fd97b94a1c))
+* **client:** polish five rough edges found in a 3-player round ([54420f4](https://github.com/keif/cards-against-humanity/commit/54420f4eedfee66c7c1fb1f25cc19e7ee9730d5e))
+* **client:** polish five rough edges found in a 3-player round ([6104033](https://github.com/keif/cards-against-humanity/commit/61040333014db00e919ea88ba0db1f32535fda9b))
+* **client:** self-host fonts and let status messages wrap ([fcc6dc0](https://github.com/keif/cards-against-humanity/commit/fcc6dc0ddfeea5c4a2f02b02c678bf01d9bc27d6))
+* **client:** size answer text by length and move discard off the text ([a9a93dd](https://github.com/keif/cards-against-humanity/commit/a9a93dd9b1c313cc50776e44471ef5bb7c9b35bc))
+* **deploy:** make the post-deploy health check actually run ([#8](https://github.com/keif/cards-against-humanity/issues/8)) ([4792d83](https://github.com/keif/cards-against-humanity/commit/4792d8372c94f6d784c90c48a5a0a7463310a7bf))
+* **deploy:** roll back to the previous image when a deploy fails ([#9](https://github.com/keif/cards-against-humanity/issues/9)) ([85eed47](https://github.com/keif/cards-against-humanity/commit/85eed476d95012f76ee21cfdf28f8a21f389fa7b))
+* make the winner-picking house rules mutually exclusive ([dfb4324](https://github.com/keif/cards-against-humanity/commit/dfb43244f88d966656c30b632eb009a329f70cea))
+* make the winner-picking house rules mutually exclusive ([8d77995](https://github.com/keif/cards-against-humanity/commit/8d779959d7629df04dee4e68f175d59c20194af7))
+* **server:** stop rate limiters from locking players out ([#6](https://github.com/keif/cards-against-humanity/issues/6)) ([ba6f38c](https://github.com/keif/cards-against-humanity/commit/ba6f38c1e3e75c3190b0d4395e06e6f5c0327512))
+* **server:** treat anything but true as off in house rule flags ([5c8e318](https://github.com/keif/cards-against-humanity/commit/5c8e318543356527bcc1179bcc2d92407843d511))
+
 ## 1.0.0 (2026-08-14)
 
 
