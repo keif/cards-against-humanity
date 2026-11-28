@@ -76,9 +76,22 @@ describe('HeaderMenu Component', () => {
 			expect(screen.getByText('45')).toBeInTheDocument();
 		});
 
-		it('displays zero time', () => {
+		it('hides the timer when no countdown is running', () => {
 			render(<HeaderMenu text="Status" timeLeft={0} />);
-			expect(screen.getByText('0')).toBeInTheDocument();
+			expect(screen.queryByText('0')).not.toBeInTheDocument();
+			expect(screen.queryByRole('timer')).not.toBeInTheDocument();
+		});
+
+		it('keeps the timer slot when hidden so the header text does not shift', () => {
+			const { container } = render(<HeaderMenu text="Status" timeLeft={0} />);
+			const slot = container.querySelector('p.min-w-\\[2ch\\]');
+			expect(slot).toHaveClass('invisible');
+			expect(slot).toHaveAttribute('aria-hidden', 'true');
+		});
+
+		it('labels a running countdown for screen readers', () => {
+			render(<HeaderMenu text="Status" timeLeft={45} />);
+			expect(screen.getByRole('timer')).toHaveAttribute('aria-label', '45 seconds left');
 		});
 
 		it('displays single digit time', () => {
@@ -91,9 +104,9 @@ describe('HeaderMenu Component', () => {
 			expect(screen.getByText('999')).toBeInTheDocument();
 		});
 
-		it('displays negative time', () => {
+		it('hides a negative time instead of showing it', () => {
 			render(<HeaderMenu text="Status" timeLeft={-1} />);
-			expect(screen.getByText('-1')).toBeInTheDocument();
+			expect(screen.queryByText('-1')).not.toBeInTheDocument();
 		});
 	});
 

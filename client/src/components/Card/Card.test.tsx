@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { describe, it, expect } from 'vitest';
-import Card, { Q, A, TITLE, PLACEHOLDER, LINK, answerTextSize } from './Card';
+import Card, { Q, A, TITLE, PLACEHOLDER, LINK, answerTextSize, inviteCodeSize } from './Card';
 
 // Helper to wrap components with DnD context
 const renderWithDnd = (ui: React.ReactElement) => {
@@ -102,6 +102,35 @@ describe('Card Component', () => {
 		it('treats missing or empty text as short', () => {
 			expect(answerTextSize(undefined)).toContain('max-[380px]:text-[17px]');
 			expect(answerTextSize('')).toContain('max-[380px]:text-[17px]');
+		});
+	});
+
+	describe('inviteCodeSize', () => {
+		it('keeps generated-length codes (up to 5) at full size', () => {
+			expect(inviteCodeSize('k7qx2')).toContain('text-[28px]');
+		});
+
+		it('steps down for 6 to 8 characters so they stay on one line', () => {
+			expect(inviteCodeSize('k7qx2a')).toContain('text-[24px]');
+			expect(inviteCodeSize('qaround1')).toContain('max-[380px]:text-[16px]');
+		});
+
+		it('uses the small size from 9 characters up to the 20-character limit', () => {
+			expect(inviteCodeSize('qaround12')).toContain('text-[18px]');
+			expect(inviteCodeSize('a'.repeat(20))).toContain('text-[18px]');
+		});
+
+		it('treats an empty code as short', () => {
+			expect(inviteCodeSize('')).toContain('text-[28px]');
+		});
+	});
+
+	describe('prompt card footer', () => {
+		it('swaps the wordmark for the short label on narrow phones', () => {
+			renderWithDnd(<Card cardType={Q} text="Prompt _" id={524} />);
+			expect(screen.getByText('PHUCKING CARDS')).toHaveClass('max-[380px]:hidden');
+			expect(screen.getByText('PC')).toHaveClass('hidden', 'max-[380px]:inline');
+			expect(screen.getByText('Nº 0524')).toBeInTheDocument();
 		});
 	});
 });

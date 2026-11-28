@@ -21,11 +21,21 @@ describe('Status Component', () => {
 		expect(statusDiv).toHaveClass('custom-status');
 	});
 
-	it('renders empty string message', () => {
-		const { container } = render(<Status message="" />);
-		const statusDiv = container.firstChild;
-		expect(statusDiv).toBeInTheDocument();
-		expect(statusDiv?.textContent).toBe('');
+	it('keeps the space but hides the bar for an empty or blank message', () => {
+		for (const message of ['', '   ']) {
+			const { container, unmount } = render(<Status message={message} />);
+			const statusDiv = container.firstChild as HTMLElement;
+			expect(statusDiv).toBeInTheDocument();
+			expect(statusDiv).toHaveClass('invisible');
+			expect(statusDiv).toHaveAttribute('aria-hidden', 'true');
+			unmount();
+		}
+	});
+
+	it('shows the bar when there is a message', () => {
+		const { container } = render(<Status message="Choose one Card" />);
+		expect(container.firstChild).not.toHaveClass('invisible');
+		expect(container.firstChild).not.toHaveAttribute('aria-hidden');
 	});
 
 	it('renders long messages', () => {

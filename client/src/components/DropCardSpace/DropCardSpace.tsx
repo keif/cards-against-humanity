@@ -71,7 +71,7 @@ const DropCardSpace = ({ cardsIn, roundRole, roundState, QCard, playerChoice, dr
 			}
 		}),
 		[dropHandler]);
-	const status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} Cards In` : undefined;
+	const status = (cardsIn > 0 && roundState !== VIEWING_WINNER) ? `${cardsIn} ${cardsIn === 1 ? 'Card' : 'Cards'} In` : undefined;
 
 	// Determine which cards to display
 	const getCardsToDisplay = (): CardProps[] => {
