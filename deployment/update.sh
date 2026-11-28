@@ -37,10 +37,12 @@ wait_healthy() {
 }
 
 restart_app() {
-    # Stop old container first to avoid docker-compose v1 ContainerConfig bug
-    $COMPOSE stop app
-    $COMPOSE rm -f app
-    $COMPOSE up -d --no-build app
+    # Stop old container first to avoid docker-compose v1 ContainerConfig bug.
+    # Chained with && because callers run this inside `if`, where set -e is
+    # off: a failed step must be returned, not skipped over.
+    $COMPOSE stop app &&
+        $COMPOSE rm -f app &&
+        $COMPOSE up -d --no-build app
 }
 
 # Remember what is running now, before the build retags the image name.
@@ -49,8 +51,12 @@ restart_app() {
 PREV_IMAGE_ID=$(docker inspect --format '{{.Image}}' "$CONTAINER" 2>/dev/null || true)
 IMAGE_NAME=$(docker inspect --format '{{.Config.Image}}' "$CONTAINER" 2>/dev/null || true)
 if [ -n "$PREV_IMAGE_ID" ]; then
-    docker tag "$PREV_IMAGE_ID" "$ROLLBACK_TAG"
-    echo "Saved current image as $ROLLBACK_TAG"
+    if docker tag "$PREV_IMAGE_ID" "$ROLLBACK_TAG"; then
+        echo "Saved current image as $ROLLBACK_TAG"
+    else
+        echo -e "${YELLOW}Could not save the current image; deploying without a rollback point${NC}"
+        PREV_IMAGE_ID=""
+    fi
 fi
 
 # Rebuild app image (a failed build exits here, leaving the old container up)
@@ -59,11 +65,9 @@ $COMPOSE build app
 
 echo
 echo "Restarting application..."
-restart_app
-
-echo
-echo "Waiting for new container to be healthy..."
-if wait_healthy; then
+# Any failure from here on (container won't start, or never gets healthy)
+# must fall through to the rollback below, not exit under set -e.
+if restart_app && echo "Waiting for new container to be healthy..." && wait_healthy; then
     echo
     echo "================================"
     echo -e "${GREEN}Update Complete!${NC}"
@@ -74,9 +78,9 @@ if wait_healthy; then
     exit 0
 fi
 
-echo -e "${RED}✗ Health check failed after ${HEALTH_TIMEOUT}s${NC}"
+echo -e "${RED}✗ New container failed to start or never became healthy (timeout ${HEALTH_TIMEOUT}s)${NC}"
 echo "Recent app logs from the failed container:"
-$COMPOSE logs --tail=50 app
+$COMPOSE logs --tail=50 app || true
 
 if [ -z "$PREV_IMAGE_ID" ] || [ -z "$IMAGE_NAME" ]; then
     echo -e "${RED}No previous image to roll back to. The app is down.${NC}"
@@ -85,14 +89,11 @@ fi
 
 echo
 echo -e "${YELLOW}Rolling back to the previous image...${NC}"
-docker tag "$ROLLBACK_TAG" "$IMAGE_NAME"
-restart_app
-
-if wait_healthy; then
+if docker tag "$ROLLBACK_TAG" "$IMAGE_NAME" && restart_app && wait_healthy; then
     echo -e "${YELLOW}Rolled back: the previous version is running. This deploy failed.${NC}"
 else
-    echo -e "${RED}Rollback is not healthy either. The app is down.${NC}"
-    $COMPOSE logs --tail=50 app
+    echo -e "${RED}Rollback failed too. The app is down.${NC}"
+    $COMPOSE logs --tail=50 app || true
 fi
 # Either way the deploy itself failed, so fail the GitHub Actions job
 exit 1
