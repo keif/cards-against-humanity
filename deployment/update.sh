@@ -18,7 +18,10 @@ NC='\033[0m'
 
 COMPOSE="docker-compose -f docker-compose.prod.yml"
 CONTAINER=cah-app             # container_name in docker-compose.prod.yml
-ROLLBACK_TAG=cah-app:rollback # pins the previous image so the build can't orphan it
+# Keeps the previous image referenced so cleanup can't delete it. Rollback
+# itself uses PREV_IMAGE_ID (immutable, captured by this run), so an
+# overlapping deploy moving this tag can't change what we restore.
+ROLLBACK_TAG=cah-app:rollback
 HEALTH_TIMEOUT=${HEALTH_TIMEOUT:-120} # seconds
 HEALTH_INTERVAL=3
 
@@ -89,7 +92,7 @@ fi
 
 echo
 echo -e "${YELLOW}Rolling back to the previous image...${NC}"
-if docker tag "$ROLLBACK_TAG" "$IMAGE_NAME" && restart_app && wait_healthy; then
+if docker tag "$PREV_IMAGE_ID" "$IMAGE_NAME" && restart_app && wait_healthy; then
     echo -e "${YELLOW}Rolled back: the previous version is running. This deploy failed.${NC}"
 else
     echo -e "${RED}Rollback failed too. The app is down.${NC}"
