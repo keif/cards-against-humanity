@@ -1,35 +1,27 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import Redis from 'ioredis';
+import { randomUUID } from 'crypto';
 import { VoteService } from './voteService';
 
 describe('VoteService', () => {
 	let redis: Redis;
 	let voteService: VoteService;
 
-	beforeEach(async () => {
-		// Use in-memory Redis mock or real Redis for testing
-		redis = new Redis();
+	// Each test gets its own key prefix so concurrent runs (other worktrees,
+	// watch mode) never share keys, and cleanup never touches real dev data.
+	let prefix: string;
+
+	beforeEach(() => {
+		prefix = `test:voteService:${randomUUID()}:`;
+		redis = new Redis({ keyPrefix: prefix });
 		voteService = new VoteService(redis);
-
-		// Clean up test data
-		const keys = await redis.keys('vote:*');
-		const voteKeys = await redis.keys('votes:*');
-		const cardKeys = await redis.keys('cards:pending:*');
-
-		if (keys.length > 0) await redis.del(...keys);
-		if (voteKeys.length > 0) await redis.del(...voteKeys);
-		if (cardKeys.length > 0) await redis.del(...cardKeys);
 	});
 
 	afterEach(async () => {
-		// Clean up after each test
-		const keys = await redis.keys('vote:*');
-		const voteKeys = await redis.keys('votes:*');
-		const cardKeys = await redis.keys('cards:pending:*');
-
-		if (keys.length > 0) await redis.del(...keys);
-		if (voteKeys.length > 0) await redis.del(...voteKeys);
-		if (cardKeys.length > 0) await redis.del(...cardKeys);
+		// keyPrefix isn't applied to the KEYS pattern, but it is applied to DEL,
+		// so strip it from the returned names before deleting.
+		const keys = await redis.keys(`${prefix}*`);
+		if (keys.length > 0) await redis.del(...keys.map((key) => key.slice(prefix.length)));
 
 		await redis.quit();
 	});
