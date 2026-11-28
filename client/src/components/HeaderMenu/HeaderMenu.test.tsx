@@ -82,6 +82,13 @@ describe('HeaderMenu Component', () => {
 			expect(screen.queryByRole('timer')).not.toBeInTheDocument();
 		});
 
+		it('keeps the timer slot when hidden so the header text does not shift', () => {
+			const { container } = render(<HeaderMenu text="Status" timeLeft={0} />);
+			const slot = container.querySelector('p.min-w-\\[2ch\\]');
+			expect(slot).toHaveClass('invisible');
+			expect(slot).toHaveAttribute('aria-hidden', 'true');
+		});
+
 		it('labels a running countdown for screen readers', () => {
 			render(<HeaderMenu text="Status" timeLeft={45} />);
 			expect(screen.getByRole('timer')).toHaveAttribute('aria-label', '45 seconds left');
